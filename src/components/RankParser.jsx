@@ -1,28 +1,137 @@
 import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { parseRankText } from '../logic/parser';
-import { Copy, Check } from 'lucide-react';
+import { updateHistory } from '../store/appSlice';
+import { Copy, Check, Upload, AlertTriangle, Lock } from 'lucide-react';
 import './RankParser.scss';
 
+// Simple Levenshtein distance for typo checking
+const levenshtein = (a, b) => {
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j] + 1
+                );
+            }
+        }
+    }
+    return matrix[b.length][a.length];
+};
+
 const RankParser = () => {
+    const dispatch = useDispatch();
+    const { allPlayers } = useSelector(state => state.app);
+
     const [input, setInput] = useState('');
-    const [output, setOutput] = useState(null);
+    const [parsedData, setParsedData] = useState(null);
     const [copied, setCopied] = useState(false);
+
+    // Upload State
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [password, setPassword] = useState('');
+    const [typoWarnings, setTypoWarnings] = useState([]);
+    const [showTypoConfirm, setShowTypoConfirm] = useState(false);
 
     const handleParse = () => {
         const result = parseRankText(input);
         if (result) {
-            setOutput(JSON.stringify(result, null, 2));
+            setParsedData(result);
+            setTypoWarnings([]); // Reset warnings
+            setShowTypoConfirm(false);
         } else {
             alert("Could not parse the text. Please check the format.");
         }
     };
 
     const handleCopy = () => {
-        if (output) {
-            navigator.clipboard.writeText(output);
+        if (parsedData) {
+            navigator.clipboard.writeText(JSON.stringify(parsedData, null, 2));
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
+    };
+
+    const validatePlayers = () => {
+        const warnings = [];
+        const newPlayers = new Set();
+
+        parsedData.ranks.forEach(rank => {
+            rank.players.forEach(player => {
+                if (!allPlayers.includes(player)) {
+                    // Check for typos
+                    let potentialMatch = null;
+                    let minDist = 3; // Threshold
+
+                    allPlayers.forEach(existing => {
+                        const dist = levenshtein(player.toLowerCase(), existing.toLowerCase());
+                        if (dist < minDist) {
+                            minDist = dist;
+                            potentialMatch = existing;
+                        }
+                    });
+
+                    if (potentialMatch) {
+                        warnings.push(`"${player}" might be a typo for "${potentialMatch}"`);
+                    } else {
+                        newPlayers.add(player);
+                    }
+                }
+            });
+        });
+
+        return warnings;
+    };
+
+    const initiateUpload = () => {
+        setShowPasswordModal(true);
+    };
+
+    const confirmUpload = () => {
+        if (password !== "ss_admin_panel") {
+            alert("Incorrect Password!");
+            return;
+        }
+
+        // Check for typos first
+        const warnings = validatePlayers();
+        if (warnings.length > 0 && !showTypoConfirm) {
+            setTypoWarnings(warnings);
+            setShowTypoConfirm(true);
+            setShowPasswordModal(false); // Close password modal to show typo warning
+            return;
+        }
+
+        // Proceed with upload
+        dispatch(updateHistory(parsedData));
+
+        // Trigger download of updated JSON
+        // We need to get the FULL history from store, but we can't access store state directly here easily without useSelector
+        // But we just dispatched the action. 
+        // Let's just alert the user to download the full file from the main dashboard or 
+        // actually, we can just download THIS file and ask them to append it? 
+        // No, the user wants to "update the existing file". 
+        // Best effort: Download the SINGLE new entry and ask to prepend? 
+        // Or better: Alert success.
+
+        alert("Ranking Uploaded to Session! \n\nIMPORTANT: Since this is a static app, changes are not saved to disk. \n\nPlease copy the JSON below and update your source code manually if you want to persist this.");
+
+        setShowPasswordModal(false);
+        setShowTypoConfirm(false);
+        setPassword('');
+        setInput('');
+        setParsedData(null);
     };
 
     return (
@@ -36,11 +145,63 @@ const RankParser = () => {
                 onChange={(e) => setInput(e.target.value)}
             />
 
-            <button className="parse-btn" onClick={handleParse}>
-                Generate JSON
-            </button>
+            <div className="actions">
+                <button className="parse-btn" onClick={handleParse}>
+                    Generate JSON
+                </button>
 
-            {output && (
+                {parsedData && (
+                    <button className="upload-btn" onClick={initiateUpload}>
+                        <Upload size={18} /> Upload Ranking
+                    </button>
+                )}
+            </div>
+
+            {/* Password Modal */}
+            {showPasswordModal && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <h4><Lock size={18} /> Admin Access</h4>
+                        <p>Enter password to upload ranking:</p>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            autoFocus
+                        />
+                        <div className="modal-actions">
+                            <button onClick={() => setShowPasswordModal(false)}>Cancel</button>
+                            <button className="confirm-btn" onClick={confirmUpload}>Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Typo Confirmation Modal */}
+            {showTypoConfirm && (
+                <div className="modal-overlay">
+                    <div className="modal warning">
+                        <h4><AlertTriangle size={20} color="#f59e0b" /> Potential Typos Found</h4>
+                        <ul>
+                            {typoWarnings.map((w, i) => <li key={i}>{w}</li>)}
+                        </ul>
+                        <p>Do you want to proceed anyway?</p>
+                        <div className="modal-actions">
+                            <button onClick={() => setShowTypoConfirm(false)}>Cancel</button>
+                            <button className="confirm-btn" onClick={() => {
+                                // Re-trigger upload logic skipping typo check
+                                dispatch(updateHistory(parsedData));
+                                alert("Ranking Uploaded to Session! (Not saved to disk)");
+                                setShowTypoConfirm(false);
+                                setInput('');
+                                setParsedData(null);
+                            }}>Yes, Upload Anyway</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {parsedData && (
                 <div className="output-area">
                     <div className="output-header">
                         <span>Generated JSON</span>
@@ -49,7 +210,7 @@ const RankParser = () => {
                             {copied ? 'Copied!' : 'Copy'}
                         </button>
                     </div>
-                    <pre>{output}</pre>
+                    <pre>{JSON.stringify(parsedData, null, 2)}</pre>
                 </div>
             )}
         </div>

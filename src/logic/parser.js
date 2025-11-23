@@ -54,7 +54,10 @@ export const parseRankText = (text) => {
                 const namesPart = match[2];
                 // Split by comma or " and "
                 const players = namesPart.split(/,| and /).map(n => n.trim()).filter(n => n);
-                ranks.push({ rank, players });
+                // Auto-assign rating based on the order (assuming lines are in order 1..8)
+                // Since 'ranks' array is filling up, its current length + 1 is the next rating index
+                const rating = ranks.length + 1;
+                ranks.push({ rank, rating, players });
             }
         }
 

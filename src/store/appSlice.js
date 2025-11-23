@@ -58,10 +58,25 @@ export const appSlice = createSlice({
                 state.selectedPlayers.push(name);
                 state.rankedPlayers = []; // Invalidate ranks
             }
+        },
+        updateHistory: (state, action) => {
+            const newTournament = action.payload;
+            // Prepend new tournament (newest first)
+            state.history = [newTournament, ...state.history];
+
+            // Update allPlayers with any new players found in the ranking
+            const newPlayers = new Set(state.allPlayers);
+            newTournament.ranks.forEach(r => {
+                r.players.forEach(p => newPlayers.add(p));
+            });
+            state.allPlayers = Array.from(newPlayers).sort();
+
+            // Invalidate ranks
+            state.rankedPlayers = [];
         }
     },
 });
 
-export const { togglePlayerSelection, calculateRanks, generateGroupsAction, resetGroups, setTournamentDate, addNewPlayer } = appSlice.actions;
+export const { togglePlayerSelection, calculateRanks, generateGroupsAction, resetGroups, setTournamentDate, addNewPlayer, updateHistory } = appSlice.actions;
 
 export default appSlice.reducer;

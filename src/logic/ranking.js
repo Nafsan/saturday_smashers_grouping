@@ -28,7 +28,8 @@ export const calculateRankings = (history, activePlayers) => {
         tournament.ranks.forEach(rankGroup => {
             rankGroup.players.forEach(playerName => {
                 if (playerStats[playerName]) {
-                    playerStats[playerName].ranks.push(rankGroup.rank);
+                    // Use 'rating' (1-8) instead of raw 'rank'
+                    playerStats[playerName].ranks.push(rankGroup.rating);
                 }
             });
         });

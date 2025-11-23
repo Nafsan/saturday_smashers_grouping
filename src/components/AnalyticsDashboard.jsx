@@ -9,6 +9,7 @@ const AnalyticsDashboard = () => {
     const { history, allPlayers } = useSelector(state => state.app);
     const [showAllHistory, setShowAllHistory] = useState(false);
     const [selectedGraphPlayers, setSelectedGraphPlayers] = useState([]);
+    const [expandedTournaments, setExpandedTournaments] = useState([]);
 
     // Prepare options for react-select
     const playerOptions = useMemo(() => {
@@ -21,6 +22,12 @@ const AnalyticsDashboard = () => {
         } else {
             // Optional: Show a toast or message that max is 5
         }
+    };
+
+    const toggleTournamentExpansion = (id) => {
+        setExpandedTournaments(prev =>
+            prev.includes(id) ? prev.filter(tId => tId !== id) : [...prev, id]
+        );
     };
 
     // Custom styles for react-select to match dark theme
@@ -158,19 +165,42 @@ const AnalyticsDashboard = () => {
             <div className="recent-history">
                 <h3>Recent Tournaments</h3>
                 <div className="history-list">
-                    {displayedHistory.map(t => (
-                        <div key={t.id} className="history-item">
-                            <div className="date">{t.date}</div>
-                            <div className="ranks-preview">
-                                {t.ranks.slice(0, 3).map(r => (
-                                    <span key={r.rank} className="rank-pill">
-                                        #{r.rank} {r.players.join(', ')}
-                                    </span>
-                                ))}
-                                {t.ranks.length > 3 && <span className="more">+{t.ranks.length - 3} more</span>}
+                    {displayedHistory.map(t => {
+                        const isExpanded = expandedTournaments.includes(t.id);
+                        const ranksToShow = isExpanded ? t.ranks : t.ranks.slice(0, 3);
+                        const hasMore = t.ranks.length > 3;
+
+                        return (
+                            <div key={t.id} className="history-item">
+                                <div className="date">{t.date}</div>
+                                <div className="ranks-preview">
+                                    {ranksToShow.map(r => (
+                                        <span key={r.rank} className="rank-pill">
+                                            #{r.rank} {r.players.join(', ')}
+                                        </span>
+                                    ))}
+
+                                    {hasMore && !isExpanded && (
+                                        <span
+                                            className="more clickable"
+                                            onClick={() => toggleTournamentExpansion(t.id)}
+                                        >
+                                            +{t.ranks.length - 3} more
+                                        </span>
+                                    )}
+
+                                    {hasMore && isExpanded && (
+                                        <span
+                                            className="more clickable"
+                                            onClick={() => toggleTournamentExpansion(t.id)}
+                                        >
+                                            Show Less
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
                 {history.length > 5 && (
                     <button className="load-more" onClick={() => setShowAllHistory(!showAllHistory)}>

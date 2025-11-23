@@ -80,6 +80,16 @@
                     font-size: 0.8rem;
                     color: var(--text-secondary);
                     align-self: center;
+
+                    &.clickable {
+                        cursor: pointer;
+                        color: var(--accent-primary);
+                        font-weight: 500;
+
+                        &:hover {
+                            text-decoration: underline;
+                        }
+                    }
                 }
             }
         }

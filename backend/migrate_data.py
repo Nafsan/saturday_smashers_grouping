@@ -14,6 +14,12 @@ if not DATABASE_URL:
     print("Error: DATABASE_URL not set")
     exit(1)
 
+# Fix for Render/Heroku which use postgres:// or postgresql:// but SQLAlchemy needs postgresql+asyncpg://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+elif DATABASE_URL.startswith("postgresql://") and "asyncpg" not in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+
 engine = create_async_engine(DATABASE_URL)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
@@ -23,7 +29,15 @@ async def migrate():
 
     async with AsyncSessionLocal() as db:
         # Read JSON
-        with open('../src/data/history.json', 'r') as f:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        json_path = os.path.join(script_dir, '..', 'src', 'data', 'history.json')
+        
+        if not os.path.exists(json_path):
+            print(f"Error: File not found at {json_path}")
+            # Fallback for Render if structure is flattened or different (unlikely but safe)
+            json_path = os.path.join(script_dir, 'history.json')
+            
+        with open(json_path, 'r') as f:
             data = json.load(f)
 
         print(f"Found {len(data)} tournaments to migrate...")

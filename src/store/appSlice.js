@@ -1,17 +1,36 @@
-import { createSlice } from '@reduxjs/toolkit';
-import historyData from '../data/history.json';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getAllPlayers, calculateRankings } from '../logic/ranking';
 import { generateGroups } from '../logic/grouping';
+import { fetchHistory, addTournament } from '../api/client';
+
+// Async Thunks
+export const fetchHistoryAsync = createAsyncThunk(
+    'app/fetchHistory',
+    async () => {
+        const data = await fetchHistory();
+        return data;
+    }
+);
+
+export const uploadRankingAsync = createAsyncThunk(
+    'app/uploadRanking',
+    async ({ tournamentData, password }, { dispatch }) => {
+        await addTournament(tournamentData, password);
+        return tournamentData; // Return data to update state optimistically or just trigger refetch
+    }
+);
 
 const initialState = {
-    history: historyData,
-    allPlayers: getAllPlayers(historyData),
-    selectedPlayers: [], // Names of players selected for this week
-    rankedPlayers: [], // Calculated ranks
+    history: [],
+    allPlayers: [],
+    selectedPlayers: [],
+    rankedPlayers: [],
     groups: { groupA: [], groupB: [] },
     isGroupsGenerated: false,
     tournamentDate: new Date().toISOString().split('T')[0],
-    customPlayers: [], // Players added manually for this session
+    customPlayers: [],
+    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    error: null
 };
 
 export const appSlice = createSlice({
@@ -25,14 +44,12 @@ export const appSlice = createSlice({
             } else {
                 state.selectedPlayers.push(playerName);
             }
-            // Invalidate ranks when selection changes
             state.rankedPlayers = [];
         },
         calculateRanks: (state) => {
             state.rankedPlayers = calculateRankings(state.history, state.selectedPlayers);
         },
         generateGroupsAction: (state) => {
-            // Ensure ranks are calculated first
             if (state.rankedPlayers.length === 0) {
                 state.rankedPlayers = calculateRankings(state.history, state.selectedPlayers);
             }
@@ -43,7 +60,7 @@ export const appSlice = createSlice({
         resetGroups: (state) => {
             state.isGroupsGenerated = false;
             state.groups = { groupA: [], groupB: [] };
-            state.rankedPlayers = []; // Clear ranks to force recalculation next time
+            state.rankedPlayers = [];
         },
         setTournamentDate: (state, action) => {
             state.tournamentDate = action.payload;
@@ -54,29 +71,42 @@ export const appSlice = createSlice({
                 state.allPlayers.push(name);
                 state.allPlayers.sort();
                 state.customPlayers.push(name);
-                // Auto-select the new player
                 state.selectedPlayers.push(name);
-                state.rankedPlayers = []; // Invalidate ranks
+                state.rankedPlayers = [];
             }
-        },
-        updateHistory: (state, action) => {
-            const newTournament = action.payload;
-            // Prepend new tournament (newest first)
-            state.history = [newTournament, ...state.history];
-
-            // Update allPlayers with any new players found in the ranking
-            const newPlayers = new Set(state.allPlayers);
-            newTournament.ranks.forEach(r => {
-                r.players.forEach(p => newPlayers.add(p));
-            });
-            state.allPlayers = Array.from(newPlayers).sort();
-
-            // Invalidate ranks
-            state.rankedPlayers = [];
         }
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchHistoryAsync.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchHistoryAsync.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.history = action.payload;
+                const players = getAllPlayers(action.payload);
+                console.log("Extracted Players:", players);
+                state.allPlayers = players;
+            })
+            .addCase(fetchHistoryAsync.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.error.message;
+            })
+            .addCase(uploadRankingAsync.fulfilled, (state, action) => {
+                const newTournament = action.payload;
+                state.history = [newTournament, ...state.history];
+
+                // Update players
+                const newPlayers = new Set(state.allPlayers);
+                newTournament.ranks.forEach(r => {
+                    r.players.forEach(p => newPlayers.add(p));
+                });
+                state.allPlayers = Array.from(newPlayers).sort();
+                state.rankedPlayers = [];
+            });
     },
 });
 
-export const { togglePlayerSelection, calculateRanks, generateGroupsAction, resetGroups, setTournamentDate, addNewPlayer, updateHistory } = appSlice.actions;
+export const { togglePlayerSelection, calculateRanks, generateGroupsAction, resetGroups, setTournamentDate, addNewPlayer } = appSlice.actions;
 
 export default appSlice.reducer;

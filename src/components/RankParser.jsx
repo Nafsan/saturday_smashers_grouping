@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { parseRankText } from '../logic/parser';
-import { updateHistory } from '../store/appSlice';
+import { uploadRankingAsync } from '../store/appSlice';
 import { Copy, Check, Upload, AlertTriangle, Lock } from 'lucide-react';
 import './RankParser.scss';
 
@@ -67,6 +67,8 @@ const RankParser = () => {
         const warnings = [];
         const newPlayers = new Set();
 
+        if (!parsedData) return warnings;
+
         parsedData.ranks.forEach(rank => {
             rank.players.forEach(player => {
                 if (!allPlayers.includes(player)) {
@@ -98,7 +100,7 @@ const RankParser = () => {
         setShowPasswordModal(true);
     };
 
-    const confirmUpload = () => {
+    const confirmUpload = async () => {
         if (password !== "ss_admin_panel") {
             alert("Incorrect Password!");
             return;
@@ -114,24 +116,18 @@ const RankParser = () => {
         }
 
         // Proceed with upload
-        dispatch(updateHistory(parsedData));
+        try {
+            await dispatch(uploadRankingAsync({ tournamentData: parsedData, password })).unwrap();
+            alert("Ranking Uploaded Successfully to Database! 🚀");
 
-        // Trigger download of updated JSON
-        // We need to get the FULL history from store, but we can't access store state directly here easily without useSelector
-        // But we just dispatched the action. 
-        // Let's just alert the user to download the full file from the main dashboard or 
-        // actually, we can just download THIS file and ask them to append it? 
-        // No, the user wants to "update the existing file". 
-        // Best effort: Download the SINGLE new entry and ask to prepend? 
-        // Or better: Alert success.
-
-        alert("Ranking Uploaded to Session! \n\nIMPORTANT: Since this is a static app, changes are not saved to disk. \n\nPlease copy the JSON below and update your source code manually if you want to persist this.");
-
-        setShowPasswordModal(false);
-        setShowTypoConfirm(false);
-        setPassword('');
-        setInput('');
-        setParsedData(null);
+            setShowPasswordModal(false);
+            setShowTypoConfirm(false);
+            setPassword('');
+            setInput('');
+            setParsedData(null);
+        } catch (err) {
+            alert(`Upload Failed: ${err.message}`);
+        }
     };
 
     return (
@@ -188,13 +184,17 @@ const RankParser = () => {
                         <p>Do you want to proceed anyway?</p>
                         <div className="modal-actions">
                             <button onClick={() => setShowTypoConfirm(false)}>Cancel</button>
-                            <button className="confirm-btn" onClick={() => {
+                            <button className="confirm-btn" onClick={async () => {
                                 // Re-trigger upload logic skipping typo check
-                                dispatch(updateHistory(parsedData));
-                                alert("Ranking Uploaded to Session! (Not saved to disk)");
-                                setShowTypoConfirm(false);
-                                setInput('');
-                                setParsedData(null);
+                                try {
+                                    await dispatch(uploadRankingAsync({ tournamentData: parsedData, password })).unwrap();
+                                    alert("Ranking Uploaded Successfully to Database! 🚀");
+                                    setShowTypoConfirm(false);
+                                    setInput('');
+                                    setParsedData(null);
+                                } catch (err) {
+                                    alert(`Upload Failed: ${err.message}`);
+                                }
                             }}>Yes, Upload Anyway</button>
                         </div>
                     </div>

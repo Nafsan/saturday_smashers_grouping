@@ -1,12 +1,20 @@
-import React from 'react';
-import { Provider, useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
+import { fetchHistoryAsync } from './store/appSlice';
 import PlayerSelection from './components/PlayerSelection';
 import GroupDisplay from './components/GroupDisplay';
 import './styles/global.scss';
 
 const MainContent = () => {
-    const { isGroupsGenerated } = useSelector(state => state.app);
+    const dispatch = useDispatch();
+    const { isGroupsGenerated, status } = useSelector(state => state.app);
+
+    useEffect(() => {
+        if (status === 'idle') {
+            dispatch(fetchHistoryAsync());
+        }
+    }, [status, dispatch]);
 
     return (
         <div className="container">

@@ -1,0 +1,11 @@
+import requests
+
+try:
+    response = requests.get('http://localhost:8000/history')
+    print(f"Status Code: {response.status_code}")
+    if response.status_code == 200:
+        print(response.json())
+    else:
+        print(response.text)
+except Exception as e:
+    print(f"Error: {e}")

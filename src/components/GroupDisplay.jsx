@@ -39,7 +39,16 @@ const GroupDisplay = () => {
             return;
         }
 
-        toPng(knockoutRef.current, { cacheBust: true, backgroundColor: '#0f172a', style: { padding: '20px' } })
+        const node = knockoutRef.current;
+        const config = {
+            cacheBust: true,
+            backgroundColor: '#0f172a',
+            style: { padding: '20px' },
+            width: node.scrollWidth + 40, // Add padding to width
+            height: node.scrollHeight + 40 // Add padding to height
+        };
+
+        toPng(node, config)
             .then((dataUrl) => {
                 const link = document.createElement('a');
                 link.download = `saturday-smashers-knockout-${new Date().toISOString().slice(0, 10)}.png`;

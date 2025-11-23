@@ -12,6 +12,10 @@ if not DATABASE_URL:
     print("WARNING: DATABASE_URL not set in .env")
     DATABASE_URL = "postgresql+asyncpg://user:password@localhost/dbname"
 
+# Fix for Render/Heroku which use postgres:// but SQLAlchemy needs postgresql+asyncpg://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+
 engine = create_async_engine(DATABASE_URL, echo=True)
 
 AsyncSessionLocal = sessionmaker(

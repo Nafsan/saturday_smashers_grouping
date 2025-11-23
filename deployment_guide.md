@@ -24,10 +24,10 @@ We will use [Render](https://render.com/) because it offers a free tier for both
 4.  **Name**: `saturday-smashers-api`.
 5.  **Region**: Same as your database.
 6.  **Branch**: `main`.
-7.  **Root Directory**: `.` (leave as is).
+7.  **Root Directory**: `backend` (This is important!)
 8.  **Runtime**: `Python 3`.
-9.  **Build Command**: `pip install -r backend/requirements.txt`
-10. **Start Command**: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+9.  **Build Command**: `pip install -r requirements.txt`
+10. **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 11. **Plan**: Free.
 12. **Environment Variables** (Scroll down to "Advanced"):
     *   Key: `DATABASE_URL`

@@ -1,0 +1,465 @@
+[
+  {
+    "id": "t_2025_11_22",
+    "date": "2025-11-22",
+    "ranks": [
+      {
+        "rank": 1,
+        "players": [
+          "Jubaer"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Showmik"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Dipro",
+          "Nafsan"
+        ]
+      },
+      {
+        "rank": 5,
+        "players": [
+          "Shammam",
+          "Riaz"
+        ]
+      },
+      {
+        "rank": 7,
+        "players": [
+          "Sameen"
+        ]
+      },
+      {
+        "rank": 8,
+        "players": [
+          "Nafiz"
+        ]
+      },
+      {
+        "rank": 9,
+        "players": [
+          "Eftekher",
+          "Ronie"
+        ]
+      },
+      {
+        "rank": 11,
+        "players": [
+          "Anwar",
+          "Chinmoy"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "t_2025_11_15",
+    "date": "2025-11-15",
+    "ranks": [
+      {
+        "rank": 1,
+        "players": [
+          "Nafsan"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Shammam"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Chinmoy",
+          "Sameen"
+        ]
+      },
+      {
+        "rank": 5,
+        "players": [
+          "Imran",
+          "Nafiz"
+        ]
+      },
+      {
+        "rank": 7,
+        "players": [
+          "Ahsan"
+        ]
+      },
+      {
+        "rank": 8,
+        "players": [
+          "Riaz"
+        ]
+      },
+      {
+        "rank": 9,
+        "players": [
+          "Anwar",
+          "Eftekhar"
+        ]
+      },
+      {
+        "rank": 11,
+        "players": [
+          "Arif",
+          "Ronie"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "t_2025_11_08",
+    "date": "2025-11-08",
+    "ranks": [
+      {
+        "rank": 1,
+        "players": [
+          "Abdullah"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Shujan"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Frank",
+          "Nafsan"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Sameen",
+          "Jubaer",
+          "Showmik",
+          "Imran"
+        ]
+      },
+      {
+        "rank": 9,
+        "players": [
+          "Chinmoy"
+        ]
+      },
+      {
+        "rank": 10,
+        "players": [
+          "Nafiz"
+        ]
+      },
+      {
+        "rank": 11,
+        "players": [
+          "Riaz",
+          "Hasan"
+        ]
+      },
+      {
+        "rank": 13,
+        "players": [
+          "Eftekher",
+          "Ronie"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "t_2025_11_01",
+    "date": "2025-11-01",
+    "ranks": [
+      {
+        "rank": 1,
+        "players": [
+          "Dipro"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Nafsan"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Jubaer",
+          "Shammam"
+        ]
+      },
+      {
+        "rank": 5,
+        "players": [
+          "Sameen",
+          "Showmik"
+        ]
+      },
+      {
+        "rank": 7,
+        "players": [
+          "Riaz"
+        ]
+      },
+      {
+        "rank": 8,
+        "players": [
+          "Auvi"
+        ]
+      },
+      {
+        "rank": 9,
+        "players": [
+          "Ronie",
+          "Eftekhar"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "t_2025_10_18",
+    "date": "2025-10-18",
+    "ranks": [
+      {
+        "rank": 1,
+        "players": [
+          "Abdullah"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Shammam"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Dipro",
+          "Nafsan"
+        ]
+      },
+      {
+        "rank": 5,
+        "players": [
+          "Showmik",
+          "Chinmoy"
+        ]
+      },
+      {
+        "rank": 7,
+        "players": [
+          "Imran"
+        ]
+      },
+      {
+        "rank": 8,
+        "players": [
+          "Riaz"
+        ]
+      },
+      {
+        "rank": 9,
+        "players": [
+          "Sameen",
+          "Nafiz"
+        ]
+      },
+      {
+        "rank": 11,
+        "players": [
+          "Ronie",
+          "Auvi"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "t_2025_10_01",
+    "date": "2025-10-01",
+    "ranks": [
+      {
+        "rank": 1,
+        "players": [
+          "Dipro"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Frank"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Nafsan",
+          "Nipon"
+        ]
+      },
+      {
+        "rank": 5,
+        "players": [
+          "Shammam",
+          "Rabbani"
+        ]
+      },
+      {
+        "rank": 7,
+        "players": [
+          "Fahim"
+        ]
+      },
+      {
+        "rank": 8,
+        "players": [
+          "Ahsan"
+        ]
+      },
+      {
+        "rank": 9,
+        "players": [
+          "Sameen",
+          "Chinmoy"
+        ]
+      },
+      {
+        "rank": 11,
+        "players": [
+          "Ronie",
+          "Eftekhar"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "t_2025_09_27",
+    "date": "2025-09-27",
+    "ranks": [
+      {
+        "rank": 1,
+        "players": [
+          "Frank"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Dipro"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Nafsan",
+          "Shammam"
+        ]
+      },
+      {
+        "rank": 5,
+        "players": [
+          "Rabbani",
+          "Imran",
+          "Chinmoy",
+          "Hasan"
+        ]
+      },
+      {
+        "rank": 9,
+        "players": [
+          "Riaz"
+        ]
+      },
+      {
+        "rank": 10,
+        "players": [
+          "Arif"
+        ]
+      },
+      {
+        "rank": 11,
+        "players": [
+          "Showmik",
+          "Ahsan"
+        ]
+      },
+      {
+        "rank": 13,
+        "players": [
+          "Eftekhar",
+          "Ronie"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "t_2025_09_13",
+    "date": "2025-09-13",
+    "ranks": [
+      {
+        "rank": 1,
+        "players": [
+          "Dipro"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Frank"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Fahim",
+          "Riaz"
+        ]
+      },
+      {
+        "rank": 5,
+        "players": [
+          "Abdullah",
+          "Sameen",
+          "Shammam",
+          "Showmik"
+        ]
+      },
+      {
+        "rank": 9,
+        "players": [
+          "Nafiz"
+        ]
+      },
+      {
+        "rank": 10,
+        "players": [
+          "Nafsan"
+        ]
+      },
+      {
+        "rank": 11,
+        "players": [
+          "Chinmoy",
+          "Hasan"
+        ]
+      },
+      {
+        "rank": 13,
+        "players": [
+          "Eftekhar",
+          "Ronie"
+        ]
+      }
+    ]
+  }
+]

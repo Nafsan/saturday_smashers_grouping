@@ -98,3 +98,54 @@ async def add_tournament(
 
     await db.commit()
     return {"message": "Tournament added successfully"}
+@app.put("/history/{tournament_id}")
+async def update_tournament(
+    tournament_id: str,
+    tournament: schemas.TournamentCreate,
+    password: str,
+    db: AsyncSession = Depends(get_db)
+):
+    if password != "ss_admin_panel":
+        raise HTTPException(status_code=403, detail="Invalid password")
+
+    # Check if exists
+    result = await db.execute(select(models.Tournament).where(models.Tournament.id == tournament_id))
+    db_tournament = result.scalar()
+    
+    if not db_tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+
+    # Update Date
+    db_tournament.date = tournament.date
+    
+    # Delete existing rank groups (cascade should handle associations if configured, but let's be explicit)
+    # Actually, we need to delete RankGroups associated with this tournament.
+    # The association table rank_group_players will be cleaned up if we delete RankGroup.
+    
+    # Fetch existing rank groups to delete them
+    result = await db.execute(select(models.RankGroup).where(models.RankGroup.tournament_id == tournament_id))
+    existing_rgs = result.scalars().all()
+    
+    for rg in existing_rgs:
+        await db.delete(rg)
+        
+    # Re-create Ranks
+    for rg in tournament.ranks:
+        db_rg = models.RankGroup(rank=rg.rank, rating=rg.rating, tournament_id=tournament_id)
+        
+        for player_name in rg.players:
+            # Find or Create Player
+            result = await db.execute(select(models.Player).where(models.Player.name == player_name))
+            player = result.scalar()
+            
+            if not player:
+                player = models.Player(name=player_name)
+                db.add(player)
+                await db.flush()
+            
+            db_rg.players.append(player)
+            
+        db.add(db_rg)
+
+    await db.commit()
+    return {"message": "Tournament updated successfully"}

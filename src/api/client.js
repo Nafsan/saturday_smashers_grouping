@@ -29,4 +29,11 @@ export const addTournament = async (tournamentData, password) => {
     return response.data;
 };
 
+export const updateTournament = async (id, tournamentData, password) => {
+    const response = await client.put(`/history/${id}`, tournamentData, {
+        params: { password }
+    });
+    return response.data;
+};
+
 export default client;

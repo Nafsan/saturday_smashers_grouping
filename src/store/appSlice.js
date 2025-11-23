@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getAllPlayers, calculateRankings } from '../logic/ranking';
 import { generateGroups } from '../logic/grouping';
-import { fetchHistory, addTournament } from '../api/client';
+import { fetchHistory, addTournament, updateTournament } from '../api/client';
 
 // Async Thunks
 export const fetchHistoryAsync = createAsyncThunk(
@@ -17,6 +17,14 @@ export const uploadRankingAsync = createAsyncThunk(
     async ({ tournamentData, password }, { dispatch }) => {
         await addTournament(tournamentData, password);
         return tournamentData; // Return data to update state optimistically or just trigger refetch
+    }
+);
+
+export const updateRankingAsync = createAsyncThunk(
+    'app/updateRanking',
+    async ({ id, tournamentData, password }, { dispatch }) => {
+        await updateTournament(id, tournamentData, password);
+        return { id, tournamentData };
     }
 );
 
@@ -99,6 +107,21 @@ export const appSlice = createSlice({
                 // Update players
                 const newPlayers = new Set(state.allPlayers);
                 newTournament.ranks.forEach(r => {
+                    r.players.forEach(p => newPlayers.add(p));
+                });
+                state.allPlayers = Array.from(newPlayers).sort();
+                state.rankedPlayers = [];
+            })
+            .addCase(updateRankingAsync.fulfilled, (state, action) => {
+                const { id, tournamentData } = action.payload;
+                const index = state.history.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    state.history[index] = tournamentData;
+                }
+
+                // Re-calculate players just in case
+                const newPlayers = new Set(state.allPlayers);
+                tournamentData.ranks.forEach(r => {
                     r.players.forEach(p => newPlayers.add(p));
                 });
                 state.allPlayers = Array.from(newPlayers).sort();

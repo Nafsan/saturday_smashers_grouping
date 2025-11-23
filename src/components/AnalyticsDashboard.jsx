@@ -3,9 +3,10 @@ import { useSelector } from 'react-redux';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import Select from 'react-select';
+import { Edit } from 'lucide-react';
 import './AnalyticsDashboard.scss';
 
-const AnalyticsDashboard = () => {
+const AnalyticsDashboard = ({ onEdit }) => {
     const { history, allPlayers } = useSelector(state => state.app);
     const [showAllHistory, setShowAllHistory] = useState(false);
     const [selectedGraphPlayers, setSelectedGraphPlayers] = useState([]);
@@ -172,7 +173,18 @@ const AnalyticsDashboard = () => {
 
                         return (
                             <div key={t.id} className="history-item">
-                                <div className="date">{t.date}</div>
+                                <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                    <div className="date">{t.date}</div>
+                                    {onEdit && (
+                                        <button
+                                            onClick={() => onEdit(t)}
+                                            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                                            title="Edit Tournament"
+                                        >
+                                            <Edit size={14} />
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="ranks-preview">
                                     {ranksToShow.map(r => (
                                         <span key={r.rank} className="rank-pill">

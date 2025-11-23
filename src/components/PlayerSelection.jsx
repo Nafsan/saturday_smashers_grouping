@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { togglePlayerSelection, generateGroupsAction, setTournamentDate, addNewPlayer } from '../store/appSlice';
 import { Calendar, UserPlus, Trophy } from 'lucide-react';
 import AnalyticsDashboard from './AnalyticsDashboard';
-import RankParser from './RankParser';
+import RankSubmission from './RankSubmission';
 import GlobalRanking from './GlobalRanking';
 import './PlayerSelection.scss';
 
@@ -12,6 +12,13 @@ const PlayerSelection = () => {
     const dispatch = useDispatch();
     const [newPlayerName, setNewPlayerName] = useState('');
     const [showGlobalRanking, setShowGlobalRanking] = useState(false);
+    const [editingTournament, setEditingTournament] = useState(null);
+
+    const handleEditTournament = (tournament) => {
+        setEditingTournament(tournament);
+        // Scroll to bottom to see the form
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    };
 
     const handleGenerate = () => {
         if (selectedPlayers.length < 2) {
@@ -80,8 +87,11 @@ const PlayerSelection = () => {
                 Generate Groups
             </button>
 
-            <AnalyticsDashboard />
-            <RankParser />
+            <AnalyticsDashboard onEdit={handleEditTournament} />
+            <RankSubmission
+                initialData={editingTournament}
+                onCancel={() => setEditingTournament(null)}
+            />
 
             {showGlobalRanking && (
                 <GlobalRanking onClose={() => setShowGlobalRanking(false)} />

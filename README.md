@@ -51,6 +51,28 @@ A modern web application designed to streamline Saturday table tennis sessions b
 
 4. Open your browser and navigate to `http://localhost:5173` (or the port shown in your terminal).
 
+## 🚀 Deployment
+
+This project is configured for **Free Automated Deployment** via GitHub Pages.
+
+### How to Deploy
+
+1.  **Push to GitHub**: Simply push your code to the `main` branch of your GitHub repository.
+    ```bash
+    git add .
+    git commit -m "Ready for deployment"
+    git push origin main
+    ```
+
+2.  **Enable GitHub Pages**:
+    - Go to your repository **Settings** on GitHub.
+    - Click on **Pages** in the left sidebar.
+    - Under **Build and deployment** > **Source**, select **GitHub Actions**.
+    - The deployment will start automatically. You can monitor it in the **Actions** tab.
+
+3.  **Update Base URL**:
+    - If your repository name is NOT `saturday-smashers-grouping`, open `vite.config.js` and update the `base` property to match your repository name: `base: '/your-repo-name/'`.
+
 ## 📱 Usage Guide
 
 1. **Player Selection**: 

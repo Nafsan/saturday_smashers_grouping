@@ -60,6 +60,40 @@ async def get_history(db: AsyncSession = Depends(get_db)):
         
     return response
 
+def validate_tournament_rules(tournament: schemas.TournamentCreate):
+    all_players = []
+    ranks_present = {}
+
+    for rg in tournament.ranks:
+        ranks_present[rg.rank] = len(rg.players)
+        all_players.extend(rg.players)
+
+        # Max players validation
+        if rg.rank in [3, 11] and len(rg.players) != 2:
+            raise HTTPException(status_code=400, detail=f"Rank {rg.rank} (Semi-Finals) must have exactly 2 players.")
+        if rg.rank in [5, 13] and len(rg.players) > 4:
+            raise HTTPException(status_code=400, detail=f"Rank {rg.rank} (Quarter-Finals) cannot have more than 4 players.")
+
+    # Unique players validation
+    if len(all_players) != len(set(all_players)):
+        raise HTTPException(status_code=400, detail="A player cannot be present multiple times in the same tournament.")
+
+    # Mandatory ranks validation
+    # Cup: 1 (Champ), 2 (Runner), 3 (Semis)
+    # Plate: 9 (Champ), 10 (Runner), 11 (Semis)
+    mandatory_ranks = {
+        1: "Cup Champion",
+        2: "Cup Runner Up",
+        3: "Cup Semi Finalists",
+        9: "Plate Champion",
+        10: "Plate Runner Up",
+        11: "Plate Semi Finalists"
+    }
+
+    for rank, name in mandatory_ranks.items():
+        if rank not in ranks_present or ranks_present[rank] == 0:
+            raise HTTPException(status_code=400, detail=f"{name} is mandatory.")
+
 @app.post("/history", status_code=status.HTTP_201_CREATED)
 async def add_tournament(
     tournament: schemas.TournamentCreate, 
@@ -68,6 +102,8 @@ async def add_tournament(
 ):
     if password != "ss_admin_panel":
         raise HTTPException(status_code=403, detail="Invalid password")
+
+    validate_tournament_rules(tournament)
 
     # Check if exists
     existing = await db.execute(select(models.Tournament).where(models.Tournament.id == tournament.id))
@@ -107,6 +143,8 @@ async def update_tournament(
 ):
     if password != "ss_admin_panel":
         raise HTTPException(status_code=403, detail="Invalid password")
+
+    validate_tournament_rules(tournament)
 
     # Check if exists
     result = await db.execute(select(models.Tournament).where(models.Tournament.id == tournament_id))
@@ -149,3 +187,33 @@ async def update_tournament(
 
     await db.commit()
     return {"message": "Tournament updated successfully"}
+
+@app.delete("/history/{tournament_id}")
+async def delete_tournament(
+    tournament_id: str,
+    password: str,
+    db: AsyncSession = Depends(get_db)
+):
+    if password != "ss_admin_panel":
+        raise HTTPException(status_code=403, detail="Invalid password")
+
+    # Check if exists
+    result = await db.execute(select(models.Tournament).where(models.Tournament.id == tournament_id))
+    db_tournament = result.scalar()
+    
+    if not db_tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+
+    # Delete RankGroups associated with this tournament
+    # (Explicitly deleting them, though cascade might handle it depending on DB setup)
+    result = await db.execute(select(models.RankGroup).where(models.RankGroup.tournament_id == tournament_id))
+    existing_rgs = result.scalars().all()
+    
+    for rg in existing_rgs:
+        await db.delete(rg)
+
+    # Delete the tournament itself
+    await db.delete(db_tournament)
+    
+    await db.commit()
+    return {"message": "Tournament deleted successfully"}

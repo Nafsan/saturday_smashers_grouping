@@ -49,6 +49,11 @@
             }
         }
 
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
         .secondary-btn {
             display: flex;
             align-items: center;

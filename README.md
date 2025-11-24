@@ -16,20 +16,22 @@ A modern web application designed to streamline Saturday table tennis sessions b
 
 ## 🛠️ Tech Stack
 
-- **Framework**: [React 18](https://reactjs.org/)
-- **Build Tool**: [Vite](https://vitejs.dev/)
-- **State Management**: [Redux Toolkit](https://redux-toolkit.js.org/)
-- **Styling**: SCSS (Sass)
+- **Frontend**: [React 18](https://reactjs.org/), [Vite](https://vitejs.dev/), [Redux Toolkit](https://redux-toolkit.js.org/), SCSS
+- **Backend**: [FastAPI](https://fastapi.tiangolo.com/) (Python)
+- **Database**: [PostgreSQL](https://www.postgresql.org/)
+- **Deployment**: 
+  - Frontend: GitHub Pages
+  - Backend & DB: [Render](https://render.com/)
 - **Visualization**: [Recharts](https://recharts.org/)
-- **Components**: [React Select](https://react-select.com/), [Lucide React](https://lucide.dev/)
-- **Utilities**: [html-to-image](https://github.com/bubkoo/html-to-image)
+- **Components**: [Material UI](https://mui.com/), [React Select](https://react-select.com/), [Lucide React](https://lucide.dev/)
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- npm or yarn
+- Node.js (v16+)
+- Python 3.9+
+- PostgreSQL (optional, for local backend dev)
 
 ### Installation
 
@@ -39,66 +41,51 @@ A modern web application designed to streamline Saturday table tennis sessions b
    cd saturday-smashers-grouping
    ```
 
-2. **Install dependencies**
+2. **Frontend Setup**
    ```bash
    npm install
-   ```
-
-3. **Start the development server**
-   ```bash
    npm run dev
    ```
 
-4. Open your browser and navigate to `http://localhost:5173` (or the port shown in your terminal).
+3. **Backend Setup** (Optional, if running locally)
+   ```bash
+   cd backend
+   python -m venv venv
+   source venv/bin/activate  # or venv\Scripts\activate on Windows
+   pip install -r requirements.txt
+   
+   # Set up .env file with DATABASE_URL
+   uvicorn main:app --reload
+   ```
+
+4. Open your browser and navigate to `http://localhost:5173`.
 
 ## 🚀 Deployment
 
-This project is configured for **Free Automated Deployment** via GitHub Pages.
+### Backend (Render)
+1. Create a new **Web Service** on Render connected to your repo.
+2. Set **Root Directory** to `backend`.
+3. Set **Build Command** to `pip install -r requirements.txt`.
+4. Set **Start Command** to `uvicorn main:app --host 0.0.0.0 --port $PORT`.
+5. Add a **PostgreSQL** database on Render and link it.
+6. Set `DATABASE_URL` environment variable.
 
-### How to Deploy
-
-1.  **Push to GitHub**: Simply push your code to the `main` branch of your GitHub repository.
-    ```bash
-    git add .
-    git commit -m "Ready for deployment"
-    git push origin main
-    ```
-
-2.  **Enable GitHub Pages**:
-    - Go to your repository **Settings** on GitHub.
-    - Click on **Pages** in the left sidebar.
-    - Under **Build and deployment** > **Source**, select **GitHub Actions**.
-    - The deployment will start automatically. You can monitor it in the **Actions** tab.
-
-3.  **Update Base URL**:
-    - If your repository name is NOT `saturday-smashers-grouping`, open `vite.config.js` and update the `base` property to match your repository name: `base: '/your-repo-name/'`.
+### Frontend (GitHub Pages)
+1. Push to `main` branch.
+2. Ensure `VITE_API_URL` is set in GitHub Actions secrets pointing to your Render backend URL.
+3. GitHub Actions will automatically deploy to GitHub Pages.
 
 ## 📱 Usage Guide
 
-1. **Player Selection**: 
-   - Select players participating in today's session from the list.
-   - Use the "Tournament Date" picker to set the date.
-   - Add temporary players if they are not in the database.
-
-2. **Generate Groups**: 
-   - Click **"Generate Groups"** to run the balancing algorithm.
-   - The app will display Group A and Group B with player rankings and averages.
-
-3. **Knockout Phase**: 
-   - Scroll down to see the generated Cup and Plate knockout brackets.
-   - The brackets automatically adjust based on the number of players (10-16).
-
-4. **Export & Share**: 
-   - Use the **"Export Groups"** button to save the group list image.
-   - Use the **"Export Bracket"** button to save the knockout tree image.
-
-5. **Analytics**: 
-   - Scroll down on the main screen to view the Analytics Dashboard.
-   - Search and select players to compare their ranking history on the graph.
+1. **Player Selection**: Select players for the session.
+2. **Generate Groups**: Create balanced groups based on rankings.
+3. **Knockout Phase**: View generated Cup and Plate brackets.
+4. **Submit Results**: Use the "Submit Results" button to upload tournament outcomes (Password Protected).
+5. **Analytics**: View historical trends and head-to-head comparisons.
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/yourusername/saturday-smashers-grouping/issues).
+Contributions, issues, and feature requests are welcome!
 
 ## 📄 License
 

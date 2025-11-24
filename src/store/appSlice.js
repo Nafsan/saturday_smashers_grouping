@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getAllPlayers, calculateRankings } from '../logic/ranking';
 import { generateGroups } from '../logic/grouping';
-import { fetchHistory, addTournament, updateTournament } from '../api/client';
+import { fetchHistory, addTournament, updateTournament, deleteTournament } from '../api/client';
 
 // Async Thunks
 export const fetchHistoryAsync = createAsyncThunk(
@@ -25,6 +25,14 @@ export const updateRankingAsync = createAsyncThunk(
     async ({ id, tournamentData, password }, { dispatch }) => {
         await updateTournament(id, tournamentData, password);
         return { id, tournamentData };
+    }
+);
+
+export const deleteRankingAsync = createAsyncThunk(
+    'app/deleteRanking',
+    async ({ id, password }, { dispatch }) => {
+        await deleteTournament(id, password);
+        return id;
     }
 );
 
@@ -125,6 +133,13 @@ export const appSlice = createSlice({
                     r.players.forEach(p => newPlayers.add(p));
                 });
                 state.allPlayers = Array.from(newPlayers).sort();
+                state.rankedPlayers = [];
+            })
+            .addCase(deleteRankingAsync.fulfilled, (state, action) => {
+                const id = action.payload;
+                state.history = state.history.filter(t => t.id !== id);
+                // We could re-calculate allPlayers here, but it's complex to know if a player was ONLY in that tournament.
+                // For now, we keep the player list as is, which is safe.
                 state.rankedPlayers = [];
             });
     },

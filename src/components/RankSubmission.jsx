@@ -14,12 +14,14 @@ import {
     Chip,
     IconButton
 } from '@mui/material';
-import { Upload, Lock, AlertTriangle, X } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 import './RankSubmission.scss';
 
-const RankSubmission = ({ initialData, onCancel }) => {
+const RankSubmission = ({ open, onClose, initialData }) => {
     const dispatch = useDispatch();
     const { allPlayers } = useSelector(state => state.app);
+    const { successNotification, errorNotification, warningNotification } = useToast();
 
     // Form State
     const [cupChampion, setCupChampion] = useState(null);
@@ -54,8 +56,19 @@ const RankSubmission = ({ initialData, onCancel }) => {
             setPlateRunnerUp(findPlayers(6)[0] || null);
             setPlateSemis(findPlayers(7));
             setPlateQuarters(findPlayers(8));
+        } else {
+            // Reset form if not editing
+            setCupChampion(null);
+            setCupRunnerUp(null);
+            setCupSemis([]);
+            setCupQuarters([]);
+            setPlateChampion(null);
+            setPlateRunnerUp(null);
+            setPlateSemis([]);
+            setPlateQuarters([]);
+            setTournamentDate(new Date().toISOString().split('T')[0]);
         }
-    }, [initialData]);
+    }, [initialData, open]);
 
     // Upload State
     const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -63,11 +76,46 @@ const RankSubmission = ({ initialData, onCancel }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = () => {
-        // Basic Validation
-        if (!cupChampion || !cupRunnerUp) {
-            alert("Cup Champion and Runner Up are required!");
+        // 1. Mandatory Fields Validation
+        if (!cupChampion || !cupRunnerUp || cupSemis.length === 0) {
+            warningNotification("Cup Champion, Runner Up, and Semi Finalists are mandatory!");
             return;
         }
+        if (!plateChampion || !plateRunnerUp || plateSemis.length === 0) {
+            warningNotification("Plate Champion, Runner Up, and Semi Finalists are mandatory!");
+            return;
+        }
+
+        // 2. Max Players Validation
+        if (cupSemis.length !== 2) {
+            warningNotification("Cup Semi Finals must have exactly 2 players.");
+            return;
+        }
+        if (plateSemis.length !== 2) {
+            warningNotification("Plate Semi Finals must have exactly 2 players.");
+            return;
+        }
+        if (cupQuarters.length > 4) {
+            warningNotification("Cup Quarter Finals cannot have more than 4 players.");
+            return;
+        }
+        if (plateQuarters.length > 4) {
+            warningNotification("Plate Quarter Finals cannot have more than 4 players.");
+            return;
+        }
+
+        // 3. Unique Players Validation
+        const allSelectedPlayers = [
+            cupChampion, cupRunnerUp, ...cupSemis, ...cupQuarters,
+            plateChampion, plateRunnerUp, ...plateSemis, ...plateQuarters
+        ].filter(Boolean); // Remove nulls
+
+        const uniquePlayers = new Set(allSelectedPlayers);
+        if (uniquePlayers.size !== allSelectedPlayers.length) {
+            warningNotification("A player cannot be selected multiple times!");
+            return;
+        }
+
         setShowPasswordModal(true);
     };
 
@@ -95,7 +143,7 @@ const RankSubmission = ({ initialData, onCancel }) => {
 
     const confirmUpload = async () => {
         if (password !== "ss_admin_panel") {
-            alert("Incorrect Password!");
+            errorNotification("Incorrect Password!");
             return;
         }
 
@@ -104,154 +152,176 @@ const RankSubmission = ({ initialData, onCancel }) => {
             const data = buildTournamentData();
             if (initialData) {
                 await dispatch(updateRankingAsync({ id: initialData.id, tournamentData: data, password })).unwrap();
-                alert("Ranking Updated Successfully! 🔄");
-                if (onCancel) onCancel();
+                successNotification("Ranking Updated Successfully! 🔄");
             } else {
                 await dispatch(uploadRankingAsync({ tournamentData: data, password })).unwrap();
-                alert("Ranking Uploaded Successfully! 🏆");
-
-                // Reset Form
-                setCupChampion(null);
-                setCupRunnerUp(null);
-                setCupSemis([]);
-                setCupQuarters([]);
-                setPlateChampion(null);
-                setPlateRunnerUp(null);
-                setPlateSemis([]);
-                setPlateQuarters([]);
-                setPassword('');
+                successNotification("Ranking Uploaded Successfully! 🏆");
             }
             setShowPasswordModal(false);
+            setPassword('');
+            if (onClose) onClose();
         } catch (err) {
-            alert(`Upload Failed: ${err.message}`);
+            errorNotification(`Upload Failed: ${err.message}`);
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <div className="rank-submission">
-            <div className="header">
-                <h3><Upload size={20} /> {initialData ? 'Update Tournament Results' : 'Submit Tournament Results'}</h3>
-                {initialData && (
-                    <IconButton onClick={onCancel} size="small" style={{ color: '#94a3b8' }}>
+        <>
+            <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth className="rank-submission-dialog">
+                <DialogTitle>
+                    {initialData ? 'Edit Tournament Results' : 'Submit Tournament Results'}
+                    <IconButton
+                        aria-label="close"
+                        onClick={onClose}
+                        sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 8,
+                            color: (theme) => theme.palette.grey[500],
+                        }}
+                    >
                         <X />
                     </IconButton>
-                )}
-                {!initialData && (
-                    <input
-                        type="date"
-                        value={tournamentDate}
-                        onChange={(e) => setTournamentDate(e.target.value)}
-                        className="date-input"
-                    />
-                )}
-            </div>
-
-            <div className="sections-container">
-                {/* CUP SECTION */}
-                <div className="section cup-section">
-                    <Typography variant="h6" className="section-title">🏆 Cup</Typography>
-
-                    <Box className="form-group">
-                        <Autocomplete
-                            options={allPlayers}
-                            value={cupChampion}
-                            onChange={(e, v) => setCupChampion(v)}
-                            renderInput={(params) => <TextField {...params} label="Champion" variant="filled" />}
-                        />
-                        <Autocomplete
-                            options={allPlayers}
-                            value={cupRunnerUp}
-                            onChange={(e, v) => setCupRunnerUp(v)}
-                            renderInput={(params) => <TextField {...params} label="Runner Up" variant="filled" />}
-                        />
-                        <Autocomplete
-                            multiple
-                            options={allPlayers}
-                            value={cupSemis}
-                            onChange={(e, v) => setCupSemis(v)}
-                            renderInput={(params) => <TextField {...params} label="Semi Finalists" variant="filled" />}
-                            renderTags={(value, getTagProps) =>
-                                value.map((option, index) => (
-                                    <Chip label={option} {...getTagProps({ index })} size="small" />
-                                ))
-                            }
-                        />
-                        <Autocomplete
-                            multiple
-                            options={allPlayers}
-                            value={cupQuarters}
-                            onChange={(e, v) => setCupQuarters(v)}
-                            renderInput={(params) => <TextField {...params} label="Quarter Finalists" variant="filled" />}
-                            renderTags={(value, getTagProps) =>
-                                value.map((option, index) => (
-                                    <Chip label={option} {...getTagProps({ index })} size="small" />
-                                ))
-                            }
+                </DialogTitle>
+                <DialogContent dividers>
+                    <Box sx={{ mb: 3 }}>
+                        <TextField
+                            label="Tournament Date"
+                            type="date"
+                            value={tournamentDate}
+                            onChange={(e) => setTournamentDate(e.target.value)}
+                            fullWidth
+                            InputLabelProps={{ shrink: true }}
                         />
                     </Box>
-                </div>
 
-                {/* PLATE SECTION */}
-                <div className="section plate-section">
-                    <Typography variant="h6" className="section-title">🛡️ Plate</Typography>
+                    <div className="rank-section">
+                        <Typography variant="h6" className="section-title cup" style={{ marginBottom: '1rem' }}>🏆 Cup Bracket</Typography>
 
-                    <Box className="form-group">
-                        <Autocomplete
-                            options={allPlayers}
-                            value={plateChampion}
-                            onChange={(e, v) => setPlateChampion(v)}
-                            renderInput={(params) => <TextField {...params} label="Champion" variant="filled" />}
-                        />
-                        <Autocomplete
-                            options={allPlayers}
-                            value={plateRunnerUp}
-                            onChange={(e, v) => setPlateRunnerUp(v)}
-                            renderInput={(params) => <TextField {...params} label="Runner Up" variant="filled" />}
-                        />
-                        <Autocomplete
-                            multiple
-                            options={allPlayers}
-                            value={plateSemis}
-                            onChange={(e, v) => setPlateSemis(v)}
-                            renderInput={(params) => <TextField {...params} label="Semi Finalists" variant="filled" />}
-                            renderTags={(value, getTagProps) =>
-                                value.map((option, index) => (
-                                    <Chip label={option} {...getTagProps({ index })} size="small" />
-                                ))
-                            }
-                        />
-                        <Autocomplete
-                            multiple
-                            options={allPlayers}
-                            value={plateQuarters}
-                            onChange={(e, v) => setPlateQuarters(v)}
-                            renderInput={(params) => <TextField {...params} label="Quarter Finalists" variant="filled" />}
-                            renderTags={(value, getTagProps) =>
-                                value.map((option, index) => (
-                                    <Chip label={option} {...getTagProps({ index })} size="small" />
-                                ))
-                            }
-                        />
-                    </Box>
-                </div>
-            </div>
+                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                            <Autocomplete
+                                options={allPlayers}
+                                value={cupChampion}
+                                onChange={(e, newValue) => setCupChampion(newValue)}
+                                renderInput={(params) => <TextField {...params} label="Cup Champion" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                            />
+                        </div>
 
-            <Button
-                variant="contained"
-                color={initialData ? "secondary" : "primary"}
-                fullWidth
-                onClick={handleSubmit}
-                className="submit-btn"
-                startIcon={<Upload />}
-            >
-                {initialData ? 'Update Results' : 'Upload Results'}
-            </Button>
+                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                            <Autocomplete
+                                options={allPlayers}
+                                value={cupRunnerUp}
+                                onChange={(e, newValue) => setCupRunnerUp(newValue)}
+                                renderInput={(params) => <TextField {...params} label="Cup Runner Up" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                            />
+                        </div>
 
-            {/* Password Dialog */}
+                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                            <Autocomplete
+                                multiple
+                                options={allPlayers}
+                                value={cupSemis}
+                                onChange={(e, newValue) => setCupSemis(newValue)}
+                                renderInput={(params) => <TextField {...params} label="Cup Semi Finalists" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                                renderTags={(value, getTagProps) =>
+                                    value.map((option, index) => (
+                                        <Chip variant="outlined" label={option} {...getTagProps({ index })} />
+                                    ))
+                                }
+                            />
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                            <Autocomplete
+                                multiple
+                                options={allPlayers}
+                                value={cupQuarters}
+                                onChange={(e, newValue) => setCupQuarters(newValue)}
+                                renderInput={(params) => <TextField {...params} label="Cup Quarter Finalists" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                                renderTags={(value, getTagProps) =>
+                                    value.map((option, index) => (
+                                        <Chip variant="outlined" label={option} {...getTagProps({ index })} />
+                                    ))
+                                }
+                            />
+                        </div>
+                    </div>
+
+                    <div className="rank-section">
+                        <Typography variant="h6" className="section-title plate" style={{ marginBottom: '1rem' }}>🍽️ Plate Bracket</Typography>
+
+                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                            <Autocomplete
+                                options={allPlayers}
+                                value={plateChampion}
+                                onChange={(e, newValue) => setPlateChampion(newValue)}
+                                renderInput={(params) => <TextField {...params} label="Plate Champion" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                            />
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                            <Autocomplete
+                                options={allPlayers}
+                                value={plateRunnerUp}
+                                onChange={(e, newValue) => setPlateRunnerUp(newValue)}
+                                renderInput={(params) => <TextField {...params} label="Plate Runner Up" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                            />
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                            <Autocomplete
+                                multiple
+                                options={allPlayers}
+                                value={plateSemis}
+                                onChange={(e, newValue) => setPlateSemis(newValue)}
+                                renderInput={(params) => <TextField {...params} label="Plate Semi Finalists" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                                renderTags={(value, getTagProps) =>
+                                    value.map((option, index) => (
+                                        <Chip variant="outlined" label={option} {...getTagProps({ index })} />
+                                    ))
+                                }
+                            />
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                            <Autocomplete
+                                multiple
+                                options={allPlayers}
+                                value={plateQuarters}
+                                onChange={(e, newValue) => setPlateQuarters(newValue)}
+                                renderInput={(params) => <TextField {...params} label="Plate Quarter Finalists" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                                renderTags={(value, getTagProps) =>
+                                    value.map((option, index) => (
+                                        <Chip variant="outlined" label={option} {...getTagProps({ index })} />
+                                    ))
+                                }
+                            />
+                        </div>
+                    </div>
+                </DialogContent>
+                <DialogActions sx={{ padding: '1.5rem' }}>
+                    <Button onClick={onClose} color="inherit" sx={{ marginRight: 'auto' }}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleSubmit}
+                        variant="contained"
+                        startIcon={<Upload size={18} />}
+                        sx={{
+                            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                            padding: '0.5rem 1.5rem',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        {initialData ? 'Update Results' : 'Upload Results'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             <Dialog open={showPasswordModal} onClose={() => setShowPasswordModal(false)}>
-                <DialogTitle>Admin Access</DialogTitle>
+                <DialogTitle>Admin Authentication</DialogTitle>
                 <DialogContent>
                     <TextField
                         autoFocus
@@ -267,11 +337,11 @@ const RankSubmission = ({ initialData, onCancel }) => {
                 <DialogActions>
                     <Button onClick={() => setShowPasswordModal(false)}>Cancel</Button>
                     <Button onClick={confirmUpload} variant="contained" disabled={isSubmitting}>
-                        {isSubmitting ? 'Uploading...' : 'Confirm'}
+                        {isSubmitting ? 'Verifying...' : 'Confirm'}
                     </Button>
                 </DialogActions>
             </Dialog>
-        </div>
+        </>
     );
 };
 

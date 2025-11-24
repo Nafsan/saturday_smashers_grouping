@@ -5,24 +5,31 @@ import { Calendar, UserPlus, Trophy } from 'lucide-react';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import RankSubmission from './RankSubmission';
 import GlobalRanking from './GlobalRanking';
+import { useToast } from '../context/ToastContext';
 import './PlayerSelection.scss';
 
 const PlayerSelection = () => {
     const { allPlayers, selectedPlayers, tournamentDate } = useSelector(state => state.app);
     const dispatch = useDispatch();
+    const { warningNotification } = useToast();
     const [newPlayerName, setNewPlayerName] = useState('');
     const [showGlobalRanking, setShowGlobalRanking] = useState(false);
+    const [isRankModalOpen, setIsRankModalOpen] = useState(false);
     const [editingTournament, setEditingTournament] = useState(null);
 
     const handleEditTournament = (tournament) => {
         setEditingTournament(tournament);
-        // Scroll to bottom to see the form
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        setIsRankModalOpen(true);
+    };
+
+    const handleOpenSubmit = () => {
+        setEditingTournament(null);
+        setIsRankModalOpen(true);
     };
 
     const handleGenerate = () => {
         if (selectedPlayers.length < 2) {
-            alert("Please select at least 2 players.");
+            warningNotification("Please select at least 2 players.");
             return;
         }
         dispatch(generateGroupsAction());
@@ -47,9 +54,14 @@ const PlayerSelection = () => {
                         onChange={(e) => dispatch(setTournamentDate(e.target.value))}
                     />
                 </div>
-                <button className="secondary-btn" onClick={() => setShowGlobalRanking(true)}>
-                    <Trophy size={18} /> Group Standings
-                </button>
+                <div className="action-buttons">
+                    <button className="secondary-btn" onClick={() => setShowGlobalRanking(true)}>
+                        <Trophy size={18} /> Group Standings
+                    </button>
+                    <button className="secondary-btn" onClick={handleOpenSubmit} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+                        <Trophy size={18} /> Submit Results
+                    </button>
+                </div>
             </div>
 
             <h2>Select Players</h2>
@@ -88,9 +100,14 @@ const PlayerSelection = () => {
             </button>
 
             <AnalyticsDashboard onEdit={handleEditTournament} />
+
             <RankSubmission
+                open={isRankModalOpen}
+                onClose={() => {
+                    setIsRankModalOpen(false);
+                    setEditingTournament(null);
+                }}
                 initialData={editingTournament}
-                onCancel={() => setEditingTournament(null)}
             />
 
             {showGlobalRanking && (

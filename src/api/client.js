@@ -36,4 +36,11 @@ export const updateTournament = async (id, tournamentData, password) => {
     return response.data;
 };
 
+export const deleteTournament = async (id, password) => {
+    const response = await client.delete(`/history/${id}`, {
+        params: { password }
+    });
+    return response.data;
+};
+
 export default client;

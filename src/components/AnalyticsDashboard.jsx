@@ -1,16 +1,27 @@
 import React, { useState, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import Select from 'react-select';
 import { Edit } from 'lucide-react';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
+import { deleteRankingAsync } from '../store/appSlice';
+import { useToast } from '../context/ToastContext';
 import './AnalyticsDashboard.scss';
 
 const AnalyticsDashboard = ({ onEdit }) => {
     const { history, allPlayers } = useSelector(state => state.app);
+    const dispatch = useDispatch();
+    const { successNotification, errorNotification } = useToast();
     const [showAllHistory, setShowAllHistory] = useState(false);
     const [selectedGraphPlayers, setSelectedGraphPlayers] = useState([]);
     const [expandedTournaments, setExpandedTournaments] = useState([]);
+
+    // Delete State
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [tournamentToDelete, setTournamentToDelete] = useState(null);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Prepare options for react-select
     const playerOptions = useMemo(() => {
@@ -29,6 +40,31 @@ const AnalyticsDashboard = ({ onEdit }) => {
         setExpandedTournaments(prev =>
             prev.includes(id) ? prev.filter(tId => tId !== id) : [...prev, id]
         );
+    };
+
+    const handleDeleteClick = (tournament) => {
+        setTournamentToDelete(tournament);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (deletePassword !== "ss_admin_panel") {
+            errorNotification("Incorrect Password!");
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            await dispatch(deleteRankingAsync({ id: tournamentToDelete.id, password: deletePassword })).unwrap();
+            successNotification("Tournament Deleted Successfully!");
+            setShowDeleteModal(false);
+            setTournamentToDelete(null);
+            setDeletePassword('');
+        } catch (err) {
+            errorNotification(`Delete Failed: ${err.message}`);
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     // Custom styles for react-select to match dark theme
@@ -175,15 +211,24 @@ const AnalyticsDashboard = ({ onEdit }) => {
                             <div key={t.id} className="history-item">
                                 <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                                     <div className="date">{t.date}</div>
-                                    {onEdit && (
+                                    <div className="actions" style={{ display: 'flex', gap: '8px' }}>
+                                        {onEdit && (
+                                            <button
+                                                onClick={() => onEdit(t)}
+                                                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                                                title="Edit Tournament"
+                                            >
+                                                <Edit size={14} />
+                                            </button>
+                                        )}
                                         <button
-                                            onClick={() => onEdit(t)}
-                                            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
-                                            title="Edit Tournament"
+                                            onClick={() => handleDeleteClick(t)}
+                                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                                            title="Delete Tournament"
                                         >
-                                            <Edit size={14} />
+                                            <Trash2 size={14} />
                                         </button>
-                                    )}
+                                    </div>
                                 </div>
                                 <div className="ranks-preview">
                                     {ranksToShow.map(r => (
@@ -220,6 +265,32 @@ const AnalyticsDashboard = ({ onEdit }) => {
                     </button>
                 )}
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                    <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>
+                        Are you sure you want to delete the tournament from <strong>{tournamentToDelete?.date}</strong>? This action cannot be undone.
+                    </p>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Admin Password"
+                        type="password"
+                        fullWidth
+                        variant="outlined"
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+                    <Button onClick={confirmDelete} color="error" variant="contained" disabled={isDeleting}>
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

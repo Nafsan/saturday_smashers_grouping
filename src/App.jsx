@@ -4,7 +4,46 @@ import { store } from './store/store';
 import { fetchHistoryAsync } from './store/appSlice';
 import PlayerSelection from './components/PlayerSelection';
 import GroupDisplay from './components/GroupDisplay';
+import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
+import { ToastProvider } from './context/ToastContext';
 import './styles/global.scss';
+
+// Create a custom dark theme matching the global SCSS variables
+const darkTheme = createTheme({
+    palette: {
+        mode: 'dark',
+        primary: {
+            main: '#38bdf8', // --accent-primary
+        },
+        secondary: {
+            main: '#818cf8', // --accent-secondary
+        },
+        background: {
+            default: '#0f172a', // --bg-primary
+            paper: '#1e293b',   // --bg-secondary
+        },
+        text: {
+            primary: '#f8fafc', // --text-primary
+            secondary: '#94a3b8', // --text-secondary
+        },
+        success: {
+            main: '#4ade80', // --accent-success
+        },
+    },
+    typography: {
+        fontFamily: "'Inter', system-ui, sans-serif",
+    },
+    components: {
+        MuiDialog: {
+            styleOverrides: {
+                paper: {
+                    backgroundColor: '#334155', // --bg-card for dialogs to stand out
+                    backgroundImage: 'none',
+                }
+            }
+        }
+    }
+});
 
 const MainContent = () => {
     const dispatch = useDispatch();
@@ -34,7 +73,12 @@ const MainContent = () => {
 function App() {
     return (
         <Provider store={store}>
-            <MainContent />
+            <ThemeProvider theme={darkTheme}>
+                <CssBaseline />
+                <ToastProvider>
+                    <MainContent />
+                </ToastProvider>
+            </ThemeProvider>
         </Provider>
     );
 }

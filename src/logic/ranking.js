@@ -3,9 +3,10 @@
  * 
  * @param {Array} history - The full tournament history from JSON.
  * @param {Array<string>} activePlayers - List of player names playing this week.
+ * @param {Array<{name: string, initialRank: number}>} temporaryPlayers - Temporary players with initial ranks.
  * @returns {Array} Sorted list of players with their stats.
  */
-export const calculateRankings = (history, activePlayers) => {
+export const calculateRankings = (history, activePlayers, temporaryPlayers = []) => {
     // 1. Flatten history into a map of Player -> List of Ranks
     // We assume history is sorted by date descending (newest first). 
     // If not, we should sort it first.
@@ -13,13 +14,20 @@ export const calculateRankings = (history, activePlayers) => {
 
     const playerStats = {};
 
+    // Create a map of temporary players for quick lookup
+    const tempPlayerMap = {};
+    temporaryPlayers.forEach(tp => {
+        tempPlayerMap[tp.name] = tp.initialRank;
+    });
+
     // Initialize stats for active players
     activePlayers.forEach(player => {
         playerStats[player] = {
             name: player,
             ranks: [],
             average: 0,
-            playedCount: 0
+            playedCount: 0,
+            isTemporary: tempPlayerMap[player] !== undefined
         };
     });
 
@@ -37,15 +45,21 @@ export const calculateRankings = (history, activePlayers) => {
 
     // Calculate Averages
     Object.values(playerStats).forEach(stat => {
-        stat.playedCount = stat.ranks.length;
-        // Take last 5 (which are the first 5 in our array since we sorted history desc)
-        const recentRanks = stat.ranks.slice(0, 5);
-
-        if (recentRanks.length > 0) {
-            const sum = recentRanks.reduce((a, b) => a + b, 0);
-            stat.average = sum / recentRanks.length;
+        // If this is a temporary player, use their initial rank
+        if (stat.isTemporary) {
+            stat.average = tempPlayerMap[stat.name];
+            stat.playedCount = 0;
         } else {
-            stat.average = 999; // No games played? Rank them last.
+            stat.playedCount = stat.ranks.length;
+            // Take last 5 (which are the first 5 in our array since we sorted history desc)
+            const recentRanks = stat.ranks.slice(0, 5);
+
+            if (recentRanks.length > 0) {
+                const sum = recentRanks.reduce((a, b) => a + b, 0);
+                stat.average = sum / recentRanks.length;
+            } else {
+                stat.average = 999; // No games played? Rank them last.
+            }
         }
     });
 

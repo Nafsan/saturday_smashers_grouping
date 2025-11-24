@@ -45,6 +45,7 @@ const initialState = {
     isGroupsGenerated: false,
     tournamentDate: new Date().toISOString().split('T')[0],
     customPlayers: [],
+    temporaryPlayers: [], // { name, initialRank }
     status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null
 };
@@ -63,11 +64,11 @@ export const appSlice = createSlice({
             state.rankedPlayers = [];
         },
         calculateRanks: (state) => {
-            state.rankedPlayers = calculateRankings(state.history, state.selectedPlayers);
+            state.rankedPlayers = calculateRankings(state.history, state.selectedPlayers, state.temporaryPlayers);
         },
         generateGroupsAction: (state) => {
             if (state.rankedPlayers.length === 0) {
-                state.rankedPlayers = calculateRankings(state.history, state.selectedPlayers);
+                state.rankedPlayers = calculateRankings(state.history, state.selectedPlayers, state.temporaryPlayers);
             }
             const { groupA, groupB } = generateGroups(state.rankedPlayers);
             state.groups = { groupA, groupB };
@@ -90,6 +91,26 @@ export const appSlice = createSlice({
                 state.selectedPlayers.push(name);
                 state.rankedPlayers = [];
             }
+        },
+        addTemporaryPlayer: (state, action) => {
+            const { name, initialRank } = action.payload;
+            if (!state.allPlayers.includes(name)) {
+                state.allPlayers.push(name);
+                state.allPlayers.sort();
+                state.temporaryPlayers.push({ name, initialRank });
+                state.selectedPlayers.push(name);
+                state.rankedPlayers = [];
+            }
+        },
+        clearDraftState: (state) => {
+            // Remove temporary players from allPlayers
+            const tempPlayerNames = state.temporaryPlayers.map(tp => tp.name);
+            state.allPlayers = state.allPlayers.filter(p => !tempPlayerNames.includes(p));
+
+            // Clear temporary players and selections
+            state.temporaryPlayers = [];
+            state.selectedPlayers = [];
+            state.rankedPlayers = [];
         }
     },
     extraReducers: (builder) => {
@@ -145,6 +166,6 @@ export const appSlice = createSlice({
     },
 });
 
-export const { togglePlayerSelection, calculateRanks, generateGroupsAction, resetGroups, setTournamentDate, addNewPlayer } = appSlice.actions;
+export const { togglePlayerSelection, calculateRanks, generateGroupsAction, resetGroups, setTournamentDate, addNewPlayer, addTemporaryPlayer, clearDraftState } = appSlice.actions;
 
 export default appSlice.reducer;

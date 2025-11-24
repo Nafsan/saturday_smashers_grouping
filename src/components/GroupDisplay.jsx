@@ -1,9 +1,10 @@
-import React, { useRef, useCallback, useMemo } from 'react';
+import React, { useRef, useCallback, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { generateGroupsAction, resetGroups } from '../store/appSlice';
+import { generateGroupsAction, resetGroups, clearDraftState } from '../store/appSlice';
 import { generateKnockoutFixtures } from '../logic/knockout';
 import { toPng } from 'html-to-image';
 import { Download, RefreshCw, ArrowLeft, Trophy, Medal } from 'lucide-react';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
 import './GroupDisplay.scss';
 
 const GroupDisplay = () => {
@@ -11,6 +12,7 @@ const GroupDisplay = () => {
     const dispatch = useDispatch();
     const exportRef = useRef(null);
     const knockoutRef = useRef(null);
+    const [showBackConfirmation, setShowBackConfirmation] = useState(false);
 
     const fixtures = useMemo(() => {
         const totalPlayers = groups.groupA.length + groups.groupB.length;
@@ -60,10 +62,20 @@ const GroupDisplay = () => {
             });
     }, [knockoutRef]);
 
+    const handleBackClick = () => {
+        setShowBackConfirmation(true);
+    };
+
+    const handleConfirmBack = () => {
+        dispatch(clearDraftState());
+        dispatch(resetGroups());
+        setShowBackConfirmation(false);
+    };
+
     return (
         <div className="group-display">
             <div className="actions-bar">
-                <button className="icon-btn" onClick={() => dispatch(resetGroups())}>
+                <button className="icon-btn" onClick={handleBackClick}>
                     <ArrowLeft size={20} /> Back
                 </button>
                 <div className="right-actions">
@@ -176,6 +188,24 @@ const GroupDisplay = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Back Confirmation Dialog */}
+            <Dialog open={showBackConfirmation} onClose={() => setShowBackConfirmation(false)}>
+                <DialogTitle>Discard Draft Changes?</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        All draft changes including selected players and temporary players will be lost. Are you sure you want to go back?
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowBackConfirmation(false)} color="inherit">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleConfirmBack} variant="contained" color="error">
+                        Discard & Go Back
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

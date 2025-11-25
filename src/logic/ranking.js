@@ -70,7 +70,12 @@ export const calculateRankings = (history, activePlayers, temporaryPlayers = [])
             return a.average - b.average;
         }
 
-        // 2. Tiebreaker: Compare Nth past ranks (6th, 7th, etc.)
+        // 2. If still tied, prefer the player who played more matches
+        if (a.playedCount !== b.playedCount) {
+            return b.playedCount - a.playedCount; // Higher count is better
+        }
+
+        // 3. Tiebreaker: Compare Nth past ranks (6th, 7th, etc.)
         // We start looking from index 5 (which is the 6th item)
         let i = 5;
         while (i < a.ranks.length && i < b.ranks.length) {
@@ -78,11 +83,6 @@ export const calculateRankings = (history, activePlayers, temporaryPlayers = [])
                 return a.ranks[i] - b.ranks[i];
             }
             i++;
-        }
-
-        // 3. If still tied, prefer the player who played more matches
-        if (a.playedCount !== b.playedCount) {
-            return b.playedCount - a.playedCount; // Higher count is better
         }
 
         // 4. If still tied (same average, same history, same match count), use random sorting

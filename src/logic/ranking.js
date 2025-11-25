@@ -80,13 +80,16 @@ export const calculateRankings = (history, activePlayers, temporaryPlayers = [])
             i++;
         }
 
-        // 3. If still tied, maybe prefer the one who played more games? 
-        // Or the one who played fewer? 
-        // User didn't specify, but usually more data is better. 
-        // Let's assume if one runs out of history, they are "worse" (higher rank) 
-        // to encourage playing? Or just keep them equal.
-        // Let's return 0 for now.
-        return 0;
+        // 3. If still tied, prefer the player who played more matches
+        if (a.playedCount !== b.playedCount) {
+            return b.playedCount - a.playedCount; // Higher count is better
+        }
+
+        // 4. If still tied (same average, same history, same match count), use random sorting
+        // Use a deterministic random based on player names to ensure consistency within a session
+        const hashA = a.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const hashB = b.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return (hashA % 2) - (hashB % 2); // Simple pseudo-random comparison
     });
 
     return sortedPlayers;

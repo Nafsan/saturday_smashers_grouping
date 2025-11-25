@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
 import { fetchHistoryAsync } from './store/appSlice';
@@ -49,9 +49,11 @@ const darkTheme = createTheme({
 const MainContent = () => {
     const dispatch = useDispatch();
     const { isGroupsGenerated, status } = useSelector(state => state.app);
+    const hasFetched = useRef(false);
 
     useEffect(() => {
-        if (status === 'idle') {
+        if (status === 'idle' && !hasFetched.current) {
+            hasFetched.current = true;
             dispatch(fetchHistoryAsync());
         }
     }, [status, dispatch]);

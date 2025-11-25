@@ -4,6 +4,7 @@ import { store } from './store/store';
 import { fetchHistoryAsync } from './store/appSlice';
 import PlayerSelection from './components/PlayerSelection';
 import GroupDisplay from './components/GroupDisplay';
+import LoadingSpinner from './components/LoadingSpinner';
 import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { ToastProvider } from './context/ToastContext';
 import './styles/global.scss';
@@ -64,7 +65,11 @@ const MainContent = () => {
             </header>
 
             <main>
-                {!isGroupsGenerated ? <PlayerSelection /> : <GroupDisplay />}
+                {status === 'loading' ? (
+                    <LoadingSpinner />
+                ) : (
+                    !isGroupsGenerated ? <PlayerSelection /> : <GroupDisplay />
+                )}
             </main>
         </div>
     );

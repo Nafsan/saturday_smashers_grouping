@@ -55,6 +55,8 @@ async def get_history(db: AsyncSession = Depends(get_db)):
         response.append({
             "id": t.id,
             "date": t.date,
+            "playlist_url": t.playlist_url,
+            "embed_url": t.embed_url,
             "ranks": ranks
         })
         
@@ -111,7 +113,12 @@ async def add_tournament(
         raise HTTPException(status_code=400, detail="Tournament ID already exists")
 
     # Create Tournament
-    db_tournament = models.Tournament(id=tournament.id, date=tournament.date)
+    db_tournament = models.Tournament(
+        id=tournament.id, 
+        date=tournament.date,
+        playlist_url=tournament.playlist_url,
+        embed_url=tournament.embed_url
+    )
     db.add(db_tournament)
     
     for rg in tournament.ranks:
@@ -153,8 +160,10 @@ async def update_tournament(
     if not db_tournament:
         raise HTTPException(status_code=404, detail="Tournament not found")
 
-    # Update Date
+    # Update Date and URLs
     db_tournament.date = tournament.date
+    db_tournament.playlist_url = tournament.playlist_url
+    db_tournament.embed_url = tournament.embed_url
     
     # Delete existing rank groups (cascade should handle associations if configured, but let's be explicit)
     # Actually, we need to delete RankGroups associated with this tournament.

@@ -32,6 +32,8 @@ class RankGroup(RankGroupBase):
 class TournamentBase(BaseModel):
     id: str
     date: date
+    playlist_url: Optional[str] = None
+    embed_url: Optional[str] = None
 
 class TournamentCreate(TournamentBase):
     ranks: List[RankGroupCreate]

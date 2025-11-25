@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { generateGroupsAction } from '../store/appSlice';
-import { Trophy, Sparkles, DollarSign, ExternalLink } from 'lucide-react';
+import { Trophy, Sparkles, DollarSign, ExternalLink, Youtube } from 'lucide-react';
 import { Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box } from '@mui/material';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import RankSubmission from './RankSubmission';
@@ -39,6 +39,10 @@ const PlayerSelection = () => {
         window.open('https://docs.google.com/spreadsheets/d/14YX5WOcggCMg38jENKCMr9AmhQac4dZrA3lRxaUhekQ/edit?usp=sharing', '_blank');
     };
 
+    const handleOpenYouTube = () => {
+        window.open('https://www.youtube.com/@PongTTT-bd', '_blank');
+    };
+
     return (
         <div className="player-selection">
             <div className="config-section">
@@ -52,6 +56,27 @@ const PlayerSelection = () => {
                     <button className="secondary-btn" onClick={handleOpenSubmit} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
                         <Trophy size={18} /> Submit Results
                     </button>
+                    <Tooltip
+                        title={
+                            <div style={{ textAlign: 'center', padding: '0.5rem' }}>
+                                <div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>Watch Tournament Videos!</div>
+                                <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Subscribe to PongTTT</div>
+                            </div>
+                        }
+                        arrow
+                        placement="bottom"
+                    >
+                        <button
+                            className="secondary-btn youtube-btn"
+                            onClick={handleOpenYouTube}
+                            style={{
+                                background: 'linear-gradient(135deg, #FF0000 0%, #CC0000 100%)',
+                                position: 'relative'
+                            }}
+                        >
+                            <Youtube size={18} /> YouTube Channel
+                        </button>
+                    </Tooltip>
                     <Tooltip
                         title={
                             <div style={{ textAlign: 'center', padding: '0.5rem' }}>

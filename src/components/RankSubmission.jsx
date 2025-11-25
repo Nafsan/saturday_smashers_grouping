@@ -35,6 +35,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
     const [plateQuarters, setPlateQuarters] = useState([]);
 
     const [tournamentDate, setTournamentDate] = useState(new Date().toISOString().split('T')[0]);
+    const [playlistUrl, setPlaylistUrl] = useState('');
+    const [embedUrl, setEmbedUrl] = useState('');
 
     // Populate form if editing
     useEffect(() => {
@@ -56,6 +58,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
             setPlateRunnerUp(findPlayers(6)[0] || null);
             setPlateSemis(findPlayers(7));
             setPlateQuarters(findPlayers(8));
+            setPlaylistUrl(initialData.playlist_url || '');
+            setEmbedUrl(initialData.embed_url || '');
         } else {
             // Reset form if not editing
             setCupChampion(null);
@@ -67,6 +71,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
             setPlateSemis([]);
             setPlateQuarters([]);
             setTournamentDate(new Date().toISOString().split('T')[0]);
+            setPlaylistUrl('');
+            setEmbedUrl('');
         }
     }, [initialData, open]);
 
@@ -137,6 +143,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
         return {
             id: initialData ? initialData.id : `t_${tournamentDate.replace(/-/g, '_')}`,
             date: tournamentDate,
+            playlist_url: playlistUrl || null,
+            embed_url: embedUrl || null,
             ranks: ranks
         };
     };
@@ -300,6 +308,38 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                             />
                         </div>
                     </div>
+
+                    {/* YouTube Fields */}
+                    <Box sx={{ mt: 4, mb: 2 }}>
+                        <Typography variant="h6" sx={{ mb: 2, color: '#FF0000', fontWeight: 'bold' }}>
+                            📺 YouTube Links (Optional)
+                        </Typography>
+
+                        <Box sx={{ mb: 2 }}>
+                            <TextField
+                                label="YouTube Playlist URL"
+                                type="url"
+                                value={playlistUrl}
+                                onChange={(e) => setPlaylistUrl(e.target.value)}
+                                fullWidth
+                                placeholder="https://www.youtube.com/playlist?list=..."
+                                helperText="Link to tournament video playlist"
+                            />
+                        </Box>
+
+                        <Box>
+                            <TextField
+                                label="YouTube Embed Code"
+                                multiline
+                                rows={3}
+                                value={embedUrl}
+                                onChange={(e) => setEmbedUrl(e.target.value)}
+                                fullWidth
+                                placeholder='<iframe width="560" height="315" src="https://www.youtube.com/embed/..." ...></iframe>'
+                                helperText="Paste the full iframe embed code from YouTube"
+                            />
+                        </Box>
+                    </Box>
                 </DialogContent>
                 <DialogActions sx={{ padding: '1.5rem' }}>
                     <Button onClick={onClose} color="inherit" sx={{ marginRight: 'auto' }}>

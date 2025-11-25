@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, Youtube } from 'lucide-react';
 import Select from 'react-select';
 import { Edit } from 'lucide-react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
@@ -22,6 +22,11 @@ const AnalyticsDashboard = ({ onEdit }) => {
     const [tournamentToDelete, setTournamentToDelete] = useState(null);
     const [deletePassword, setDeletePassword] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // YouTube Modal State
+    const [showYouTubeModal, setShowYouTubeModal] = useState(false);
+    const [currentEmbedUrl, setCurrentEmbedUrl] = useState('');
+    const [currentPlaylistUrl, setCurrentPlaylistUrl] = useState('');
 
     // Prepare options for react-select
     const playerOptions = useMemo(() => {
@@ -64,6 +69,17 @@ const AnalyticsDashboard = ({ onEdit }) => {
             errorNotification(`Delete Failed: ${err.message}`);
         } finally {
             setIsDeleting(false);
+        }
+    };
+
+    const handleYouTubeClick = (tournament) => {
+        if (tournament.embed_url) {
+            setCurrentEmbedUrl(tournament.embed_url);
+            setCurrentPlaylistUrl(tournament.playlist_url || '');
+            setShowYouTubeModal(true);
+        } else if (tournament.playlist_url) {
+            // Fallback to opening playlist in new tab if no embed URL
+            window.open(tournament.playlist_url, '_blank');
         }
     };
 
@@ -218,7 +234,16 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                                 style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
                                                 title="Edit Tournament"
                                             >
-                                                <Edit size={14} />
+                                                <Edit size={16} />
+                                            </button>
+                                        )}
+                                        {t.playlist_url && (
+                                            <button
+                                                onClick={() => handleYouTubeClick(t)}
+                                                style={{ background: 'none', border: 'none', color: '#FF0000', cursor: 'pointer', padding: '4px' }}
+                                                title="Watch on YouTube"
+                                            >
+                                                <Youtube size={16} />
                                             </button>
                                         )}
                                         <button
@@ -226,7 +251,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                             style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
                                             title="Delete Tournament"
                                         >
-                                            <Trash2 size={14} />
+                                            <Trash2 size={16} />
                                         </button>
                                     </div>
                                 </div>
@@ -288,6 +313,60 @@ const AnalyticsDashboard = ({ onEdit }) => {
                     <Button onClick={() => setShowDeleteModal(false)}>Cancel</Button>
                     <Button onClick={confirmDelete} color="error" variant="contained" disabled={isDeleting}>
                         {isDeleting ? 'Deleting...' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* YouTube Embed Modal */}
+            <Dialog
+                open={showYouTubeModal}
+                onClose={() => setShowYouTubeModal(false)}
+                maxWidth="lg"
+                fullWidth
+            >
+                <DialogTitle sx={{ background: 'linear-gradient(135deg, #FF0000 0%, #CC0000 100%)', color: 'white' }}>
+                    📺 Tournament Video
+                </DialogTitle>
+                <DialogContent sx={{ mt: 2, minHeight: '400px' }}>
+                    {currentEmbedUrl ? (
+                        <div
+                            dangerouslySetInnerHTML={{ __html: currentEmbedUrl }}
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                '& iframe': {
+                                    maxWidth: '100%',
+                                    height: 'auto'
+                                }
+                            }}
+                        />
+                    ) : (
+                        <p style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem' }}>
+                            No embed URL available.
+                            {currentPlaylistUrl && (
+                                <a
+                                    href={currentPlaylistUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ color: '#FF0000', marginLeft: '0.5rem' }}
+                                >
+                                    Open playlist in YouTube
+                                </a>
+                            )}
+                        </p>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    {currentPlaylistUrl && (
+                        <Button
+                            onClick={() => window.open(currentPlaylistUrl, '_blank')}
+                            sx={{ marginRight: 'auto', color: '#FF0000' }}
+                        >
+                            Open Full Playlist
+                        </Button>
+                    )}
+                    <Button onClick={() => setShowYouTubeModal(false)} color="inherit">
+                        Close
                     </Button>
                 </DialogActions>
             </Dialog>

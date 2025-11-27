@@ -43,4 +43,15 @@ export const deleteTournament = async (id, password) => {
     return response.data;
 };
 
+export const addPlayer = async (playerName) => {
+    const response = await client.post('/players', { name: playerName });
+    return response.data;
+};
+
+export const fetchPlayers = async () => {
+    const response = await client.get('/players');
+    return response.data;
+};
+
 export default client;
+

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { generateGroupsAction } from '../store/appSlice';
-import { Trophy, Sparkles, DollarSign, ExternalLink, Youtube } from 'lucide-react';
+import { Trophy, Sparkles, DollarSign, ExternalLink, Youtube, UserPlus } from 'lucide-react';
 import { Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box } from '@mui/material';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import RankSubmission from './RankSubmission';
 import GlobalRanking from './GlobalRanking';
 import TournamentFixtureModal from './TournamentFixtureModal';
+import AddPlayer from './AddPlayer';
 import './PlayerSelection.scss';
 
 const PlayerSelection = () => {
@@ -16,6 +17,7 @@ const PlayerSelection = () => {
     const [editingTournament, setEditingTournament] = useState(null);
     const [isFixtureModalOpen, setIsFixtureModalOpen] = useState(false);
     const [isFundDialogOpen, setIsFundDialogOpen] = useState(false);
+    const [isAddPlayerOpen, setIsAddPlayerOpen] = useState(false);
 
     const handleEditTournament = (tournament) => {
         setEditingTournament(tournament);
@@ -98,6 +100,13 @@ const PlayerSelection = () => {
                             <DollarSign size={18} /> Saturday Smashers Fund
                         </button>
                     </Tooltip>
+                    <button
+                        className="secondary-btn"
+                        onClick={() => setIsAddPlayerOpen(true)}
+                        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+                    >
+                        <UserPlus size={18} /> Add Player
+                    </button>
                 </div>
             </div>
 
@@ -179,6 +188,12 @@ const PlayerSelection = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Add Player Modal */}
+            <AddPlayer
+                open={isAddPlayerOpen}
+                onClose={() => setIsAddPlayerOpen(false)}
+            />
         </div>
     );
 };

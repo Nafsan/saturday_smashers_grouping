@@ -51,6 +51,10 @@
                 border-left: 3px solid #818cf8;
             }
 
+            &.no-history {
+                border-left: 3px solid #f59e0b;
+            }
+
             .player-rank {
                 background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
                 color: white;
@@ -70,6 +74,17 @@
             .temp-badge {
                 display: inline-block;
                 background: #818cf8;
+                color: white;
+                font-size: 0.625rem;
+                padding: 0.125rem 0.5rem;
+                border-radius: 4px;
+                margin-left: 0.5rem;
+                font-weight: 600;
+            }
+
+            .no-history-badge {
+                display: inline-block;
+                background: #f59e0b;
                 color: white;
                 font-size: 0.625rem;
                 padding: 0.125rem 0.5rem;

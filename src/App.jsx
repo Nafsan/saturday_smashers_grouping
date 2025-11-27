@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
-import { fetchHistoryAsync } from './store/appSlice';
+import { fetchPlayersAsync, fetchHistoryAsync } from './store/appSlice';
 import PlayerSelection from './components/PlayerSelection';
 import GroupDisplay from './components/GroupDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -54,7 +54,10 @@ const MainContent = () => {
     useEffect(() => {
         if (status === 'idle' && !hasFetched.current) {
             hasFetched.current = true;
-            dispatch(fetchHistoryAsync());
+            // Fetch players first, then history
+            dispatch(fetchPlayersAsync()).then(() => {
+                dispatch(fetchHistoryAsync());
+            });
         }
     }, [status, dispatch]);
 

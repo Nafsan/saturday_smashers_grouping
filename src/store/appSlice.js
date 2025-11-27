@@ -1,9 +1,17 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getAllPlayers, calculateRankings } from '../logic/ranking';
 import { generateGroups } from '../logic/grouping';
-import { fetchHistory, addTournament, updateTournament, deleteTournament } from '../api/client';
+import { fetchHistory, addTournament, updateTournament, deleteTournament, fetchPlayers } from '../api/client';
 
 // Async Thunks
+export const fetchPlayersAsync = createAsyncThunk(
+    'app/fetchPlayers',
+    async () => {
+        const players = await fetchPlayers();
+        return players.map(p => p.name);
+    }
+);
+
 export const fetchHistoryAsync = createAsyncThunk(
     'app/fetchHistory',
     async () => {
@@ -35,6 +43,16 @@ export const deleteRankingAsync = createAsyncThunk(
         return id;
     }
 );
+
+export const addPlayerAsync = createAsyncThunk(
+    'app/addPlayer',
+    async (playerName) => {
+        const { addPlayer } = await import('../api/client');
+        const player = await addPlayer(playerName);
+        return player.name;
+    }
+);
+
 
 const initialState = {
     history: [],
@@ -94,20 +112,28 @@ export const appSlice = createSlice({
         },
         addTemporaryPlayer: (state, action) => {
             const { name, initialRank } = action.payload;
+
+            // Add to allPlayers if not exists (legacy support for truly temporary players)
             if (!state.allPlayers.includes(name)) {
                 state.allPlayers.push(name);
                 state.allPlayers.sort();
-                state.temporaryPlayers.push({ name, initialRank });
-                state.selectedPlayers.push(name);
-                state.rankedPlayers = [];
             }
+
+            // Always add/update temporary player record
+            // Remove existing if any to avoid duplicates
+            state.temporaryPlayers = state.temporaryPlayers.filter(tp => tp.name !== name);
+            state.temporaryPlayers.push({ name, initialRank });
+
+            // Ensure selected
+            if (!state.selectedPlayers.includes(name)) {
+                state.selectedPlayers.push(name);
+            }
+
+            state.rankedPlayers = [];
         },
         clearDraftState: (state) => {
-            // Remove temporary players from allPlayers
-            const tempPlayerNames = state.temporaryPlayers.map(tp => tp.name);
-            state.allPlayers = state.allPlayers.filter(p => !tempPlayerNames.includes(p));
-
             // Clear temporary players and selections
+            // We do NOT remove from allPlayers anymore because all players are now real DB players
             state.temporaryPlayers = [];
             state.selectedPlayers = [];
             state.rankedPlayers = [];
@@ -115,15 +141,22 @@ export const appSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            .addCase(fetchPlayersAsync.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchPlayersAsync.fulfilled, (state, action) => {
+                state.allPlayers = action.payload;
+            })
+            .addCase(fetchPlayersAsync.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.error.message;
+            })
             .addCase(fetchHistoryAsync.pending, (state) => {
                 state.status = 'loading';
             })
             .addCase(fetchHistoryAsync.fulfilled, (state, action) => {
                 state.status = 'succeeded';
                 state.history = action.payload;
-                const players = getAllPlayers(action.payload);
-                console.log("Extracted Players:", players);
-                state.allPlayers = players;
             })
             .addCase(fetchHistoryAsync.rejected, (state, action) => {
                 state.status = 'failed';
@@ -132,13 +165,6 @@ export const appSlice = createSlice({
             .addCase(uploadRankingAsync.fulfilled, (state, action) => {
                 const newTournament = action.payload;
                 state.history = [newTournament, ...state.history];
-
-                // Update players
-                const newPlayers = new Set(state.allPlayers);
-                newTournament.ranks.forEach(r => {
-                    r.players.forEach(p => newPlayers.add(p));
-                });
-                state.allPlayers = Array.from(newPlayers).sort();
                 state.rankedPlayers = [];
             })
             .addCase(updateRankingAsync.fulfilled, (state, action) => {
@@ -147,21 +173,19 @@ export const appSlice = createSlice({
                 if (index !== -1) {
                     state.history[index] = tournamentData;
                 }
-
-                // Re-calculate players just in case
-                const newPlayers = new Set(state.allPlayers);
-                tournamentData.ranks.forEach(r => {
-                    r.players.forEach(p => newPlayers.add(p));
-                });
-                state.allPlayers = Array.from(newPlayers).sort();
                 state.rankedPlayers = [];
             })
             .addCase(deleteRankingAsync.fulfilled, (state, action) => {
                 const id = action.payload;
                 state.history = state.history.filter(t => t.id !== id);
-                // We could re-calculate allPlayers here, but it's complex to know if a player was ONLY in that tournament.
-                // For now, we keep the player list as is, which is safe.
                 state.rankedPlayers = [];
+            })
+            .addCase(addPlayerAsync.fulfilled, (state, action) => {
+                const playerName = action.payload;
+                if (!state.allPlayers.includes(playerName)) {
+                    state.allPlayers.push(playerName);
+                    state.allPlayers.sort();
+                }
             });
     },
 });

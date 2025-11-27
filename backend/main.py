@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from database import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 from tournament.api import router as tournament_router
+from player.api import router as player_router
 
 app = FastAPI()
 
@@ -19,5 +20,6 @@ async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-# Include tournament router
+# Include routers
 app.include_router(tournament_router)
+app.include_router(player_router)

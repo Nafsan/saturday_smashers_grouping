@@ -58,7 +58,9 @@ export const calculateRankings = (history, activePlayers, temporaryPlayers = [])
                 const sum = recentRanks.reduce((a, b) => a + b, 0);
                 stat.average = sum / recentRanks.length;
             } else {
-                stat.average = 999; // No games played? Rank them last.
+                // New players without tournament history get initial rating of 1000
+                // This ensures they appear at the end of standings (since lower is better)
+                stat.average = 1000;
             }
         }
     });

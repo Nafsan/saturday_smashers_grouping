@@ -107,8 +107,8 @@ const GlobalRanking = ({ onClose }) => {
                                             <TableCell sx={{ fontWeight: 500 }}>
                                                 {player.name}
                                             </TableCell>
-                                            <TableCell sx={{ textAlign: 'center', fontFamily: 'monospace', color: '#4ade80' }}>
-                                                {player.average.toFixed(2)}
+                                            <TableCell sx={{ textAlign: 'center', fontFamily: 'monospace', color: player.playedCount === 0 ? '#94a3b8' : '#4ade80' }}>
+                                                {player.playedCount === 0 ? '-' : player.average.toFixed(2)}
                                             </TableCell>
                                             <TableCell sx={{ textAlign: 'center', color: '#94a3b8' }}>
                                                 {player.playedCount > 5 ? 5 : player.playedCount}

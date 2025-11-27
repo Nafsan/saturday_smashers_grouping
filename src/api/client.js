@@ -43,8 +43,8 @@ export const deleteTournament = async (id, password) => {
     return response.data;
 };
 
-export const addPlayer = async (playerName) => {
-    const response = await client.post('/players', { name: playerName });
+export const addPlayer = async (playerName, password) => {
+    const response = await client.post(`/players?password=${password}`, { name: playerName });
     return response.data;
 };
 

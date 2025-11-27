@@ -46,9 +46,9 @@ export const deleteRankingAsync = createAsyncThunk(
 
 export const addPlayerAsync = createAsyncThunk(
     'app/addPlayer',
-    async (playerName) => {
+    async ({ playerName, password }) => {
         const { addPlayer } = await import('../api/client');
-        const player = await addPlayer(playerName);
+        const player = await addPlayer(playerName, password);
         return player.name;
     }
 );

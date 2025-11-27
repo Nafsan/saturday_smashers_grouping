@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from typing import List
@@ -20,9 +20,12 @@ class PlayerResponse(BaseModel):
 @router.post("", response_model=PlayerResponse, status_code=201)
 async def add_player(
     player: PlayerCreate,
+    password: str,
     database_session: AsyncSession = Depends(get_db)
 ):
     """Add a new player"""
+    if password != "ss_admin_panel":
+        raise HTTPException(status_code=403, detail="Invalid password")
     return await services.create_player(player.name, database_session)
 
 

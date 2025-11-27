@@ -128,17 +128,67 @@ const RankSubmission = ({ open, onClose, initialData }) => {
     const buildTournamentData = () => {
         const ranks = [];
 
-        // Cup (Ranks 1, 2, 3, 5)
-        if (cupChampion) ranks.push({ rank: 1, rating: 1, players: [cupChampion] });
-        if (cupRunnerUp) ranks.push({ rank: 2, rating: 2, players: [cupRunnerUp] });
-        if (cupSemis.length > 0) ranks.push({ rank: 3, rating: 3, players: cupSemis });
-        if (cupQuarters.length > 0) ranks.push({ rank: 5, rating: 4, players: cupQuarters });
+        // Cup - Dynamic rank assignment
+        // Champion: 1, Runner Up: 2, Semi Finalists: 3 (both get rank 3), Quarter Finalists: 5 (all get rank 5)
+        let cupRank = 1;
+        let ratingCounter = 1;
 
-        // Plate (Ranks 9, 10, 11, 13)
-        if (plateChampion) ranks.push({ rank: 9, rating: 5, players: [plateChampion] });
-        if (plateRunnerUp) ranks.push({ rank: 10, rating: 6, players: [plateRunnerUp] });
-        if (plateSemis.length > 0) ranks.push({ rank: 11, rating: 7, players: plateSemis });
-        if (plateQuarters.length > 0) ranks.push({ rank: 13, rating: 8, players: plateQuarters });
+        if (cupChampion) {
+            ranks.push({ rank: cupRank, rating: ratingCounter, players: [cupChampion] });
+            cupRank++;
+            ratingCounter++;
+        }
+
+        if (cupRunnerUp) {
+            ranks.push({ rank: cupRank, rating: ratingCounter, players: [cupRunnerUp] });
+            cupRank++;
+            ratingCounter++;
+        }
+
+        if (cupSemis.length > 0) {
+            ranks.push({ rank: cupRank, rating: ratingCounter, players: cupSemis });
+            cupRank += cupSemis.length;
+            ratingCounter++;
+        }
+
+        if (cupQuarters.length > 0) {
+            ranks.push({ rank: cupRank, rating: ratingCounter, players: cupQuarters });
+            cupRank += cupQuarters.length;
+            ratingCounter++;
+        }
+
+        // Calculate total cup players to determine plate starting rank
+        const totalCupPlayers =
+            (cupChampion ? 1 : 0) +
+            (cupRunnerUp ? 1 : 0) +
+            cupSemis.length +
+            cupQuarters.length;
+
+        // Plate - Dynamic ranks based on cup players
+        // Plate Champion rank = total cup players + 1
+        let plateStartRank = totalCupPlayers + 1;
+
+        if (plateChampion) {
+            ranks.push({ rank: plateStartRank, rating: ratingCounter, players: [plateChampion] });
+            plateStartRank++;
+            ratingCounter++;
+        }
+
+        if (plateRunnerUp) {
+            ranks.push({ rank: plateStartRank, rating: ratingCounter, players: [plateRunnerUp] });
+            plateStartRank++;
+            ratingCounter++;
+        }
+
+        if (plateSemis.length > 0) {
+            ranks.push({ rank: plateStartRank, rating: ratingCounter, players: plateSemis });
+            plateStartRank += plateSemis.length;
+            ratingCounter++;
+        }
+
+        if (plateQuarters.length > 0) {
+            ranks.push({ rank: plateStartRank, rating: ratingCounter, players: plateQuarters });
+        }
 
         return {
             id: initialData ? initialData.id : `t_${tournamentDate.replace(/-/g, '_')}`,

@@ -54,3 +54,18 @@ async def delete_tournament(
         raise HTTPException(status_code=403, detail="Invalid password")
 
     return await services.delete_tournament(tournament_id, database_session)
+
+
+@router.get("/players-by-date")
+async def get_tournament_players_by_date(
+    date: str,
+    database_session: AsyncSession = Depends(get_db)
+):
+    """Get list of players who played in a tournament on a specific date"""
+    from datetime import datetime
+    try:
+        tournament_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    
+    return await services.get_tournament_players_by_date(tournament_date, database_session)

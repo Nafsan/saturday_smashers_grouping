@@ -1,0 +1,437 @@
+import React, { useState, useEffect } from 'react';
+import {
+    TextField, Button, Alert, Checkbox, FormControlLabel, Autocomplete,
+    Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody,
+    TableCell, TableContainer, TableHead, TableRow, Paper
+} from '@mui/material';
+import { fetchPlayers, fetchFundSettings, fetchTournamentPlayersByDate, calculateTournamentCosts, saveTournamentCosts } from '../api/client';
+import { Plus, Calculator, Save, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+const AddTournamentCosts = () => {
+    const navigate = useNavigate();
+    const [allPlayers, setAllPlayers] = useState([]);
+    const [settings, setSettings] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [message, setMessage] = useState(null);
+
+    // Form state
+    const [tournamentDate, setTournamentDate] = useState('');
+    const [useDefaultVenue, setUseDefaultVenue] = useState(true);
+    const [useDefaultBall, setUseDefaultBall] = useState(true);
+    const [venueFee, setVenueFee] = useState(0);
+    const [ballFee, setBallFee] = useState(0);
+    const [tournamentPlayers, setTournamentPlayers] = useState([]);
+    const [clubMembers, setClubMembers] = useState([]);
+    const [numBalls, setNumBalls] = useState(0);
+    const [commonMiscCost, setCommonMiscCost] = useState(0);
+    const [commonMiscName, setCommonMiscName] = useState('');
+    const [playerSpecificCosts, setPlayerSpecificCosts] = useState([]);
+
+    // Calculation state
+    const [calculation, setCalculation] = useState(null);
+    const [showPreview, setShowPreview] = useState(false);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const loadData = async () => {
+        try {
+            setLoading(true);
+            const [players, fundSettings] = await Promise.all([
+                fetchPlayers(),
+                fetchFundSettings()
+            ]);
+            setAllPlayers(players.map(p => p.name));
+            setSettings(fundSettings);
+            setVenueFee(fundSettings.default_venue_fee);
+            setBallFee(fundSettings.default_ball_fee);
+        } catch (error) {
+            console.error('Error loading data:', error);
+            setMessage({ type: 'error', text: 'Failed to load data' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAutoPopulatePlayers = async () => {
+        if (!tournamentDate) {
+            setMessage({ type: 'error', text: 'Please select a tournament date first' });
+            return;
+        }
+
+        try {
+            const response = await fetchTournamentPlayersByDate(tournamentDate);
+            setTournamentPlayers(response.players);
+            setMessage({ type: 'success', text: `Auto-populated ${response.players.length} players` });
+        } catch (error) {
+            console.error('Error auto-populating players:', error);
+            setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to fetch tournament players' });
+        }
+    };
+
+    const addPlayerSpecificCost = () => {
+        setPlayerSpecificCosts([...playerSpecificCosts, {
+            player_names: [],
+            cost_amount: 0,
+            cost_name: ''
+        }]);
+    };
+
+    const removePlayerSpecificCost = (index) => {
+        setPlayerSpecificCosts(playerSpecificCosts.filter((_, i) => i !== index));
+    };
+
+    const updatePlayerSpecificCost = (index, field, value) => {
+        const updated = [...playerSpecificCosts];
+        updated[index][field] = value;
+        setPlayerSpecificCosts(updated);
+    };
+
+    const handleCalculate = async () => {
+        // Validation
+        if (!tournamentDate) {
+            setMessage({ type: 'error', text: 'Please select a tournament date' });
+            return;
+        }
+        if (tournamentPlayers.length === 0) {
+            setMessage({ type: 'error', text: 'Please select tournament players' });
+            return;
+        }
+
+        const requestData = {
+            tournament_date: tournamentDate,
+            use_default_venue_fee: useDefaultVenue,
+            use_default_ball_fee: useDefaultBall,
+            venue_fee_per_person: useDefaultVenue ? null : venueFee,
+            ball_fee_per_ball: useDefaultBall ? null : ballFee,
+            tournament_players: tournamentPlayers,
+            club_members: clubMembers,
+            num_balls_purchased: numBalls,
+            common_misc_cost: commonMiscCost,
+            common_misc_name: commonMiscName || null,
+            player_specific_costs: playerSpecificCosts
+        };
+
+        try {
+            setMessage(null);
+            const result = await calculateTournamentCosts(requestData, 'ss_admin_panel');
+            setCalculation(result);
+            setShowPreview(true);
+        } catch (error) {
+            console.error('Error calculating costs:', error);
+            setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to calculate costs' });
+        }
+    };
+
+    const handleSave = async () => {
+        const requestData = {
+            tournament_date: tournamentDate,
+            use_default_venue_fee: useDefaultVenue,
+            use_default_ball_fee: useDefaultBall,
+            venue_fee_per_person: useDefaultVenue ? null : venueFee,
+            ball_fee_per_ball: useDefaultBall ? null : ballFee,
+            tournament_players: tournamentPlayers,
+            club_members: clubMembers,
+            num_balls_purchased: numBalls,
+            common_misc_cost: commonMiscCost,
+            common_misc_name: commonMiscName || null,
+            player_specific_costs: playerSpecificCosts
+        };
+
+        try {
+            setSaving(true);
+            await saveTournamentCosts(requestData, 'ss_admin_panel');
+            setMessage({ type: 'success', text: 'Tournament costs saved and balances updated successfully!' });
+            setShowPreview(false);
+
+            // Reset form
+            setTimeout(() => {
+                navigate('/fund');
+            }, 2000);
+        } catch (error) {
+            console.error('Error saving costs:', error);
+            setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to save costs' });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    return (
+        <div>
+            <h2 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Add Tournament Costs</h2>
+
+            {message && (
+                <Alert severity={message.type} sx={{ mb: 3 }}>
+                    {message.text}
+                </Alert>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* Tournament Date */}
+                <TextField
+                    fullWidth
+                    label="Tournament Date"
+                    type="date"
+                    value={tournamentDate}
+                    onChange={(e) => setTournamentDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                />
+
+                {/* Venue and Ball Fees */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+                    <div>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={useDefaultVenue}
+                                    onChange={(e) => setUseDefaultVenue(e.target.checked)}
+                                />
+                            }
+                            label={`Use default venue fee (৳${settings?.default_venue_fee || 0})`}
+                        />
+                        {!useDefaultVenue && (
+                            <TextField
+                                fullWidth
+                                label="Venue Fee (per person)"
+                                type="number"
+                                value={venueFee}
+                                onChange={(e) => setVenueFee(parseFloat(e.target.value) || 0)}
+                                InputProps={{
+                                    startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
+                                }}
+                            />
+                        )}
+                    </div>
+
+                    <div>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={useDefaultBall}
+                                    onChange={(e) => setUseDefaultBall(e.target.checked)}
+                                />
+                            }
+                            label={`Use default ball fee (৳${settings?.default_ball_fee || 0})`}
+                        />
+                        {!useDefaultBall && (
+                            <TextField
+                                fullWidth
+                                label="Ball Fee (per ball)"
+                                type="number"
+                                value={ballFee}
+                                onChange={(e) => setBallFee(parseFloat(e.target.value) || 0)}
+                                InputProps={{
+                                    startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
+                                }}
+                            />
+                        )}
+                    </div>
+                </div>
+
+                {/* Tournament Players */}
+                <div>
+                    <Button
+                        variant="outlined"
+                        onClick={handleAutoPopulatePlayers}
+                        startIcon={<Sparkles size={20} />}
+                        sx={{ mb: 2 }}
+                    >
+                        Auto Populate Tournament Players
+                    </Button>
+                    <Autocomplete
+                        multiple
+                        options={allPlayers}
+                        value={tournamentPlayers}
+                        onChange={(e, newValue) => setTournamentPlayers(newValue)}
+                        renderInput={(params) => (
+                            <TextField {...params} label="Tournament Players" placeholder="Select players" />
+                        )}
+                    />
+                </div>
+
+                {/* Club Members */}
+                <Autocomplete
+                    multiple
+                    options={tournamentPlayers}
+                    value={clubMembers}
+                    onChange={(e, newValue) => setClubMembers(newValue)}
+                    renderInput={(params) => (
+                        <TextField {...params} label="Club Members (Optional)" placeholder="Select club members" />
+                    )}
+                />
+
+                {/* Number of Balls */}
+                <TextField
+                    fullWidth
+                    label="Number of WTT Balls Purchased"
+                    type="number"
+                    value={numBalls}
+                    onChange={(e) => setNumBalls(parseInt(e.target.value) || 0)}
+                />
+
+                {/* Common Miscellaneous Cost */}
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+                    <TextField
+                        label="Common Miscellaneous Cost Name (Optional)"
+                        value={commonMiscName}
+                        onChange={(e) => setCommonMiscName(e.target.value)}
+                    />
+                    <TextField
+                        label="Amount"
+                        type="number"
+                        value={commonMiscCost}
+                        onChange={(e) => setCommonMiscCost(parseFloat(e.target.value) || 0)}
+                        InputProps={{
+                            startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
+                        }}
+                    />
+                </div>
+
+                {/* Player Specific Costs */}
+                <div>
+                    <Button
+                        variant="outlined"
+                        onClick={addPlayerSpecificCost}
+                        startIcon={<Plus size={20} />}
+                        sx={{ mb: 2 }}
+                    >
+                        Add Player Specific Miscellaneous Cost
+                    </Button>
+
+                    {playerSpecificCosts.map((cost, index) => (
+                        <div
+                            key={index}
+                            style={{
+                                background: 'var(--bg-secondary)',
+                                border: '1px solid var(--border-color)',
+                                borderRadius: '12px',
+                                padding: '1rem',
+                                marginBottom: '1rem'
+                            }}
+                        >
+                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '1rem', alignItems: 'center' }}>
+                                <Autocomplete
+                                    multiple
+                                    options={tournamentPlayers}
+                                    value={cost.player_names}
+                                    onChange={(e, newValue) => updatePlayerSpecificCost(index, 'player_names', newValue)}
+                                    renderInput={(params) => (
+                                        <TextField {...params} label="Player Names" size="small" />
+                                    )}
+                                />
+                                <TextField
+                                    label="Cost Amount"
+                                    type="number"
+                                    size="small"
+                                    value={cost.cost_amount}
+                                    onChange={(e) => updatePlayerSpecificCost(index, 'cost_amount', parseFloat(e.target.value) || 0)}
+                                    InputProps={{
+                                        startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
+                                    }}
+                                />
+                                <Button
+                                    color="error"
+                                    onClick={() => removePlayerSpecificCost(index)}
+                                >
+                                    Remove
+                                </Button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Calculate Button */}
+                <Button
+                    variant="contained"
+                    onClick={handleCalculate}
+                    startIcon={<Calculator size={20} />}
+                    sx={{
+                        background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)',
+                        padding: '0.75rem 2rem',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        '&:hover': {
+                            background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
+                        }
+                    }}
+                >
+                    Calculate Costs
+                </Button>
+            </div>
+
+            {/* Preview Dialog */}
+            <Dialog open={showPreview} onClose={() => setShowPreview(false)} maxWidth="md" fullWidth>
+                <DialogTitle>Tournament Cost Breakdown</DialogTitle>
+                <DialogContent>
+                    {calculation && (
+                        <>
+                            <div style={{ marginBottom: '2rem' }}>
+                                <h3>Total Costs</h3>
+                                <p>Venue Cost: ৳{calculation.total_venue_cost.toFixed(2)}</p>
+                                <p>Ball Cost: ৳{calculation.total_ball_cost.toFixed(2)}</p>
+                                <p>Miscellaneous Cost: ৳{calculation.total_misc_cost.toFixed(2)}</p>
+                                <p><strong>Total: ৳{calculation.total_cost.toFixed(2)}</strong></p>
+                            </div>
+
+                            <TableContainer component={Paper}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Player</TableCell>
+                                            <TableCell>Venue</TableCell>
+                                            <TableCell>Ball</TableCell>
+                                            <TableCell>Misc</TableCell>
+                                            <TableCell>Player Specific</TableCell>
+                                            <TableCell><strong>Total</strong></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {calculation.player_breakdowns.map((player) => (
+                                            <TableRow key={player.player_name}>
+                                                <TableCell>
+                                                    {player.player_name}
+                                                    {player.is_club_member && <span style={{ color: '#4ade80', marginLeft: '0.5rem' }}>(Club)</span>}
+                                                </TableCell>
+                                                <TableCell>৳{player.venue_cost.toFixed(2)}</TableCell>
+                                                <TableCell>৳{player.ball_cost.toFixed(2)}</TableCell>
+                                                <TableCell>৳{player.common_misc_cost.toFixed(2)}</TableCell>
+                                                <TableCell>৳{player.player_specific_cost.toFixed(2)}</TableCell>
+                                                <TableCell><strong>৳{player.total_cost.toFixed(2)}</strong></TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowPreview(false)}>Cancel</Button>
+                    <Button
+                        onClick={handleSave}
+                        variant="contained"
+                        disabled={saving}
+                        startIcon={<Save size={20} />}
+                        sx={{
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            '&:hover': {
+                                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                            }
+                        }}
+                    >
+                        {saving ? 'Saving...' : 'Save & Update Balances'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </div>
+    );
+};
+
+export default AddTournamentCosts;

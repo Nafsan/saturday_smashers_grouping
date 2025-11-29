@@ -109,6 +109,9 @@ async def create_tournament(tournament: schemas.TournamentCreate, database_sessi
     )
     database_session.add(database_tournament)
     
+    # Track all players for days_played update
+    all_players = []
+    
     for rank_group in tournament.ranks:
         database_rank_group = models.RankGroup(
             rank=rank_group.rank, 
@@ -130,10 +133,49 @@ async def create_tournament(tournament: schemas.TournamentCreate, database_sessi
                 await database_session.flush() # Get ID
             
             database_rank_group.players.append(existing_player)
+            all_players.append(player_name)
             
         database_session.add(database_rank_group)
 
     await database_session.commit()
+    
+    # Update days_played for all tournament players
+    try:
+        from fund_models import PlayerFund
+        
+        for player_name in all_players:
+            # Get player by name
+            player_result = await database_session.execute(
+                select(models.Player).where(models.Player.name == player_name)
+            )
+            player = player_result.scalar()
+            
+            if player:
+                # Get or create player fund
+                fund_result = await database_session.execute(
+                    select(PlayerFund).where(PlayerFund.player_id == player.id)
+                )
+                player_fund = fund_result.scalar()
+                
+                if player_fund:
+                    # Increment days_played
+                    player_fund.days_played += 1
+                else:
+                    # Create new fund record if doesn't exist
+                    player_fund = PlayerFund(
+                        player_id=player.id,
+                        current_balance=0.0,
+                        days_played=1,
+                        total_paid=0.0,
+                        total_cost=0.0
+                    )
+                    database_session.add(player_fund)
+        
+        await database_session.commit()
+    except Exception as e:
+        # Don't fail tournament creation if fund update fails
+        print(f"Warning: Failed to update player fund days_played: {e}")
+    
     return {"message": "Tournament added successfully"}
 
 
@@ -220,3 +262,28 @@ async def delete_tournament(tournament_id: str, database_session: AsyncSession):
     
     await database_session.commit()
     return {"message": "Tournament deleted successfully"}
+
+
+async def get_tournament_players_by_date(tournament_date, database_session: AsyncSession):
+    """Get list of players who played in a tournament on a specific date"""
+    # Get tournament by date
+    tournament_query_result = await database_session.execute(
+        select(models.Tournament)
+        .where(models.Tournament.date == tournament_date)
+        .options(
+            selectinload(models.Tournament.rank_groups)
+            .selectinload(models.RankGroup.players)
+        )
+    )
+    tournament = tournament_query_result.scalar()
+    
+    if not tournament:
+        raise HTTPException(status_code=404, detail=f"Tournament not found for date {tournament_date}")
+    
+    # Extract unique player names from all rank groups
+    player_names = set()
+    for rank_group in tournament.rank_groups:
+        for player in rank_group.players:
+            player_names.add(player.name)
+    
+    return {"players": sorted(list(player_names))}

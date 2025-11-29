@@ -19,6 +19,8 @@ class Tournament(Base):
     embed_url = Column(Text, nullable=True)
 
     rank_groups = relationship("RankGroup", back_populates="tournament", cascade="all, delete-orphan")
+    costs = relationship("TournamentCost", back_populates="tournament", uselist=False, cascade="all, delete-orphan")
+    attendance = relationship("TournamentAttendance", back_populates="tournament", cascade="all, delete-orphan")
 
 class RankGroup(Base):
     __tablename__ = "rank_groups"
@@ -38,3 +40,7 @@ class Player(Base):
     name = Column(String, unique=True, index=True, nullable=False)
 
     rank_groups = relationship("RankGroup", secondary=rank_group_players, back_populates="players")
+    fund = relationship("PlayerFund", back_populates="player", uselist=False, cascade="all, delete-orphan")
+
+# Import fund models to ensure they're registered with Base.metadata
+from fund_models import PlayerFund, TournamentCost, FundSettings, PlayerSpecificCost, TournamentAttendance

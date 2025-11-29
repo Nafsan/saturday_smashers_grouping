@@ -3,6 +3,7 @@ from database import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 from tournament.api import router as tournament_router
 from player.api import router as player_router
+from fund.api import router as fund_router
 
 app = FastAPI()
 
@@ -23,3 +24,4 @@ async def startup():
 # Include routers
 app.include_router(tournament_router)
 app.include_router(player_router)
+app.include_router(fund_router)

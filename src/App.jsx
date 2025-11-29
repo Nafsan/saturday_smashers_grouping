@@ -1,10 +1,13 @@
 import React, { useEffect, useRef } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
 import { fetchPlayersAsync, fetchHistoryAsync } from './store/appSlice';
 import PlayerSelection from './components/PlayerSelection';
 import GroupDisplay from './components/GroupDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
+import FundManagement from './components/FundManagement';
+import AdminConsole from './components/AdminConsole';
 import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { ToastProvider } from './context/ToastContext';
 import './styles/global.scss';
@@ -81,12 +84,21 @@ const MainContent = () => {
 };
 
 function App() {
+    // Use base path for GitHub Pages, empty for local development
+    const basename = import.meta.env.BASE_URL || '/';
+
     return (
         <Provider store={store}>
             <ThemeProvider theme={darkTheme}>
                 <CssBaseline />
                 <ToastProvider>
-                    <MainContent />
+                    <BrowserRouter basename={basename}>
+                        <Routes>
+                            <Route path="/" element={<MainContent />} />
+                            <Route path="/fund" element={<FundManagement />} />
+                            <Route path="/fund/admin" element={<AdminConsole />} />
+                        </Routes>
+                    </BrowserRouter>
                 </ToastProvider>
             </ThemeProvider>
         </Provider>

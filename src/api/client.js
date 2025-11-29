@@ -53,5 +53,82 @@ export const fetchPlayers = async () => {
     return response.data;
 };
 
+// ============ Fund Management APIs ============
+export const fetchFundSettings = async () => {
+    const response = await client.get('/fund/settings');
+    return response.data;
+};
+
+export const updateFundSettings = async (settings, password) => {
+    const response = await client.post('/fund/settings', settings, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const seedInitialData = async (data, password) => {
+    const response = await client.post('/fund/seed', data, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const fetchFundBalances = async (search = null, filter = null) => {
+    const params = {};
+    if (search) params.search = search;
+    if (filter) params.filter = filter;
+
+    const response = await client.get('/fund/balances', { params });
+    return response.data;
+};
+
+export const calculateTournamentCosts = async (data, password) => {
+    const response = await client.post('/fund/tournament-costs/calculate', data, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const saveTournamentCosts = async (data, password) => {
+    const response = await client.post('/fund/tournament-costs/save', data, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const fetchPlayerAttendance = async () => {
+    const response = await client.get('/fund/attendance');
+    return response.data;
+};
+
+export const fetchTournamentPlayersByDate = async (date) => {
+    const response = await client.get('/history/players-by-date', {
+        params: { date }
+    });
+    return response.data;
+};
+
+export const recordPayment = async (data, password) => {
+    const response = await client.post('/fund/record-payment', data, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const fetchDaysPlayedComparison = async () => {
+    const response = await client.get('/fund/days-played-comparison');
+    return response.data;
+};
+
+export const fetchTournamentCostDates = async () => {
+    const response = await client.get('/fund/tournament-costs/dates');
+    return response.data;
+};
+
+export const fetchTournamentCostDetails = async (date) => {
+    const response = await client.get(`/fund/tournament-costs/${date}`);
+    return response.data;
+};
+
 export default client;
 

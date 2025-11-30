@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
 import { fetchPlayersAsync, fetchHistoryAsync } from './store/appSlice';
@@ -92,13 +92,13 @@ function App() {
             <ThemeProvider theme={darkTheme}>
                 <CssBaseline />
                 <ToastProvider>
-                    <BrowserRouter basename={basename}>
+                    <HashRouter>
                         <Routes>
                             <Route path="/" element={<MainContent />} />
                             <Route path="/fund" element={<FundManagement />} />
                             <Route path="/fund/admin" element={<AdminConsole />} />
                         </Routes>
-                    </BrowserRouter>
+                    </HashRouter>
                 </ToastProvider>
             </ThemeProvider>
         </Provider>

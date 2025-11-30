@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { generateGroupsAction } from '../store/appSlice';
 import { Trophy, Sparkles, DollarSign, Youtube, UserPlus } from 'lucide-react';

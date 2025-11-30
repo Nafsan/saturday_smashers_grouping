@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { X, Trophy } from 'lucide-react';
+import { X, Trophy, Info } from 'lucide-react';
 import { calculateRankings } from '../logic/ranking';
 import {
     Table,
@@ -51,7 +51,9 @@ const darkTheme = createTheme({
 
 const GlobalRanking = ({ onClose }) => {
     const { history, allPlayers } = useSelector(state => state.app);
-    const [searchTerm, setSearchTerm] = React.useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedPlayer, setSelectedPlayer] = useState(null);
+    const [showBreakdown, setShowBreakdown] = useState(false);
 
     const globalRankings = useMemo(() => {
         return calculateRankings(history, allPlayers);
@@ -62,6 +64,36 @@ const GlobalRanking = ({ onClose }) => {
             player.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [globalRankings, searchTerm]);
+
+    // Get detailed tournament breakdown for a player
+    const getPlayerBreakdown = (playerName) => {
+        const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+        const tournaments = [];
+
+        sortedHistory.forEach(tournament => {
+            tournament.ranks.forEach(rankGroup => {
+                if (rankGroup.players.includes(playerName)) {
+                    tournaments.push({
+                        date: tournament.date,
+                        rank: rankGroup.rank,
+                        rating: rankGroup.rating
+                    });
+                }
+            });
+        });
+
+        return tournaments;
+    };
+
+    const handleShowBreakdown = (player) => {
+        setSelectedPlayer(player);
+        setShowBreakdown(true);
+    };
+
+    const handleCloseBreakdown = () => {
+        setShowBreakdown(false);
+        setSelectedPlayer(null);
+    };
 
     return (
         <div className="global-ranking-overlay" onClick={onClose}>
@@ -93,6 +125,7 @@ const GlobalRanking = ({ onClose }) => {
                                         <TableCell>Player</TableCell>
                                         <TableCell sx={{ width: '120px', textAlign: 'center' }}>Avg (Last 5)</TableCell>
                                         <TableCell sx={{ width: '80px', textAlign: 'center' }}>Games</TableCell>
+                                        <TableCell sx={{ width: '60px', textAlign: 'center' }}>Info</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -113,11 +146,33 @@ const GlobalRanking = ({ onClose }) => {
                                             <TableCell sx={{ textAlign: 'center', color: '#94a3b8' }}>
                                                 {player.playedCount > 5 ? 5 : player.playedCount}
                                             </TableCell>
+                                            <TableCell sx={{ textAlign: 'center' }}>
+                                                <button
+                                                    onClick={() => handleShowBreakdown(player)}
+                                                    style={{
+                                                        background: 'transparent',
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        color: '#38bdf8',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        padding: '4px',
+                                                        borderRadius: '4px',
+                                                        transition: 'all 0.2s ease'
+                                                    }}
+                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.1)'}
+                                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                                    title="View Rank Breakdown"
+                                                >
+                                                    <Info size={18} />
+                                                </button>
+                                            </TableCell>
                                         </TableRow>
                                     ))}
                                     {filteredRankings.length === 0 && (
                                         <TableRow>
-                                            <TableCell colSpan={4} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                                            <TableCell colSpan={5} align="center" sx={{ py: 4, color: 'text.secondary' }}>
                                                 No players found
                                             </TableCell>
                                         </TableRow>
@@ -126,7 +181,92 @@ const GlobalRanking = ({ onClose }) => {
                             </Table>
                         </TableContainer>
                     </ThemeProvider>
+
+                    {/* Ranking Calculation Description */}
+                    <div style={{
+                        marginTop: '1rem',
+                        padding: '1rem',
+                        background: 'rgba(56, 189, 248, 0.1)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(56, 189, 248, 0.3)',
+                        fontSize: '0.875rem',
+                        color: '#94a3b8',
+                        lineHeight: '1.6'
+                    }}>
+                        <strong style={{ color: '#38bdf8' }}>How Rankings Are Calculated:</strong>
+                        <br />
+                        Rankings are based on the average rating from your last 5 tournaments (or fewer if you've played less). Lower averages rank higher. Ratings range from 1-8, where 1 is the best. Click the info icon to see the detailed breakdown for each player.
+                    </div>
                 </div>
+
+                {/* Rank Breakdown Modal */}
+                {showBreakdown && selectedPlayer && (
+                    <div className="breakdown-overlay" onClick={handleCloseBreakdown}>
+                        <div className="breakdown-modal" onClick={e => e.stopPropagation()}>
+                            <div className="breakdown-header">
+                                <h3>Rank Breakdown: {selectedPlayer.name}</h3>
+                                <button className="close-btn" onClick={handleCloseBreakdown}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div className="breakdown-content">
+                                {selectedPlayer.playedCount === 0 ? (
+                                    <p style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem' }}>
+                                        This player hasn't participated in any tournaments yet.
+                                    </p>
+                                ) : (
+                                    <>
+                                        <div className="calculation-summary">
+                                            <div className="summary-item">
+                                                <span className="label">Total Tournaments Played:</span>
+                                                <span className="value">{selectedPlayer.playedCount}</span>
+                                            </div>
+                                            <div className="summary-item">
+                                                <span className="label">Tournaments Considered:</span>
+                                                <span className="value">{Math.min(selectedPlayer.playedCount, 5)}</span>
+                                            </div>
+                                            <div className="summary-item">
+                                                <span className="label">Average Rating:</span>
+                                                <span className="value highlight">{selectedPlayer.average.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="tournaments-list">
+                                            <h4>Recent Tournaments (Last 5)</h4>
+                                            {getPlayerBreakdown(selectedPlayer.name).slice(0, 5).map((tournament, index) => (
+                                                <div key={index} className="tournament-item">
+                                                    <div className="tournament-date">
+                                                        {new Date(tournament.date).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric'
+                                                        })}
+                                                    </div>
+                                                    <div className="tournament-details">
+                                                        <span>Rank: <strong>#{tournament.rank}</strong></span>
+                                                        <span className="rating">Rating: <strong>{tournament.rating}</strong></span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="calculation-formula">
+                                            <h4>Calculation</h4>
+                                            <div className="formula">
+                                                <div className="formula-line">
+                                                    Average = ({selectedPlayer.ranks.slice(0, 5).join(' + ')}) / {Math.min(selectedPlayer.playedCount, 5)}
+                                                </div>
+                                                <div className="formula-line result">
+                                                    Average = {selectedPlayer.ranks.slice(0, 5).reduce((a, b) => a + b, 0)} / {Math.min(selectedPlayer.playedCount, 5)} = <strong>{selectedPlayer.average.toFixed(2)}</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -3,7 +3,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
 import { fetchPlayersAsync, fetchHistoryAsync } from './store/appSlice';
-import PlayerSelection from './components/PlayerSelection';
+import AppLandingPage from './components/AppLandingPage';
 import GroupDisplay from './components/GroupDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
 import FundManagement from './components/FundManagement';
@@ -76,7 +76,7 @@ const MainContent = () => {
                 {status === 'loading' ? (
                     <LoadingSpinner />
                 ) : (
-                    !isGroupsGenerated ? <PlayerSelection /> : <GroupDisplay />
+                    !isGroupsGenerated ? <AppLandingPage /> : <GroupDisplay />
                 )}
             </main>
         </div>

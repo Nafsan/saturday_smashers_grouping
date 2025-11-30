@@ -10,9 +10,9 @@ import GlobalRanking from './GlobalRanking';
 import TournamentFixtureModal from './TournamentFixtureModal';
 import AddPlayer from './AddPlayer';
 import DaysPlayedChart from './DaysPlayedChart';
-import './PlayerSelection.scss';
+import './AppLandingPage.scss';
 
-const PlayerSelection = () => {
+const AppLandingPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [showGlobalRanking, setShowGlobalRanking] = useState(false);
@@ -44,7 +44,7 @@ const PlayerSelection = () => {
     };
 
     return (
-        <div className="player-selection">
+        <div className="app-landing-page-container">
             <div className="config-section">
                 <div className="action-buttons">
                     <button className="secondary-btn" onClick={() => setIsFixtureModalOpen(true)} style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
@@ -140,4 +140,4 @@ const PlayerSelection = () => {
     );
 };
 
-export default PlayerSelection;
+export default AppLandingPage;

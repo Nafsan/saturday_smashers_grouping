@@ -320,7 +320,6 @@ async def save_tournament_costs_and_update_balances(
             # Update balance and costs
             player_fund.current_balance -= breakdown.total_cost
             player_fund.total_cost += breakdown.total_cost
-            player_fund.days_played += 1
             player_fund.last_updated = datetime.utcnow()
     
     await db.commit()

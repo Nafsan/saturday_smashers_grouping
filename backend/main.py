@@ -7,6 +7,14 @@ from fund.api import router as fund_router
 from datetime import datetime
 from sqlalchemy import text
 import time
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -28,14 +36,20 @@ async def startup():
 @app.get("/health")
 async def health_check():
     """Simple health check endpoint for keep-alive pings"""
+    timestamp = datetime.utcnow().isoformat()
+    logger.info(f"Health check endpoint called at {timestamp}")
+    
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": timestamp
     }
 
 @app.get("/health/db")
 async def database_health_check():
     """Database health check endpoint to verify Supabase connectivity"""
+    timestamp = datetime.utcnow().isoformat()
+    logger.info(f"Database health check endpoint called at {timestamp}")
+    
     try:
         start_time = time.time()
         
@@ -45,18 +59,22 @@ async def database_health_check():
         
         response_time_ms = round((time.time() - start_time) * 1000, 2)
         
+        logger.info(f"Database health check successful - Response time: {response_time_ms}ms")
+        
         return {
             "status": "healthy",
             "database": "connected",
             "response_time_ms": response_time_ms,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": timestamp
         }
     except Exception as e:
+        logger.error(f"Database health check failed - Error: {str(e)}", exc_info=True)
+        
         return {
             "status": "unhealthy",
             "database": "disconnected",
             "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": timestamp
         }
 
 # Include routers

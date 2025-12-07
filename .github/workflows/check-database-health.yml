@@ -1,0 +1,45 @@
+name: Database Health Check
+
+on:
+  schedule:
+    # Run daily at 3:17 AM UTC (off-peak to avoid GitHub Actions delays)
+    - cron: '17 3 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  check-database:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check Database Health
+        run: |
+          echo "Checking Supabase database health..."
+          
+          # Make request and capture both status code and response body
+          response=$(curl -s -w "\n%{http_code}" https://saturday-smashers-grouping-api.onrender.com/health/db)
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+          
+          echo "Response: $body"
+          
+          if [ $http_code -eq 200 ]; then
+            # Check if database is connected
+            if echo "$body" | grep -q '"database":"connected"'; then
+              echo "✅ Database is healthy and connected"
+              
+              # Extract and display response time if available
+              response_time=$(echo "$body" | grep -o '"response_time_ms":[0-9.]*' | cut -d':' -f2)
+              if [ ! -z "$response_time" ]; then
+                echo "📊 Database response time: ${response_time}ms"
+              fi
+            else
+              echo "❌ Database is not connected"
+              exit 1
+            fi
+          else
+            echo "❌ Database health check failed (HTTP $http_code)"
+            exit 1
+          fi
+      
+      - name: Log Timestamp
+        run: echo "Database health check completed at $(date -u)"

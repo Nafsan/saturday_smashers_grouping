@@ -1,0 +1,28 @@
+name: Keep Backend Alive
+
+on:
+  schedule:
+    # Run every 5 minutes (GitHub Actions minimum interval)
+    # Using */5 instead of */15 for better uptime
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  ping-backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Ping Health Endpoint
+        run: |
+          echo "Pinging backend health endpoint..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://saturday-smashers-grouping-api.onrender.com/health)
+          
+          if [ $response -eq 200 ]; then
+            echo "✅ Backend is healthy (HTTP $response)"
+          else
+            echo "❌ Backend health check failed (HTTP $response)"
+            exit 1
+          fi
+      
+      - name: Log Timestamp
+        run: echo "Keep-alive ping completed at $(date -u)"

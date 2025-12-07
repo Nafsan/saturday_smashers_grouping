@@ -22,15 +22,19 @@ if DATABASE_URL:
 # Enable SQL logging only in development (when DEBUG=True)
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-# Connection pool configuration for Supabase
-# Supabase Session Pooler has limited connections, so we need to limit our pool
+# Connection pool configuration for Supabase Transaction Pooler
+# Supabase uses pgbouncer in transaction mode, which doesn't support prepared statements
 engine = create_async_engine(
     DATABASE_URL, 
     echo=DEBUG,
     pool_size=5,          # Maximum number of permanent connections
     max_overflow=10,      # Maximum number of temporary connections beyond pool_size
     pool_pre_ping=True,   # Verify connections before using them
-    pool_recycle=3600     # Recycle connections after 1 hour
+    pool_recycle=3600,    # Recycle connections after 1 hour
+    connect_args={
+        "statement_cache_size": 0,  # Disable prepared statements for pgbouncer compatibility
+        "prepared_statement_cache_size": 0  # Also disable for newer asyncpg versions
+    }
 )
 
 AsyncSessionLocal = sessionmaker(

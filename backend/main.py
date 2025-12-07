@@ -34,8 +34,9 @@ async def startup():
 
 # Health check endpoints
 @app.get("/health")
+@app.head("/health")
 async def health_check():
-    """Simple health check endpoint for keep-alive pings"""
+    """Simple health check endpoint for keep-alive pings (supports GET and HEAD)"""
     timestamp = datetime.utcnow().isoformat()
     logger.info(f"Health check endpoint called at {timestamp}")
     
@@ -45,8 +46,9 @@ async def health_check():
     }
 
 @app.get("/health/db")
+@app.head("/health/db")
 async def database_health_check():
-    """Database health check endpoint to verify Supabase connectivity"""
+    """Database health check endpoint to verify Supabase connectivity (supports GET and HEAD)"""
     timestamp = datetime.utcnow().isoformat()
     logger.info(f"Database health check endpoint called at {timestamp}")
     

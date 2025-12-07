@@ -130,7 +130,7 @@ const FundManagement = () => {
                         </div>
                         <div className="stat-info">
                             <div className="stat-label">Positive Balance</div>
-                            <div className="stat-value">{balances.filter(p => p.current_balance > 0).length}</div>
+                            <div className="stat-value">{balances.filter(p => p.current_balance >= 0).length}</div>
                         </div>
                     </div>
                     <div className="stat-card">

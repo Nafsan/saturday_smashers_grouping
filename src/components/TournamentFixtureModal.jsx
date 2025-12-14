@@ -15,14 +15,15 @@ import {
     InputAdornment
 } from '@mui/material';
 import { X, Search, UserPlus, Calendar } from 'lucide-react';
-import { togglePlayerSelection, setTournamentDate, addTemporaryPlayer } from '../store/appSlice';
+import { togglePlayerSelection, setTournamentDate, addTemporaryPlayer, selectAllPlayerNames } from '../store/appSlice';
 import { calculateRankings } from '../logic/ranking';
 import { useToast } from '../context/ToastContext';
 import './TournamentFixtureModal.scss';
 
 const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
     const dispatch = useDispatch();
-    const { allPlayers, selectedPlayers, history, tournamentDate, temporaryPlayers } = useSelector(state => state.app);
+    const allPlayers = useSelector(selectAllPlayerNames);
+    const { selectedPlayers, history, tournamentDate, temporaryPlayers } = useSelector(state => state.app);
     const { warningNotification } = useToast();
 
     const [ratingPromptOpen, setRatingPromptOpen] = useState(false);

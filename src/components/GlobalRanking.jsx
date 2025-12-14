@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { X, Trophy, Info } from 'lucide-react';
 import { calculateRankings } from '../logic/ranking';
+import { selectAllPlayerNames } from '../store/appSlice';
 import {
     Table,
     TableBody,
@@ -50,7 +51,8 @@ const darkTheme = createTheme({
 });
 
 const GlobalRanking = ({ onClose }) => {
-    const { history, allPlayers } = useSelector(state => state.app);
+    const { history } = useSelector(state => state.app);
+    const allPlayers = useSelector(selectAllPlayerNames);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [showBreakdown, setShowBreakdown] = useState(false);

@@ -5,12 +5,13 @@ import { ChevronDown, ChevronUp, Trash2, Youtube } from 'lucide-react';
 import Select from 'react-select';
 import { Edit } from 'lucide-react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
-import { deleteRankingAsync } from '../store/appSlice';
+import { deleteRankingAsync, selectAllPlayerNames } from '../store/appSlice';
 import { useToast } from '../context/ToastContext';
 import './AnalyticsDashboard.scss';
 
 const AnalyticsDashboard = ({ onEdit }) => {
-    const { history, allPlayers } = useSelector(state => state.app);
+    const { history } = useSelector(state => state.app);
+    const allPlayers = useSelector(selectAllPlayerNames);
     const dispatch = useDispatch();
     const { successNotification, errorNotification } = useToast();
     const [showAllHistory, setShowAllHistory] = useState(false);

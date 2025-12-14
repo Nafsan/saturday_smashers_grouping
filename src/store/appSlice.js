@@ -8,7 +8,7 @@ export const fetchPlayersAsync = createAsyncThunk(
     'app/fetchPlayers',
     async () => {
         const players = await fetchPlayers();
-        return players.map(p => p.name);
+        return players; // Return full player objects with id and name
     }
 );
 
@@ -192,4 +192,15 @@ export const appSlice = createSlice({
 
 export const { togglePlayerSelection, calculateRanks, generateGroupsAction, resetGroups, setTournamentDate, addNewPlayer, addTemporaryPlayer, clearDraftState } = appSlice.actions;
 
+// Selectors
+export const selectAllPlayerNames = (state) => {
+    const players = state.app.allPlayers;
+    if (players.length === 0) return [];
+    // Handle both formats: array of strings or array of objects
+    return typeof players[0] === 'string' ? players : players.map(p => p.name);
+};
+
+export const selectAllPlayers = (state) => state.app.allPlayers;
+
 export default appSlice.reducer;
+

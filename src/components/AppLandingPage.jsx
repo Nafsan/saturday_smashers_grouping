@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { generateGroupsAction } from '../store/appSlice';
-import { Trophy, Sparkles, DollarSign, Youtube, UserPlus } from 'lucide-react';
+import { Trophy, Sparkles, DollarSign, Youtube, UserPlus, BarChart3 } from 'lucide-react';
 import { Tooltip } from '@mui/material';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import RankSubmission from './RankSubmission';
@@ -10,6 +10,7 @@ import GlobalRanking from './GlobalRanking';
 import TournamentFixtureModal from './TournamentFixtureModal';
 import AddPlayer from './AddPlayer';
 import DaysPlayedChart from './DaysPlayedChart';
+import PlayerStatsModal from './PlayerStatsModal';
 import './AppLandingPage.scss';
 
 const AppLandingPage = () => {
@@ -20,6 +21,7 @@ const AppLandingPage = () => {
     const [editingTournament, setEditingTournament] = useState(null);
     const [isFixtureModalOpen, setIsFixtureModalOpen] = useState(false);
     const [isAddPlayerOpen, setIsAddPlayerOpen] = useState(false);
+    const [isPlayerStatsOpen, setIsPlayerStatsOpen] = useState(false);
 
     const handleEditTournament = (tournament) => {
         setEditingTournament(tournament);
@@ -105,6 +107,13 @@ const AppLandingPage = () => {
                     >
                         <UserPlus size={18} /> Add Player
                     </button>
+                    <button
+                        className="secondary-btn"
+                        onClick={() => setIsPlayerStatsOpen(true)}
+                        style={{ background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)' }}
+                    >
+                        <BarChart3 size={18} /> Player Stats
+                    </button>
                 </div>
             </div>
 
@@ -135,6 +144,12 @@ const AppLandingPage = () => {
             <AddPlayer
                 open={isAddPlayerOpen}
                 onClose={() => setIsAddPlayerOpen(false)}
+            />
+
+            {/* Player Stats Modal */}
+            <PlayerStatsModal
+                open={isPlayerStatsOpen}
+                onClose={() => setIsPlayerStatsOpen(false)}
             />
         </div>
     );

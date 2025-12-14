@@ -1,0 +1,178 @@
+{
+    "categories": [
+        {
+            "id": "consistent_champion",
+            "name": "Consistent Champion",
+            "criteria": "Regularly finishes in top 2 positions (60%+ of tournaments)",
+            "statements": [
+                "🏆 You're a true champion! Your consistency at the top is remarkable. Keep dominating!",
+                "👑 Excellence is your standard! Your regular podium finishes inspire everyone.",
+                "⭐ A champion's mindset shows in every tournament. Your dedication is unmatched!",
+                "🔥 Top-tier performance is your norm. You set the bar for everyone else!"
+            ]
+        },
+        {
+            "id": "comeback_king",
+            "name": "Comeback King",
+            "criteria": "Shows significant improvement after poor performances",
+            "statements": [
+                "💪 Your resilience is inspiring! You never stay down for long.",
+                "🚀 Every setback is just a setup for your comeback. Keep bouncing back!",
+                "⚡ You prove that champions aren't defined by falls, but by how they rise!",
+                "🎯 Your ability to recover and improve is what makes you special!"
+            ]
+        },
+        {
+            "id": "plate_specialist",
+            "name": "Plate Specialist",
+            "criteria": "Consistently performs well in Plate rounds (70%+ plate participation)",
+            "statements": [
+                "🛡️ You own the Plate division! Your dominance here is undeniable.",
+                "💎 Plate champion through and through! Your consistency is your strength.",
+                "🌟 You've made the Plate your kingdom. Keep ruling!",
+                "⚔️ Every Plate tournament is your battlefield, and you're winning the war!"
+            ]
+        },
+        {
+            "id": "rising_star",
+            "name": "Rising Star",
+            "criteria": "Clear upward trend in recent tournaments",
+            "statements": [
+                "📈 Your improvement trajectory is incredible! The sky's the limit!",
+                "🌠 Rising fast! Your recent performances show you're destined for greatness.",
+                "🚀 Watch out world! This rising star is about to shine bright!",
+                "✨ Your growth is exponential. Keep climbing, champion!",
+                "🔝 The only way is up! Your progress is phenomenal!"
+            ]
+        },
+        {
+            "id": "versatile_performer",
+            "name": "Versatile Performer",
+            "criteria": "Balanced performance across Cup and Plate (40-60% in each)",
+            "statements": [
+                "🎭 Versatility is your superpower! You excel everywhere you play.",
+                "🌈 Cup or Plate, you bring your A-game. True all-rounder!",
+                "⚖️ Balanced and brilliant! Your adaptability sets you apart.",
+                "🎪 You're comfortable in any arena. That's the mark of a true competitor!"
+            ]
+        },
+        {
+            "id": "cup_regular",
+            "name": "Cup Regular",
+            "criteria": "Mostly plays Cup rounds with occasional Plate appearances (70%+ cup)",
+            "statements": [
+                "🏅 Cup is your home! You belong among the elite.",
+                "👊 You're a Cup mainstay! Your presence in top tier is well-earned.",
+                "💫 Cup regular with championship potential! Keep pushing!",
+                "🎖️ You've earned your place in the Cup. Now claim your trophy!"
+            ]
+        },
+        {
+            "id": "underdog_hero",
+            "name": "Underdog Hero",
+            "criteria": "Occasional breakthrough performances with mostly mid-tier finishes",
+            "statements": [
+                "🦸 When you peak, you're unstoppable! Those breakthrough moments are magic!",
+                "💥 Your surprise victories keep everyone on their toes!",
+                "🎲 Unpredictability is your weapon. When you strike, you strike hard!",
+                "⚡ Those clutch performances show your true potential. Unleash it more often!",
+                "🌟 Your best is championship-level. Bring it out consistently!"
+            ]
+        },
+        {
+            "id": "steady_eddie",
+            "name": "Steady Eddie",
+            "criteria": "Consistent mid-tier performances (ranks 3-6 consistently)",
+            "statements": [
+                "🎯 Consistency is key, and you've mastered it! Solid as a rock.",
+                "⚓ Reliable and steady! Your consistency is your foundation for growth.",
+                "📊 Your stable performance shows discipline. Now reach for the stars!",
+                "🔄 Steady progress beats wild swings. You're building something great!"
+            ]
+        },
+        {
+            "id": "wildcard",
+            "name": "Wildcard",
+            "criteria": "Highly variable performance (high standard deviation in ranks)",
+            "statements": [
+                "🎰 You're the wildcard! When you're hot, you're unstoppable!",
+                "🌪️ Unpredictable and exciting! Find your rhythm and you'll dominate.",
+                "🎢 Your performance is a rollercoaster, but those highs are incredible!",
+                "⚡ Channel that peak performance more often and you'll be unstoppable!",
+                "🔮 Your potential is sky-high. Consistency will unlock it!"
+            ]
+        },
+        {
+            "id": "plate_warrior",
+            "name": "Plate Warrior",
+            "criteria": "Dominates Plate competition (multiple Plate championships)",
+            "statements": [
+                "⚔️ Plate Warrior! Your dominance in this division is legendary!",
+                "🛡️ You've conquered the Plate! Multiple championships prove your class.",
+                "👑 Plate royalty! Your reign continues with every tournament.",
+                "💪 Plate champion multiple times over! You're the one to beat!",
+                "🏆 The Plate belongs to you! Your legacy is being written!"
+            ]
+        },
+        {
+            "id": "cup_contender",
+            "name": "Cup Contender",
+            "criteria": "Frequently reaches Cup semi-finals or better (50%+ top 4 finishes)",
+            "statements": [
+                "🥇 You're always in the mix! Cup contender through and through.",
+                "🎯 Top 4 is your territory! That championship is within reach.",
+                "💎 Elite performer! You belong among the best.",
+                "🔥 You're knocking on the door of greatness! Keep pushing!",
+                "⭐ Semi-finals and beyond is your standard. Championship next!"
+            ]
+        },
+        {
+            "id": "developing_talent",
+            "name": "Developing Talent",
+            "criteria": "New player or limited tournament history (less than 5 tournaments)",
+            "statements": [
+                "🌱 Welcome to the journey! Every tournament is a learning experience.",
+                "🎓 You're building your legacy one tournament at a time!",
+                "🚀 New to the scene but full of potential! The future is bright!",
+                "💫 Every champion started somewhere. Your journey has begun!",
+                "🌟 Fresh talent with unlimited potential! Keep learning and growing!"
+            ]
+        },
+        {
+            "id": "tournament_veteran",
+            "name": "Tournament Veteran",
+            "criteria": "High tournament participation (15+ tournaments)",
+            "statements": [
+                "🎖️ Veteran presence! Your experience is invaluable to the community.",
+                "👴 You've seen it all! Your dedication to the game is inspiring.",
+                "📚 Tournament wisdom personified! Your consistency in showing up matters.",
+                "🏛️ A pillar of the community! Your commitment is legendary.",
+                "⏰ Time and dedication build champions. You embody both!"
+            ]
+        },
+        {
+            "id": "clutch_performer",
+            "name": "Clutch Performer",
+            "criteria": "Recent performances better than historical average",
+            "statements": [
+                "🔥 You're heating up! Recent form is outstanding!",
+                "📈 Peaking at the right time! Your best is yet to come!",
+                "⚡ On fire lately! This momentum is championship-worthy!",
+                "💪 Your recent surge shows you're ready for the next level!",
+                "🎯 Locked in! Your current form is exceptional!"
+            ]
+        },
+        {
+            "id": "balanced_competitor",
+            "name": "Balanced Competitor",
+            "criteria": "Default category for players who don't fit other patterns",
+            "statements": [
+                "⚖️ Balanced and competitive! You bring solid performance every time.",
+                "🎯 Consistent competitor! Your presence makes every tournament better.",
+                "💪 You show up and compete! That's what champions are made of.",
+                "🌟 Every tournament is an opportunity to shine. Keep competing!",
+                "🏓 Your competitive spirit is what it's all about! Keep playing!"
+            ]
+        }
+    ]
+}

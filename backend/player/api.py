@@ -33,3 +33,14 @@ async def add_player(
 async def get_players(database_session: AsyncSession = Depends(get_db)):
     """Get all players"""
     return await services.get_all_players(database_session)
+
+
+@router.get("/{player_id}/statistics")
+async def get_player_statistics(
+    player_id: int,
+    database_session: AsyncSession = Depends(get_db)
+):
+    """Get tournament statistics for a specific player"""
+    return await services.get_player_statistics(player_id, database_session)
+
+

@@ -35,3 +35,59 @@ async def get_all_players(database_session: AsyncSession):
     query_result = await database_session.execute(select(models.Player).order_by(models.Player.name))
     players = query_result.scalars().all()
     return [{"id": player.id, "name": player.name} for player in players]
+
+
+async def get_player_statistics(player_id: int, database_session: AsyncSession):
+    """Get tournament statistics for a specific player"""
+    from sqlalchemy.orm import selectinload
+    
+    # First, check if player exists
+    player_query = await database_session.execute(
+        select(models.Player).where(models.Player.id == player_id)
+    )
+    player = player_query.scalar()
+    
+    if not player:
+        raise HTTPException(status_code=404, detail=f"Player with ID {player_id} not found")
+    
+    # Get all tournaments where this player participated
+    tournaments_query = await database_session.execute(
+        select(models.Tournament)
+        .join(models.Tournament.rank_groups)
+        .join(models.RankGroup.players)
+        .where(models.Player.id == player_id)
+        .options(
+            selectinload(models.Tournament.rank_groups)
+            .selectinload(models.RankGroup.players)
+        )
+        .order_by(models.Tournament.date.desc())
+    )
+    tournaments = tournaments_query.unique().scalars().all()
+    
+    # Transform to response format
+    response = []
+    for tournament in tournaments:
+        rank_groups_list = []
+        for rank_group in tournament.rank_groups:
+            rank_groups_list.append({
+                "id": rank_group.id,
+                "tournament_id": rank_group.tournament_id,
+                "rank": rank_group.rank,
+                "rating": rank_group.rating,
+                "players": [p.name for p in rank_group.players]
+            })
+        response.append({
+            "id": tournament.id,
+            "date": tournament.date.isoformat(),
+            "playlist_url": tournament.playlist_url,
+            "embed_url": tournament.embed_url,
+            "ranks": rank_groups_list
+        })
+    
+    return {
+        "player_id": player_id,
+        "player_name": player.name,
+        "tournaments": response
+    }
+
+

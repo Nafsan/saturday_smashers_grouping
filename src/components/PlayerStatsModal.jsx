@@ -34,6 +34,15 @@ const PlayerStatsModal = ({ open, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Reset state when modal closes
+    useEffect(() => {
+        if (!open) {
+            setSelectedPlayer(null);
+            setPlayerData(null);
+            setError(null);
+        }
+    }, [open]);
+
     // Custom styles for react-select
     const customSelectStyles = {
         control: (provided, state) => ({

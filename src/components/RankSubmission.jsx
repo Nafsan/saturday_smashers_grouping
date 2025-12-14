@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { uploadRankingAsync, updateRankingAsync } from '../store/appSlice';
+import { uploadRankingAsync, updateRankingAsync, selectAllPlayerNames } from '../store/appSlice';
 import {
     TextField,
     Autocomplete,
@@ -20,7 +20,7 @@ import './RankSubmission.scss';
 
 const RankSubmission = ({ open, onClose, initialData }) => {
     const dispatch = useDispatch();
-    const { allPlayers } = useSelector(state => state.app);
+    const allPlayers = useSelector(selectAllPlayerNames);
     const { successNotification, errorNotification, warningNotification } = useToast();
 
     // Form State

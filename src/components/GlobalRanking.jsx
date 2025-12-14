@@ -111,7 +111,6 @@ const GlobalRanking = ({ onClose }) => {
                         placeholder="Search players..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        autoFocus
                     />
                 </div>
 

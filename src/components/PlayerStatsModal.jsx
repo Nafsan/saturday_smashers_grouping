@@ -344,8 +344,9 @@ const PlayerStatsModal = ({ open, onClose }) => {
 
                     {!loading && !error && playerData && statistics && (
                         <>
+                            {/* TODO: Implement this later. */}
                             {/* Player Category & Motivational Statement */}
-                            {playerCategory && (
+                            {/* {playerCategory && (
                                 <div className="player-category-card">
                                     <div className="category-header">
                                         <Award size={20} color="#fbbf24" />
@@ -353,7 +354,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                     </div>
                                     <p className="motivational-statement">{playerCategory.selectedStatement}</p>
                                 </div>
-                            )}
+                            )} */}
 
                             {/* Statistics Summary */}
                             <div className="stats-summary">

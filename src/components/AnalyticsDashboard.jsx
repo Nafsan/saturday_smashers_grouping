@@ -17,6 +17,8 @@ const AnalyticsDashboard = ({ onEdit }) => {
     const [showAllHistory, setShowAllHistory] = useState(false);
     const [selectedGraphPlayers, setSelectedGraphPlayers] = useState([]);
     const [expandedTournaments, setExpandedTournaments] = useState([]);
+    const [timeRange, setTimeRange] = useState('10'); // '10', '20', 'all'
+
 
     // Delete State
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -146,7 +148,13 @@ const AnalyticsDashboard = ({ onEdit }) => {
     const graphData = useMemo(() => {
         // Sort history by date ascending for the graph
         const sortedHistory = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
-        const recentHistory = sortedHistory.slice(-10); // Last 10
+
+        let limit;
+        if (timeRange === '10') limit = 10;
+        else if (timeRange === '20') limit = 20;
+        else limit = sortedHistory.length; // 'all'
+
+        const recentHistory = sortedHistory.slice(-limit); // Last N tournaments
 
         return recentHistory.map(t => {
             const point = { date: t.date };
@@ -157,7 +165,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
             });
             return point;
         });
-    }, [history]);
+    }, [history, timeRange]);
 
     // Colors for lines
     const colors = ['#38bdf8', '#818cf8', '#4ade80', '#f472b6', '#fbbf24'];
@@ -167,7 +175,26 @@ const AnalyticsDashboard = ({ onEdit }) => {
 
     return (
         <div className="analytics-dashboard">
-            <h3>Player Performance Trends</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3>Player Performance Trends</h3>
+                <select
+                    value={timeRange}
+                    onChange={(e) => setTimeRange(e.target.value)}
+                    style={{
+                        backgroundColor: '#1e293b',
+                        color: '#f8fafc',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '6px',
+                        padding: '0.5rem 1rem',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem'
+                    }}
+                >
+                    <option value="10">Last 10</option>
+                    <option value="20">Last 20</option>
+                    <option value="all">All Time</option>
+                </select>
+            </div>
 
             <div className="player-selector-container">
                 <p className="label">Compare Players (Max 5):</p>

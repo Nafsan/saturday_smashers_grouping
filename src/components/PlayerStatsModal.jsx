@@ -33,6 +33,8 @@ const PlayerStatsModal = ({ open, onClose }) => {
     const [playerData, setPlayerData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [timeRange, setTimeRange] = useState('10'); // '10', '20', 'all'
+
 
     // Reset state when modal closes
     useEffect(() => {
@@ -40,6 +42,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
             setSelectedPlayer(null);
             setPlayerData(null);
             setError(null);
+            setTimeRange('10'); // Reset time range too
         }
     }, [open]);
 
@@ -282,11 +285,17 @@ const PlayerStatsModal = ({ open, onClose }) => {
 
     const performanceTrendData = useMemo(() => {
         if (!statistics) return [];
-        return statistics.ranks.slice(0, 10).reverse().map(r => ({
+
+        let limit;
+        if (timeRange === '10') limit = 10;
+        else if (timeRange === '20') limit = 20;
+        else limit = statistics.ranks.length; // 'all'
+
+        return statistics.ranks.slice(0, limit).reverse().map(r => ({
             date: r.date.substring(5),
             rating: r.rating
         }));
-    }, [statistics]);
+    }, [statistics, timeRange]);
 
     if (!open) return null;
 
@@ -336,8 +345,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
                     {!loading && !error && playerData && statistics && (
                         <>
                             {/* Player Category & Motivational Statement */}
-                            {/* TODO: Implement player category and motivational statement */}
-                            {/* {playerCategory && (
+                            {playerCategory && (
                                 <div className="player-category-card">
                                     <div className="category-header">
                                         <Award size={20} color="#fbbf24" />
@@ -345,7 +353,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                     </div>
                                     <p className="motivational-statement">{playerCategory.selectedStatement}</p>
                                 </div>
-                            )} */}
+                            )}
 
                             {/* Statistics Summary */}
                             <div className="stats-summary">
@@ -471,7 +479,26 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                 {/* Performance Trend */}
                                 {performanceTrendData.length > 0 && (
                                     <div className="chart-container full-width">
-                                        <h3><TrendingUp size={20} /> Performance Trend (Last 10 Tournaments)</h3>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                            <h3><TrendingUp size={20} /> Performance Trend</h3>
+                                            <select
+                                                value={timeRange}
+                                                onChange={(e) => setTimeRange(e.target.value)}
+                                                style={{
+                                                    backgroundColor: '#1e293b',
+                                                    color: '#f8fafc',
+                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                    borderRadius: '6px',
+                                                    padding: '0.5rem 1rem',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.875rem'
+                                                }}
+                                            >
+                                                <option value="10">Last 10</option>
+                                                <option value="20">Last 20</option>
+                                                <option value="all">All Time</option>
+                                            </select>
+                                        </div>
                                         <ResponsiveContainer width="100%" height={300}>
                                             <LineChart data={performanceTrendData}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />

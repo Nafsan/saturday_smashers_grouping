@@ -282,13 +282,28 @@ async def save_tournament_costs_and_update_balances(
         player = player_result.scalar()
         
         if player:
-            is_club_member = player_name in cost_request.club_members
-            attendance = fund_models.TournamentAttendance(
-                tournament_id=tournament.id,
-                player_id=player.id,
-                is_club_member=is_club_member
+            # Check if attendance record already exists (e.g., from unofficial tournament creation)
+            existing_attendance_result = await db.execute(
+                select(fund_models.TournamentAttendance).where(
+                    fund_models.TournamentAttendance.tournament_id == tournament.id,
+                    fund_models.TournamentAttendance.player_id == player.id
+                )
             )
-            db.add(attendance)
+            existing_attendance = existing_attendance_result.scalar()
+            
+            if existing_attendance:
+                # Update existing attendance record with club member status
+                is_club_member = player_name in cost_request.club_members
+                existing_attendance.is_club_member = is_club_member
+            else:
+                # Create new attendance record
+                is_club_member = player_name in cost_request.club_members
+                attendance = fund_models.TournamentAttendance(
+                    tournament_id=tournament.id,
+                    player_id=player.id,
+                    is_club_member=is_club_member
+                )
+                db.add(attendance)
     
     # Update player balances
     for breakdown in calculation.player_breakdowns:

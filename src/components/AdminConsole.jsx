@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Database, DollarSign, Settings as SettingsIcon, Lock, Wallet } from 'lucide-react';
+import { ArrowLeft, Database, DollarSign, Settings as SettingsIcon, Lock, Wallet, Receipt } from 'lucide-react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Tabs, Tab, Box } from '@mui/material';
 import SeedInitialData from './SeedInitialData';
 import AddTournamentCosts from './AddTournamentCosts';
 import FundSettings from './FundSettings';
 import RecordPayment from './RecordPayment';
+import AddPlayerMiscCost from './AddPlayerMiscCost';
 import './AdminConsole.scss';
 
 const AdminConsole = () => {
@@ -108,14 +109,19 @@ const AdminConsole = () => {
                             }
                         }}
                     >
-                        <Tab
+                        {/* <Tab
                             icon={<Database size={18} />}
                             label="Seed/Edit Data"
                             iconPosition="start"
-                        />
+                        /> */}
                         <Tab
                             icon={<Wallet size={18} />}
                             label="Record Payment"
+                            iconPosition="start"
+                        />
+                        <Tab
+                            icon={<Receipt size={18} />}
+                            label="Player Misc Costs"
                             iconPosition="start"
                         />
                         <Tab
@@ -132,8 +138,8 @@ const AdminConsole = () => {
                 </Box>
 
                 <div className="tab-content">
-                    {activeTab === 0 && <SeedInitialData />}
-                    {activeTab === 1 && <RecordPayment />}
+                    {activeTab === 0 && <RecordPayment />}
+                    {activeTab === 1 && <AddPlayerMiscCost />}
                     {activeTab === 2 && <AddTournamentCosts />}
                     {activeTab === 3 && <FundSettings />}
                 </div>

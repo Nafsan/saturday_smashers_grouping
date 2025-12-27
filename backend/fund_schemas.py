@@ -144,3 +144,11 @@ class RecordPaymentRequest(BaseModel):
     amount: float
     payment_date: Optional[date] = None
     notes: Optional[str] = None
+
+
+# ============ Player Miscellaneous Cost ============
+class AddPlayerMiscCostRequest(BaseModel):
+    player_names: List[str]
+    cost_amount: float
+    cost_description: Optional[str] = None
+    cost_date: Optional[date] = None

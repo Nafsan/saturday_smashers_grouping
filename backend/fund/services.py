@@ -560,3 +560,69 @@ async def get_tournament_cost_details(
         total_cost=cost_record.total_venue_cost + cost_record.total_ball_cost + cost_record.common_misc_cost,
         player_breakdowns=player_breakdowns
     )
+
+
+async def add_player_misc_cost(
+    cost_data: fund_schemas.AddPlayerMiscCostRequest,
+    db: AsyncSession
+):
+    """Add miscellaneous cost for players and update their balances"""
+    
+    if not cost_data.player_names:
+        raise HTTPException(status_code=400, detail="At least one player must be selected")
+    
+    if cost_data.cost_amount <= 0:
+        raise HTTPException(status_code=400, detail="Cost amount must be greater than 0")
+    
+    updated_balances = []
+    
+    for player_name in cost_data.player_names:
+        # Get player by name
+        player_result = await db.execute(
+            select(models.Player).where(models.Player.name == player_name)
+        )
+        player = player_result.scalar()
+        
+        if not player:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Player '{player_name}' not found"
+            )
+        
+        # Get or create player fund
+        fund_result = await db.execute(
+            select(fund_models.PlayerFund).where(
+                fund_models.PlayerFund.player_id == player.id
+            )
+        )
+        player_fund = fund_result.scalar()
+        
+        if not player_fund:
+            player_fund = fund_models.PlayerFund(
+                player_id=player.id,
+                current_balance=0.0,
+                days_played=0,
+                total_paid=0.0,
+                total_cost=0.0
+            )
+            db.add(player_fund)
+            await db.flush()
+        
+        # Deduct cost from balance and increment total cost
+        player_fund.current_balance -= cost_data.cost_amount
+        player_fund.total_cost += cost_data.cost_amount
+        player_fund.last_updated = datetime.utcnow()
+        
+        updated_balances.append({
+            "player_name": player_name,
+            "new_balance": player_fund.current_balance,
+            "cost_added": cost_data.cost_amount
+        })
+    
+    await db.commit()
+    
+    return {
+        "message": f"Miscellaneous cost of ৳{cost_data.cost_amount} added successfully for {len(cost_data.player_names)} player(s)",
+        "description": cost_data.cost_description,
+        "updated_balances": updated_balances
+    }

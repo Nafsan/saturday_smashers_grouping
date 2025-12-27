@@ -124,3 +124,17 @@ async def record_payment(
 async def get_days_played_comparison(db: AsyncSession = Depends(get_db)):
     """Get days played comparison for all players with fund records"""
     return await services.get_days_played_comparison(db)
+
+
+# ============ Player Miscellaneous Cost ============
+@router.post("/player-misc-cost")
+async def add_player_misc_cost(
+    cost_data: fund_schemas.AddPlayerMiscCostRequest,
+    password: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Add miscellaneous cost for players (password protected)"""
+    if password != "ss_admin_panel":
+        raise HTTPException(status_code=403, detail="Invalid password")
+    
+    return await services.add_player_misc_cost(cost_data, db)

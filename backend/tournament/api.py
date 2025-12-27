@@ -69,3 +69,16 @@ async def get_tournament_players_by_date(
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
     
     return await services.get_tournament_players_by_date(tournament_date, database_session)
+
+
+@router.post("/create-unofficial", status_code=status.HTTP_201_CREATED)
+async def create_unofficial_tournament(
+    request: schemas.CreateUnofficialTournamentRequest,
+    password: str,
+    database_session: AsyncSession = Depends(get_db)
+):
+    """Create an unofficial tournament entry for cost tracking"""
+    if password != "ss_admin_panel":
+        raise HTTPException(status_code=403, detail="Invalid password")
+    
+    return await services.create_unofficial_tournament(request, database_session)

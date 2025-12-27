@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey, Table, Text
+from sqlalchemy import Column, Integer, String, Date, ForeignKey, Table, Text, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -17,6 +17,7 @@ class Tournament(Base):
     date = Column(Date, unique=True, nullable=False)
     playlist_url = Column(String(500), nullable=True)
     embed_url = Column(Text, nullable=True)
+    is_official = Column(Boolean, default=True, nullable=False)
 
     rank_groups = relationship("RankGroup", back_populates="tournament", cascade="all, delete-orphan")
     costs = relationship("TournamentCost", back_populates="tournament", uselist=False, cascade="all, delete-orphan")

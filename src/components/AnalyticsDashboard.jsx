@@ -284,28 +284,42 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                     </div>
                                 </div>
                                 <div className="ranks-preview">
-                                    {ranksToShow.map(r => (
-                                        <span key={r.rank} className="rank-pill">
-                                            #{r.rank} {r.players.join(', ')}
+                                    {t.is_official === false ? (
+                                        <span style={{
+                                            color: '#38bdf8',
+                                            fontStyle: 'italic',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem'
+                                        }}>
+                                            🎾 Unofficial friendly tournament - no ranking
                                         </span>
-                                    ))}
+                                    ) : (
+                                        <>
+                                            {ranksToShow.map(r => (
+                                                <span key={r.rank} className="rank-pill">
+                                                    #{r.rank} {r.players.join(', ')}
+                                                </span>
+                                            ))}
 
-                                    {hasMore && !isExpanded && (
-                                        <span
-                                            className="more clickable"
-                                            onClick={() => toggleTournamentExpansion(t.id)}
-                                        >
-                                            +{t.ranks.length - 3} more
-                                        </span>
-                                    )}
+                                            {hasMore && !isExpanded && (
+                                                <span
+                                                    className="more clickable"
+                                                    onClick={() => toggleTournamentExpansion(t.id)}
+                                                >
+                                                    +{t.ranks.length - 3} more
+                                                </span>
+                                            )}
 
-                                    {hasMore && isExpanded && (
-                                        <span
-                                            className="more clickable"
-                                            onClick={() => toggleTournamentExpansion(t.id)}
-                                        >
-                                            Show Less
-                                        </span>
+                                            {hasMore && isExpanded && (
+                                                <span
+                                                    className="more clickable"
+                                                    onClick={() => toggleTournamentExpansion(t.id)}
+                                                >
+                                                    Show Less
+                                                </span>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             </div>

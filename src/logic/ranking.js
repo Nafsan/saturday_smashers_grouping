@@ -7,10 +7,13 @@
  * @returns {Array} Sorted list of players with their stats.
  */
 export const calculateRankings = (history, activePlayers, temporaryPlayers = []) => {
-    // 1. Flatten history into a map of Player -> List of Ranks
+    // 1. Filter out unofficial tournaments from ranking calculation
+    const officialHistory = history.filter(tournament => tournament.is_official !== false);
+
+    // 2. Flatten history into a map of Player -> List of Ranks
     // We assume history is sorted by date descending (newest first). 
     // If not, we should sort it first.
-    const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sortedHistory = [...officialHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     const playerStats = {};
 

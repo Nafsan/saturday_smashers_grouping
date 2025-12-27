@@ -34,6 +34,7 @@ class TournamentBase(BaseModel):
     date: date
     playlist_url: Optional[str] = None
     embed_url: Optional[str] = None
+    is_official: Optional[bool] = True
 
 class TournamentCreate(TournamentBase):
     ranks: List[RankGroupCreate]
@@ -43,3 +44,9 @@ class Tournament(TournamentBase):
 
     class Config:
         orm_mode = True
+
+
+class CreateUnofficialTournamentRequest(BaseModel):
+    """Request schema for creating unofficial tournament"""
+    date: date
+    tournament_players: List[str]

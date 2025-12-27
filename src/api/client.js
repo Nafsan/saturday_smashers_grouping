@@ -136,5 +136,12 @@ export const fetchTournamentCostDetails = async (date) => {
     return response.data;
 };
 
+export const createUnofficialTournament = async (data, password) => {
+    const response = await client.post('/history/create-unofficial', data, {
+        params: { password }
+    });
+    return response.data;
+};
+
 export default client;
 

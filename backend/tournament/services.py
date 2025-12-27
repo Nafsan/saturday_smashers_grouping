@@ -38,6 +38,7 @@ async def get_all_tournaments(database_session: AsyncSession):
             "date": tournament.date,
             "playlist_url": tournament.playlist_url,
             "embed_url": tournament.embed_url,
+            "is_official": tournament.is_official,
             "ranks": rank_groups_list
         })
         
@@ -105,7 +106,8 @@ async def create_tournament(tournament: schemas.TournamentCreate, database_sessi
         id=tournament.id, 
         date=tournament.date,
         playlist_url=tournament.playlist_url,
-        embed_url=tournament.embed_url
+        embed_url=tournament.embed_url,
+        is_official=tournament.is_official if tournament.is_official is not None else True
     )
     database_session.add(database_tournament)
     
@@ -194,6 +196,7 @@ async def update_tournament(tournament_id: str, tournament: schemas.TournamentCr
     database_tournament.date = tournament.date
     database_tournament.playlist_url = tournament.playlist_url
     database_tournament.embed_url = tournament.embed_url
+    database_tournament.is_official = tournament.is_official if tournament.is_official is not None else True
     
     # Delete existing rank groups (cascade should handle associations if configured, but let's be explicit)
     # Actually, we need to delete RankGroups associated with this tournament.
@@ -287,3 +290,101 @@ async def get_tournament_players_by_date(tournament_date, database_session: Asyn
             player_names.add(player.name)
     
     return {"players": sorted(list(player_names))}
+
+
+async def create_unofficial_tournament(
+    request_data: schemas.CreateUnofficialTournamentRequest, 
+    database_session: AsyncSession
+):
+    """Create an unofficial tournament entry for cost tracking without rankings"""
+    
+    # Check if tournament already exists for this date
+    existing_tournament_query = await database_session.execute(
+        select(models.Tournament).where(models.Tournament.date == request_data.date)
+    )
+    existing_tournament = existing_tournament_query.scalar()
+    
+    if existing_tournament:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Tournament already exists for date {request_data.date}"
+        )
+    
+    # Generate tournament ID from date
+    tournament_id = f"unofficial_{request_data.date.strftime('%Y%m%d')}"
+    
+    # Create unofficial tournament
+    database_tournament = models.Tournament(
+        id=tournament_id,
+        date=request_data.date,
+        playlist_url=None,
+        embed_url=None,
+        is_official=False
+    )
+    database_session.add(database_tournament)
+    await database_session.flush()
+    
+    # Create attendance records for all players
+    for player_name in request_data.tournament_players:
+        # Get or create player
+        player_query_result = await database_session.execute(
+            select(models.Player).where(models.Player.name == player_name)
+        )
+        player = player_query_result.scalar()
+        
+        if not player:
+            player = models.Player(name=player_name)
+            database_session.add(player)
+            await database_session.flush()
+        
+        # Create attendance record (default to non-club member)
+        from fund_models import TournamentAttendance
+        attendance = TournamentAttendance(
+            tournament_id=tournament_id,
+            player_id=player.id,
+            is_club_member=False
+        )
+        database_session.add(attendance)
+    
+    # Update days_played for all tournament players
+    try:
+        from fund_models import PlayerFund
+        
+        for player_name in request_data.tournament_players:
+            # Get player by name
+            player_result = await database_session.execute(
+                select(models.Player).where(models.Player.name == player_name)
+            )
+            player = player_result.scalar()
+            
+            if player:
+                # Get or create player fund
+                fund_result = await database_session.execute(
+                    select(PlayerFund).where(PlayerFund.player_id == player.id)
+                )
+                player_fund = fund_result.scalar()
+                
+                if player_fund:
+                    # Increment days_played
+                    player_fund.days_played += 1
+                else:
+                    # Create new fund record if doesn't exist
+                    player_fund = PlayerFund(
+                        player_id=player.id,
+                        current_balance=0.0,
+                        days_played=1,
+                        total_paid=0.0,
+                        total_cost=0.0
+                    )
+                    database_session.add(player_fund)
+    except Exception as e:
+        # Don't fail tournament creation if fund update fails
+        print(f"Warning: Failed to update player fund days_played: {e}")
+    
+    await database_session.commit()
+    
+    return {
+        "message": "Unofficial tournament created successfully",
+        "tournament_id": tournament_id,
+        "date": request_data.date
+    }

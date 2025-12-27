@@ -4,7 +4,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, Paper
 } from '@mui/material';
-import { fetchPlayers, fetchFundSettings, fetchTournamentPlayersByDate, calculateTournamentCosts, saveTournamentCosts } from '../api/client';
+import { fetchPlayers, fetchFundSettings, fetchTournamentPlayersByDate, calculateTournamentCosts, saveTournamentCosts, createUnofficialTournament } from '../api/client';
 import { Plus, Calculator, Save, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,10 +28,14 @@ const AddTournamentCosts = () => {
     const [commonMiscName, setCommonMiscName] = useState('');
     const [playerSpecificCosts, setPlayerSpecificCosts] = useState([]);
 
-    // Calculation state
     const [calculation, setCalculation] = useState(null);
     const [showPreview, setShowPreview] = useState(false);
+    const [showUnofficialDialog, setShowUnofficialDialog] = useState(false);
+    const [isUnofficialTournament, setIsUnofficialTournament] = useState(false);
+    const [unofficialTournamentCreated, setUnofficialTournamentCreated] = useState(false);
+    const [unofficialTournamentDate, setUnofficialTournamentDate] = useState('');
     const [saving, setSaving] = useState(false);
+    const [creatingUnofficial, setCreatingUnofficial] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -66,9 +70,52 @@ const AddTournamentCosts = () => {
             const response = await fetchTournamentPlayersByDate(tournamentDate);
             setTournamentPlayers(response.players);
             setMessage({ type: 'success', text: `Auto-populated ${response.players.length} players` });
+            console.log('Auto-populated players:', response.players);
+            console.log(response);
+            // Clear unofficial tournament flag if successfully populated
+            setIsUnofficialTournament(false);
         } catch (error) {
             console.error('Error auto-populating players:', error);
-            setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to fetch tournament players' });
+            // If tournament not found (404), prompt for unofficial tournament creation
+            if (error.response?.status === 404) {
+                setUnofficialTournamentDate(tournamentDate);
+                setShowUnofficialDialog(true);
+            } else {
+                setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to fetch tournament players' });
+            }
+        }
+    };
+
+    const handleConfirmUnofficialTournament = () => {
+        // Just store the confirmation, don't create tournament yet
+        setIsUnofficialTournament(true);
+        setUnofficialTournamentCreated(false);
+        setShowUnofficialDialog(false);
+        setMessage({
+            type: 'info',
+            text: 'Marked as unofficial tournament. Please select players and click "Create Unofficial Tournament" button below.'
+        });
+    };
+
+    const handleCreateUnofficialTournament = async () => {
+        if (tournamentPlayers.length === 0) {
+            setMessage({ type: 'error', text: 'Please select tournament players first' });
+            return;
+        }
+
+        try {
+            setCreatingUnofficial(true);
+            await createUnofficialTournament(
+                { date: tournamentDate, tournament_players: tournamentPlayers },
+                'ss_admin_panel'
+            );
+            setUnofficialTournamentCreated(true);
+            setMessage({ type: 'success', text: 'Unofficial tournament created successfully! You can now calculate and save costs.' });
+        } catch (error) {
+            console.error('Error creating unofficial tournament:', error);
+            setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to create unofficial tournament' });
+        } finally {
+            setCreatingUnofficial(false);
         }
     };
 
@@ -98,6 +145,10 @@ const AddTournamentCosts = () => {
         }
         if (tournamentPlayers.length === 0) {
             setMessage({ type: 'error', text: 'Please select tournament players' });
+            return;
+        }
+        if (isUnofficialTournament && !unofficialTournamentCreated) {
+            setMessage({ type: 'error', text: 'Please create the unofficial tournament first using the button below.' });
             return;
         }
 
@@ -143,6 +194,8 @@ const AddTournamentCosts = () => {
 
         try {
             setSaving(true);
+
+            // Unofficial tournament should already be created by now
             await saveTournamentCosts(requestData, 'ss_admin_panel');
             setMessage({ type: 'success', text: 'Tournament costs saved and balances updated successfully!' });
             setShowPreview(false);
@@ -347,10 +400,37 @@ const AddTournamentCosts = () => {
                     ))}
                 </div>
 
+                {/* Create Unofficial Tournament Button - Only shown when unofficial tournament needs to be created */}
+                {isUnofficialTournament && !unofficialTournamentCreated && (
+                    <Button
+                        variant="contained"
+                        onClick={handleCreateUnofficialTournament}
+                        disabled={creatingUnofficial || tournamentPlayers.length === 0}
+                        startIcon={<Plus size={20} />}
+                        sx={{
+                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                            padding: '0.75rem 2rem',
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                            marginBottom: '1rem',
+                            '&:hover': {
+                                background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+                            },
+                            '&:disabled': {
+                                background: '#64748b',
+                                color: '#cbd5e1'
+                            }
+                        }}
+                    >
+                        {creatingUnofficial ? 'Creating Unofficial Tournament...' : 'Create Unofficial Tournament Entry'}
+                    </Button>
+                )}
+
                 {/* Calculate Button */}
                 <Button
                     variant="contained"
                     onClick={handleCalculate}
+                    disabled={isUnofficialTournament && !unofficialTournamentCreated}
                     startIcon={<Calculator size={20} />}
                     sx={{
                         background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)',
@@ -359,6 +439,10 @@ const AddTournamentCosts = () => {
                         fontWeight: 600,
                         '&:hover': {
                             background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
+                        },
+                        '&:disabled': {
+                            background: '#64748b',
+                            color: '#cbd5e1'
                         }
                     }}
                 >
@@ -427,6 +511,40 @@ const AddTournamentCosts = () => {
                         }}
                     >
                         {saving ? 'Saving...' : 'Save & Update Balances'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Unofficial Tournament Dialog */}
+            <Dialog open={showUnofficialDialog} onClose={() => setShowUnofficialDialog(false)}>
+                <DialogTitle>No Tournament Found</DialogTitle>
+                <DialogContent>
+                    <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>
+                        No tournament was found for <strong>{unofficialTournamentDate}</strong>.
+                    </p>
+                    <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>
+                        Is this an <strong>unofficial friendly tournament</strong>? If yes, we'll create an entry for cost tracking when you save (it won't affect rankings).
+                    </p>
+                    <p style={{ color: '#f59e0b', fontSize: '0.875rem' }}>
+                        ⚠️ Make sure to select tournament players below before proceeding.
+                    </p>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => {
+                        setShowUnofficialDialog(false);
+                        setIsUnofficialTournament(false);
+                    }}>Cancel</Button>
+                    <Button
+                        onClick={handleConfirmUnofficialTournament}
+                        variant="contained"
+                        sx={{
+                            background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)',
+                            '&:hover': {
+                                background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
+                            }
+                        }}
+                    >
+                        Yes, This is Unofficial
                     </Button>
                 </DialogActions>
             </Dialog>

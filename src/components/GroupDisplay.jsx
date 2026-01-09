@@ -5,6 +5,7 @@ import { generateKnockoutFixtures } from '../logic/knockout';
 import { toPng } from 'html-to-image';
 import { Download, RefreshCw, ArrowLeft, Trophy, Medal } from 'lucide-react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
+import ThemeToggle from './ThemeToggle';
 import './GroupDisplay.scss';
 
 const GroupDisplay = () => {
@@ -74,6 +75,7 @@ const GroupDisplay = () => {
 
     return (
         <div className="group-display">
+            <ThemeToggle />
             <div className="actions-bar">
                 <button className="icon-btn" onClick={handleBackClick}>
                     <ArrowLeft size={20} /> Back

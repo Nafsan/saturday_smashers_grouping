@@ -11,6 +11,7 @@ import TournamentFixtureModal from './TournamentFixtureModal';
 import AddPlayer from './AddPlayer';
 import DaysPlayedChart from './DaysPlayedChart';
 import PlayerStatsModal from './PlayerStatsModal';
+import ThemeToggle from './ThemeToggle';
 import './AppLandingPage.scss';
 
 const AppLandingPage = () => {
@@ -47,6 +48,7 @@ const AppLandingPage = () => {
 
     return (
         <div className="app-landing-page-container">
+            <ThemeToggle />
             <div className="config-section">
                 <div className="action-buttons">
                     <button className="secondary-btn" onClick={() => setIsFixtureModalOpen(true)} style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>

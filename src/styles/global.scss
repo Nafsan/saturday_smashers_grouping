@@ -10,6 +10,17 @@
   --font-family: 'Inter', system-ui, sans-serif;
 }
 
+[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --accent-primary: #0284c7; /* Darker sky blue for better contrast */
+  --accent-secondary: #6366f1; /* Darker indigo */
+  --accent-success: #16a34a;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

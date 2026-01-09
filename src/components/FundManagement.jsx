@@ -4,6 +4,7 @@ import { ArrowLeft, Settings, Search, TrendingUp, TrendingDown, Users, FileText 
 import { fetchFundBalances } from '../api/client';
 import LoadingSpinner from './LoadingSpinner';
 import TournamentCostViewerModal from './TournamentCostViewerModal';
+import ThemeToggle from './ThemeToggle';
 import './FundManagement.scss';
 
 const FundManagement = () => {
@@ -55,6 +56,7 @@ const FundManagement = () => {
 
     return (
         <div className="fund-management">
+            <ThemeToggle />
             <div className="fund-header">
                 <div className="header-content">
                     <button className="back-btn" onClick={() => navigate('/')}>

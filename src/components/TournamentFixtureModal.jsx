@@ -14,10 +14,11 @@ import {
     IconButton,
     InputAdornment
 } from '@mui/material';
-import { X, Search, UserPlus, Calendar } from 'lucide-react';
+import { X, Search, UserPlus, Calendar, ClipboardPaste, ChevronDown, ChevronUp, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { togglePlayerSelection, setTournamentDate, addTemporaryPlayer, selectAllPlayerNames } from '../store/appSlice';
 import { calculateRankings } from '../logic/ranking';
 import { useToast } from '../context/ToastContext';
+import { Collapse, Alert, Chip, Stack } from '@mui/material';
 import './TournamentFixtureModal.scss';
 
 const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
@@ -30,6 +31,12 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
     const [pendingUnratedPlayers, setPendingUnratedPlayers] = useState([]);
     const [initialRatings, setInitialRatings] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Batch Paste State
+    const [isPasteExpanded, setIsPasteExpanded] = useState(false);
+    const [pastedText, setPastedText] = useState('');
+    const [unmatchedNames, setUnmatchedNames] = useState([]);
+    const [matchedCount, setMatchedCount] = useState(0);
 
     // Calculate rankings for all players
     const playerRankings = useMemo(() => {
@@ -139,7 +146,61 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
         setRatingPromptOpen(false);
         setPendingUnratedPlayers([]);
         setInitialRatings({});
+        // Reset paste state
+        setIsPasteExpanded(false);
+        setPastedText('');
+        setUnmatchedNames([]);
+        setMatchedCount(0);
         onClose();
+    };
+
+    const handleProcessPaste = () => {
+        if (!pastedText.trim()) return;
+
+        const lines = pastedText.split(/\r?\n/);
+        const unmatched = [];
+        let newMatched = 0;
+
+        lines.forEach(line => {
+            if (!line.trim()) return;
+
+            // Clean the name: remove "1.", "-", and trim spaces
+            // Regex explanation:
+            // ^[\d\W]+ : Matches numbers, dots, or non-word characters at start (e.g., "1. ", "- ")
+            let cleanName = line.replace(/^[\d\W]+/, '').trim();
+
+            // Further clean: ensure no leading special chars remained if complex pattern
+            cleanName = cleanName.replace(/^[.\- ]+/, '').trim();
+
+            if (!cleanName) return;
+
+            // Find exact match (case insensitive)
+            const matchedPlayer = allPlayers.find(p => p.toLowerCase() === cleanName.toLowerCase());
+
+            if (matchedPlayer) {
+                // Select only if not already selected
+                if (!selectedPlayers.includes(matchedPlayer)) {
+                    dispatch(togglePlayerSelection(matchedPlayer));
+                    newMatched++;
+                }
+            } else {
+                unmatched.push(cleanName);
+            }
+        });
+
+        setMatchedCount(newMatched);
+        setUnmatchedNames(unmatched);
+
+        if (newMatched > 0) {
+            // Optional: Show a toast or just rely on the UI feedback
+            // successNotification(`Selected ${newMatched} players from list`);
+        }
+    };
+
+    const handleClearPaste = () => {
+        setPastedText('');
+        setUnmatchedNames([]);
+        setMatchedCount(0);
     };
 
     return (
@@ -185,6 +246,116 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                                 ),
                             }}
                         />
+                    </Box>
+
+                    {/* Batch Paste Section */}
+                    <Box className="batch-paste-section" sx={{ mb: 3 }}>
+                        <Button
+                            startIcon={<ClipboardPaste size={18} />}
+                            endIcon={isPasteExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                            onClick={() => setIsPasteExpanded(!isPasteExpanded)}
+                            fullWidth
+                            variant="outlined"
+                            sx={{
+                                justifyContent: 'space-between',
+                                borderColor: 'rgba(56, 189, 248, 0.5)',
+                                color: '#38bdf8',
+                                background: 'rgba(56, 189, 248, 0.08)',
+                                fontWeight: 600,
+                                '&:hover': {
+                                    borderColor: '#38bdf8',
+                                    background: 'rgba(56, 189, 248, 0.15)',
+                                    color: '#7dd3fc'
+                                }
+                            }}
+                        >
+                            Paste Player List (Batch Select)
+                        </Button>
+
+                        <Collapse in={isPasteExpanded}>
+                            <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 1 }}>
+                                <TextField
+                                    multiline
+                                    rows={4}
+                                    placeholder={`Paste list example:\n1. Rejaul\n2. Sakib\n3. Mizan Bhai`}
+                                    value={pastedText}
+                                    onChange={(e) => setPastedText(e.target.value)}
+                                    fullWidth
+                                    variant="outlined"
+                                    size="small"
+                                    sx={{ mb: 2 }}
+                                />
+                                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                                    <Button
+                                        onClick={handleClearPaste}
+                                        size="small"
+                                        color="inherit"
+                                        disabled={!pastedText && unmatchedNames.length === 0}
+                                    >
+                                        Clear
+                                    </Button>
+                                    <Button
+                                        onClick={handleProcessPaste}
+                                        variant="contained"
+                                        size="small"
+                                        disabled={!pastedText.trim()}
+                                        sx={{ background: 'var(--accent-primary)', '&:hover': { background: '#0284c7' } }}
+                                    >
+                                        Process List
+                                    </Button>
+                                </Stack>
+
+                                {/* Feedback Area */}
+                                {(matchedCount > 0 || unmatchedNames.length > 0) && (
+                                    <Box sx={{ mt: 2 }}>
+                                        {matchedCount > 0 && (
+                                            <Alert
+                                                icon={<CheckCircle2 fontSize="inherit" />}
+                                                severity="success"
+                                                sx={{
+                                                    mb: 1,
+                                                    bgcolor: 'rgba(74, 222, 128, 0.1)',
+                                                    color: '#4ade80',
+                                                    '& .MuiAlert-icon': { color: '#4ade80' }
+                                                }}
+                                            >
+                                                Successfully selected {matchedCount} new players.
+                                            </Alert>
+                                        )}
+
+                                        {unmatchedNames.length > 0 && (
+                                            <Alert
+                                                icon={<AlertCircle fontSize="inherit" />}
+                                                severity="error"
+                                                sx={{
+                                                    bgcolor: 'rgba(248, 113, 113, 0.1)',
+                                                    color: '#f87171',
+                                                    '& .MuiAlert-icon': { color: '#f87171' }
+                                                }}
+                                            >
+                                                <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                                                    {unmatchedNames.length} names not found:
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                                    {unmatchedNames.map((name, idx) => (
+                                                        <Chip
+                                                            key={idx}
+                                                            label={name}
+                                                            size="small"
+                                                            sx={{
+                                                                bgcolor: 'rgba(248, 113, 113, 0.2)',
+                                                                color: '#fca5a5',
+                                                                height: '24px'
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </Box>
+                                            </Alert>
+                                        )}
+                                    </Box>
+                                )}
+                            </Box>
+                        </Collapse>
                     </Box>
 
                     {/* Search Bar */}

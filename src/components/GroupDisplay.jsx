@@ -3,65 +3,94 @@ import { useSelector, useDispatch } from 'react-redux';
 import { generateGroupsAction, resetGroups, clearDraftState } from '../store/appSlice';
 import { generateKnockoutFixtures } from '../logic/knockout';
 import { toPng } from 'html-to-image';
-import { Download, RefreshCw, ArrowLeft, Trophy, Medal } from 'lucide-react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
+import { Download, RefreshCw, ArrowLeft, Trophy, Medal, FileImage, Layers } from 'lucide-react';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import ThemeToggle from './ThemeToggle';
 import './GroupDisplay.scss';
 
 const GroupDisplay = () => {
     const { groups, rankedPlayers, tournamentDate } = useSelector(state => state.app);
     const dispatch = useDispatch();
-    const exportRef = useRef(null);
-    const knockoutRef = useRef(null);
+    const exportRef = useRef(null); // Main container (for full export)
+    const groupsRef = useRef(null); // Specific groups container
+    const knockoutRef = useRef(null); // Specific bracket container
     const [showBackConfirmation, setShowBackConfirmation] = useState(false);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const openExportMenu = Boolean(anchorEl);
 
     const fixtures = useMemo(() => {
         const totalPlayers = groups.groupA.length + groups.groupB.length;
         return generateKnockoutFixtures(totalPlayers);
     }, [groups]);
 
-    const handleExport = useCallback(() => {
-        if (exportRef.current === null) {
-            return;
+    // Consolidated Export Handler
+    const handleExport = useCallback((type) => {
+        // Close menu first
+        setAnchorEl(null);
+
+        let node = null;
+        let filename = '';
+        const dateStr = new Date().toISOString().slice(0, 10);
+
+        if (type === 'groups') {
+            // Target the groups container (plus header if possible, but let's stick to the container for specific export)
+            // For better context, we might want to capture the header + groups. 
+            // We can clone the node or just target the main exportRef but hide other elements temporarily.
+            // A simpler approach for now: Target the specific container if refs are separated, 
+            // or use specific logic. Here we will try to capture the specific sections.
+
+            // To capture specific parts beautifully, we can target the 'content-to-export' 
+            // but use the 'filter' option of html-to-image to exclude what we don't want.
+            node = exportRef.current;
+            filename = `saturday-smashers-groups-${dateStr}.png`;
+        } else if (type === 'bracket') {
+            node = knockoutRef.current;
+            filename = `saturday-smashers-bracket-${dateStr}.png`;
+        } else if (type === 'all') {
+            node = exportRef.current;
+            filename = `saturday-smashers-full-export-${dateStr}.png`;
         }
 
-        toPng(exportRef.current, { cacheBust: true, backgroundColor: '#0f172a' })
-            .then((dataUrl) => {
-                const link = document.createElement('a');
-                link.download = `saturday-smashers-groups-${new Date().toISOString().slice(0, 10)}.png`;
-                link.href = dataUrl;
-                link.click();
-            })
-            .catch((err) => {
-                console.error('oops, something went wrong!', err);
-            });
-    }, [exportRef]);
+        if (!node) return;
 
-    const handleExportKnockout = useCallback(() => {
-        if (knockoutRef.current === null) {
-            return;
-        }
-
-        const node = knockoutRef.current;
         const config = {
             cacheBust: true,
             backgroundColor: '#0f172a',
             style: { padding: '20px' },
-            width: node.scrollWidth + 40, // Add padding to width
-            height: node.scrollHeight + 40 // Add padding to height
+            width: node.scrollWidth + 40,
+            height: node.scrollHeight + 40,
+            filter: (domNode) => {
+                // For 'groups' export, exclude the knockout section
+                if (type === 'groups' && domNode.classList?.contains('knockout-section')) {
+                    return false;
+                }
+                // For 'groups' export, exclude rankings summary if desired (optional)
+                if (type === 'groups' && domNode.classList?.contains('rankings-summary')) {
+                    return false;
+                }
+                return true;
+            }
         };
 
         toPng(node, config)
             .then((dataUrl) => {
                 const link = document.createElement('a');
-                link.download = `saturday-smashers-knockout-${new Date().toISOString().slice(0, 10)}.png`;
+                link.download = filename;
                 link.href = dataUrl;
                 link.click();
             })
             .catch((err) => {
                 console.error('oops, something went wrong!', err);
             });
-    }, [knockoutRef]);
+    }, [exportRef, knockoutRef]);
+
+    const handleMenuClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
 
     const handleBackClick = () => {
         setShowBackConfirmation(true);
@@ -84,14 +113,56 @@ const GroupDisplay = () => {
                     <button className="icon-btn" onClick={() => dispatch(generateGroupsAction())}>
                         <RefreshCw size={20} /> Shuffle
                     </button>
-                    <button className="icon-btn primary" onClick={handleExport}>
-                        <Download size={20} /> Export Groups
+
+                    <button
+                        className="icon-btn primary"
+                        onClick={handleMenuClick}
+                        aria-controls={openExportMenu ? 'export-menu' : undefined}
+                        aria-haspopup="true"
+                        aria-expanded={openExportMenu ? 'true' : undefined}
+                    >
+                        <Download size={20} /> Export...
                     </button>
-                    {(fixtures.cup.length > 0 || fixtures.plate.length > 0) && (
-                        <button className="icon-btn primary" onClick={handleExportKnockout}>
-                            <Trophy size={20} /> Export Bracket
-                        </button>
-                    )}
+
+                    <Menu
+                        id="export-menu"
+                        anchorEl={anchorEl}
+                        open={openExportMenu}
+                        onClose={handleMenuClose}
+                        MenuListProps={{
+                            'aria-labelledby': 'export-button',
+                        }}
+                        PaperProps={{
+                            style: {
+                                backgroundColor: '#1e293b',
+                                color: '#f8fafc',
+                                border: '1px solid #334155',
+                            },
+                        }}
+                    >
+                        <MenuItem onClick={() => handleExport('groups')}>
+                            <ListItemIcon>
+                                <FileImage size={18} color="#f8fafc" />
+                            </ListItemIcon>
+                            <ListItemText>Export Groups Only</ListItemText>
+                        </MenuItem>
+
+                        {(fixtures.cup.length > 0 || fixtures.plate.length > 0) && (
+                            <MenuItem onClick={() => handleExport('bracket')}>
+                                <ListItemIcon>
+                                    <Trophy size={18} color="#f8fafc" />
+                                </ListItemIcon>
+                                <ListItemText>Export Bracket Only</ListItemText>
+                            </MenuItem>
+                        )}
+
+                        <MenuItem onClick={() => handleExport('all')}>
+                            <ListItemIcon>
+                                <Layers size={18} color="#f8fafc" />
+                            </ListItemIcon>
+                            <ListItemText>Export Full</ListItemText>
+                        </MenuItem>
+                    </Menu>
                 </div>
             </div>
 
@@ -101,7 +172,7 @@ const GroupDisplay = () => {
                     <p>{new Date(tournamentDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 </div>
 
-                <div className="groups-container">
+                <div className="groups-container" ref={groupsRef}>
                     <div className="group-card group-a">
                         <h3>Group A</h3>
                         <ul>
@@ -208,7 +279,7 @@ const GroupDisplay = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </div>
+        </div >
     );
 };
 

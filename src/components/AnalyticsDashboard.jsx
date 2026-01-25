@@ -189,21 +189,29 @@ const AnalyticsDashboard = ({ onEdit }) => {
         setCurrentPage(1); // Reset to first page
     };
 
-    // Generate page numbers with ellipsis
+    // Generate page numbers with smart ellipsis
     const getPageNumbers = () => {
         const delta = 1; // Number of pages to show around current page
         const range = [];
         const rangeWithDots = [];
         let l;
 
+        // Always show first page
         range.push(1);
+
+        // Calculate range around current page
         for (let i = currentPage - delta; i <= currentPage + delta; i++) {
             if (i < totalPages && i > 1) {
                 range.push(i);
             }
         }
-        if (totalPages > 1) range.push(totalPages);
 
+        // Always show last page
+        if (totalPages > 1) {
+            range.push(totalPages);
+        }
+
+        // Add dots where needed
         for (let i of range) {
             if (l) {
                 if (i - l === 2) {

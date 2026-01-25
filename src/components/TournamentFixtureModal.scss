@@ -136,4 +136,12 @@
             color: #94a3b8;
         }
     }
+
+    .batch-paste-section {
+        .MuiTextField-root {
+            textarea {
+                color: white;
+            }
+        }
+    }
 }

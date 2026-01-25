@@ -106,7 +106,7 @@ const RecordPayment = () => {
                     label="Payment Amount"
                     type="number"
                     value={amount}
-                    onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setAmount(parseFloat(e.target.value) || '')}
                     InputProps={{
                         startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
                     }}

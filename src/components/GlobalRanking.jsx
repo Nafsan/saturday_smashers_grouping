@@ -56,15 +56,22 @@ const GlobalRanking = ({ onClose }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [showBreakdown, setShowBreakdown] = useState(false);
+    const [showRankingInfo, setShowRankingInfo] = useState(false);
 
     const globalRankings = useMemo(() => {
         return calculateRankings(history, allPlayers);
     }, [history, allPlayers]);
 
-    const filteredRankings = useMemo(() => {
-        return globalRankings.filter(player =>
+    const categorizedRankings = useMemo(() => {
+        const filtered = globalRankings.filter(player =>
             player.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
+
+        return {
+            established: filtered.filter(p => p.playedCount >= 2),
+            newPlayers: filtered.filter(p => p.playedCount === 1),
+            neverPlayed: filtered.filter(p => p.playedCount === 0)
+        };
     }, [globalRankings, searchTerm]);
 
     // Get detailed tournament breakdown for a player
@@ -101,7 +108,31 @@ const GlobalRanking = ({ onClose }) => {
         <div className="global-ranking-overlay" onClick={onClose}>
             <div className="global-ranking-modal" onClick={e => e.stopPropagation()}>
                 <div className="modal-header">
-                    <h2><Trophy size={24} color="#fbbf24" /> Group Standings</h2>
+                    <h2>
+                        <Trophy size={24} color="#fbbf24" /> Group Standings
+                        <button
+                            className="info-btn"
+                            onClick={() => setShowRankingInfo(true)}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: '#38bdf8',
+                                padding: '4px',
+                                marginLeft: '0.5rem',
+                                borderRadius: '50%',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.1)'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            title="How Rankings Are Calculated"
+                        >
+                            <Info size={20} />
+                        </button>
+                    </h2>
                     <button className="close-btn" onClick={onClose}>
                         <X size={24} />
                     </button>
@@ -118,86 +149,150 @@ const GlobalRanking = ({ onClose }) => {
 
                 <div className="modal-content">
                     <ThemeProvider theme={darkTheme}>
-                        <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'transparent', height: '100%' }}>
-                            <Table stickyHeader aria-label="ranking table">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell sx={{ width: '80px', textAlign: 'center' }}>Rank</TableCell>
-                                        <TableCell>Player</TableCell>
-                                        <TableCell sx={{ width: '120px', textAlign: 'center' }}>Avg (Last 5)</TableCell>
-                                        <TableCell sx={{ width: '80px', textAlign: 'center' }}>Games</TableCell>
-                                        <TableCell sx={{ width: '60px', textAlign: 'center' }}>Info</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {filteredRankings.map((player, index) => (
-                                        <TableRow
-                                            key={player.name}
-                                            sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' } }}
-                                        >
-                                            <TableCell sx={{ textAlign: 'center', fontWeight: 'bold', color: '#38bdf8' }}>
-                                                #{index + 1}
-                                            </TableCell>
-                                            <TableCell sx={{ fontWeight: 500 }}>
-                                                {player.name}
-                                            </TableCell>
-                                            <TableCell sx={{ textAlign: 'center', fontFamily: 'monospace', color: player.playedCount === 0 ? '#94a3b8' : '#4ade80' }}>
-                                                {player.playedCount === 0 ? '-' : player.average.toFixed(2)}
-                                            </TableCell>
-                                            <TableCell sx={{ textAlign: 'center', color: '#94a3b8' }}>
-                                                {player.playedCount > 5 ? 5 : player.playedCount}
-                                            </TableCell>
-                                            <TableCell sx={{ textAlign: 'center' }}>
-                                                <button
-                                                    onClick={() => handleShowBreakdown(player)}
-                                                    style={{
-                                                        background: 'transparent',
-                                                        border: 'none',
-                                                        cursor: 'pointer',
-                                                        color: '#38bdf8',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        padding: '4px',
-                                                        borderRadius: '4px',
-                                                        transition: 'all 0.2s ease'
-                                                    }}
-                                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.1)'}
-                                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                                    title="View Rank Breakdown"
-                                                >
-                                                    <Info size={18} />
-                                                </button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                    {filteredRankings.length === 0 && (
-                                        <TableRow>
-                                            <TableCell colSpan={5} align="center" sx={{ py: 4, color: 'text.secondary' }}>
-                                                No players found
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </ThemeProvider>
+                        <div className="ranking-sections-container">
+                            {/* Section 1: Established Players (2+ Tournaments) */}
+                            {categorizedRankings.established.length > 0 && (
+                                <div className="ranking-section">
+                                    <div className="section-header">
+                                        <Trophy size={18} color="#fbbf24" />
+                                        <h3>Global Leaderboard ({categorizedRankings.established.length})</h3>
+                                    </div>
+                                    <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'transparent' }}>
+                                        <Table size="small" aria-label="established players table">
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell sx={{ width: '60px', textAlign: 'center' }}>Rank</TableCell>
+                                                    <TableCell>Player</TableCell>
+                                                    <TableCell sx={{ width: '100px', textAlign: 'center' }}>Avg Rating</TableCell>
+                                                    <TableCell sx={{ width: '80px', textAlign: 'center' }}>Games</TableCell>
+                                                    <TableCell sx={{ width: '60px', textAlign: 'center' }}>Info</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {categorizedRankings.established.map((player, index) => (
+                                                    <TableRow
+                                                        key={player.name}
+                                                        sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' } }}
+                                                    >
+                                                        <TableCell sx={{ textAlign: 'center', fontWeight: 'bold', color: '#38bdf8' }}>
+                                                            #{index + 1}
+                                                        </TableCell>
+                                                        <TableCell sx={{ fontWeight: 500 }}>
+                                                            {player.name}
+                                                        </TableCell>
+                                                        <TableCell sx={{ textAlign: 'center', fontFamily: 'monospace', color: '#4ade80' }}>
+                                                            {player.average.toFixed(2)}
+                                                        </TableCell>
+                                                        <TableCell sx={{ textAlign: 'center', color: '#94a3b8' }}>
+                                                            {player.playedCount}
+                                                        </TableCell>
+                                                        <TableCell sx={{ textAlign: 'center' }}>
+                                                            <button
+                                                                onClick={() => handleShowBreakdown(player)}
+                                                                className="info-action-btn"
+                                                                title="View Rank Breakdown"
+                                                            >
+                                                                <Info size={16} />
+                                                            </button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </div>
+                            )}
 
-                    {/* Ranking Calculation Description */}
-                    <div style={{
-                        marginTop: '1rem',
-                        padding: '1rem',
-                        background: 'rgba(56, 189, 248, 0.1)',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(56, 189, 248, 0.3)',
-                        fontSize: '0.875rem',
-                        color: '#94a3b8',
-                        lineHeight: '1.6'
-                    }}>
-                        <strong style={{ color: '#38bdf8' }}>How Rankings Are Calculated:</strong>
-                        <br />
-                        Rankings are based on the average rating from your last 5 tournaments (or fewer if you've played less). Lower averages rank higher. Ratings range from 1-8, where 1 is the best. Click the info icon to see the detailed breakdown for each player.
-                    </div>
+                            {/* Section 2: New Players (1 Tournament) */}
+                            {categorizedRankings.newPlayers.length > 0 && (
+                                <div className="ranking-section new-players">
+                                    <div className="section-header">
+                                        <div className="badge new">New</div>
+                                        <h3>Single Tournament Players ({categorizedRankings.newPlayers.length})</h3>
+                                    </div>
+                                    <p className="section-desc">Players consolidating their initial rating (need 2+ games for rank)</p>
+                                    <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'transparent' }}>
+                                        <Table size="small" aria-label="new players table">
+                                            <TableBody>
+                                                {categorizedRankings.newPlayers.map((player) => (
+                                                    <TableRow
+                                                        key={player.name}
+                                                        sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: 'rgba(56, 189, 248, 0.05)' } }}
+                                                    >
+                                                        <TableCell sx={{ width: '60px', textAlign: 'center', color: '#94a3b8' }}>
+                                                            -
+                                                        </TableCell>
+                                                        <TableCell sx={{ fontWeight: 500 }}>
+                                                            {player.name}
+                                                        </TableCell>
+                                                        <TableCell sx={{ width: '100px', textAlign: 'center', fontFamily: 'monospace', color: '#818cf8' }}>
+                                                            {player.average.toFixed(2)}
+                                                        </TableCell>
+                                                        <TableCell sx={{ width: '80px', textAlign: 'center', color: '#94a3b8' }}>
+                                                            1
+                                                        </TableCell>
+                                                        <TableCell sx={{ width: '60px', textAlign: 'center' }}>
+                                                            <button
+                                                                onClick={() => handleShowBreakdown(player)}
+                                                                className="info-action-btn"
+                                                                title="View Tournament"
+                                                            >
+                                                                <Info size={16} />
+                                                            </button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </div>
+                            )}
+
+                            {/* Section 3: Never Played (0 Tournaments) */}
+                            {categorizedRankings.neverPlayed.length > 0 && (
+                                <div className="ranking-section never-played">
+                                    <div className="section-header">
+                                        <div className="badge inactive">Inactive</div>
+                                        <h3>No Tournament History ({categorizedRankings.neverPlayed.length})</h3>
+                                    </div>
+                                    <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'transparent' }}>
+                                        <Table size="small" aria-label="inactive players table">
+                                            <TableBody>
+                                                {categorizedRankings.neverPlayed.sort((a, b) => a.name.localeCompare(b.name)).map((player) => (
+                                                    <TableRow
+                                                        key={player.name}
+                                                        sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: 'rgba(148, 163, 184, 0.05)' } }}
+                                                    >
+                                                        <TableCell sx={{ width: '60px', textAlign: 'center', color: '#64748b' }}>
+                                                            -
+                                                        </TableCell>
+                                                        <TableCell sx={{ color: '#94a3b8' }}>
+                                                            {player.name}
+                                                        </TableCell>
+                                                        <TableCell sx={{ width: '100px', textAlign: 'center', color: '#64748b' }}>
+                                                            -
+                                                        </TableCell>
+                                                        <TableCell sx={{ width: '80px', textAlign: 'center', color: '#64748b' }}>
+                                                            0
+                                                        </TableCell>
+                                                        <TableCell sx={{ width: '60px', textAlign: 'center' }}>
+                                                            {/* No info button for never played */}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </div>
+                            )}
+
+                            {Object.values(categorizedRankings).every(arr => arr.length === 0) && (
+                                <div className="no-results">
+                                    No players found matching "{searchTerm}"
+                                </div>
+                            )}
+                        </div>
+                    </ThemeProvider>
                 </div>
 
                 {/* Rank Breakdown Modal */}
@@ -264,6 +359,26 @@ const GlobalRanking = ({ onClose }) => {
                                         </div>
                                     </>
                                 )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Ranking Info Overlay */}
+                {showRankingInfo && (
+                    <div className="ranking-info-overlay" onClick={() => setShowRankingInfo(false)}>
+                        <div className="ranking-info-modal" onClick={e => e.stopPropagation()}>
+                            <div className="info-header">
+                                <h3><Info size={20} color="#38bdf8" /> How Rankings Are Calculated</h3>
+                                <button className="close-btn" onClick={() => setShowRankingInfo(false)}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div className="info-content">
+                                <div className="info-description">
+                                    <strong>Ranking Methodology:</strong>
+                                    Rankings are based on the average rating from your last 5 tournaments (or fewer if you've played less). Lower averages rank higher. Ratings range from 1-8, where 1 is the best. Click the info icon next to any player to see their detailed breakdown.
+                                </div>
                             </div>
                         </div>
                     </div>

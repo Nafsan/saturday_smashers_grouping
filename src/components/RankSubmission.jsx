@@ -16,6 +16,8 @@ import {
 } from '@mui/material';
 import { Upload, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { getAdminAuthCookie } from '../utils/cookieUtils';
+import PasswordDialog from './PasswordDialog';
 import './RankSubmission.scss';
 
 const RankSubmission = ({ open, onClose, initialData }) => {
@@ -78,7 +80,6 @@ const RankSubmission = ({ open, onClose, initialData }) => {
 
     // Upload State
     const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = () => {
@@ -121,8 +122,15 @@ const RankSubmission = ({ open, onClose, initialData }) => {
             warningNotification("A player cannot be selected multiple times!");
             return;
         }
-
-        setShowPasswordModal(true);
+        // Check if we have a stored password in cookie
+        const storedPassword = getAdminAuthCookie();
+        if (storedPassword && storedPassword === 'ss_admin_panel') {
+            // Auto-submit with stored password without showing dialog
+            confirmUpload(storedPassword);
+        } else {
+            // Show password dialog
+            setShowPasswordModal(true);
+        }
     };
 
     const buildTournamentData = () => {
@@ -199,10 +207,10 @@ const RankSubmission = ({ open, onClose, initialData }) => {
         };
     };
 
-    const confirmUpload = async () => {
+    const confirmUpload = async (password) => {
         if (password !== "ss_admin_panel") {
             errorNotification("Incorrect Password!");
-            return;
+            throw new Error("Incorrect Password"); // Throw error to be caught by PasswordDialog
         }
 
         setIsSubmitting(true);
@@ -215,11 +223,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                 await dispatch(uploadRankingAsync({ tournamentData: data, password })).unwrap();
                 successNotification("Ranking Uploaded Successfully! 🏆");
             }
+
             setShowPasswordModal(false);
-            setPassword('');
             if (onClose) onClose();
         } catch (err) {
             errorNotification(`Upload Failed: ${err.message}`);
+            throw err; // Re-throw to let PasswordDialog handle the error
         } finally {
             setIsSubmitting(false);
         }
@@ -263,6 +272,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 options={allPlayers}
                                 value={cupChampion}
                                 onChange={(e, newValue) => setCupChampion(newValue)}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
+                                isOptionEqualToValue={(option, value) => {
+                                    const optionName = typeof option === 'string' ? option : option.name;
+                                    const valueName = typeof value === 'string' ? value : value?.name;
+                                    return optionName === valueName;
+                                }}
                                 renderInput={(params) => <TextField {...params} label="Cup Champion" variant="outlined" InputLabelProps={{ shrink: true }} />}
                             />
                         </div>
@@ -272,6 +287,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 options={allPlayers}
                                 value={cupRunnerUp}
                                 onChange={(e, newValue) => setCupRunnerUp(newValue)}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
+                                isOptionEqualToValue={(option, value) => {
+                                    const optionName = typeof option === 'string' ? option : option.name;
+                                    const valueName = typeof value === 'string' ? value : value?.name;
+                                    return optionName === valueName;
+                                }}
                                 renderInput={(params) => <TextField {...params} label="Cup Runner Up" variant="outlined" InputLabelProps={{ shrink: true }} />}
                             />
                         </div>
@@ -282,11 +303,18 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 options={allPlayers}
                                 value={cupSemis}
                                 onChange={(e, newValue) => setCupSemis(newValue)}
-                                renderInput={(params) => <TextField {...params} label="Cup Semi Finalists" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
+                                isOptionEqualToValue={(option, value) => {
+                                    const optionName = typeof option === 'string' ? option : option.name;
+                                    const valueName = typeof value === 'string' ? value : value?.name;
+                                    return optionName === valueName;
+                                }}
+                                renderInput={(params) => <TextField {...params} label="Cup Semi Finalists (2 players)" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 renderTags={(value, getTagProps) =>
-                                    value.map((option, index) => (
-                                        <Chip variant="outlined" label={option} {...getTagProps({ index })} />
-                                    ))
+                                    value.map((option, index) => {
+                                        const playerName = typeof option === 'string' ? option : (option.name || String(option));
+                                        return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
+                                    })
                                 }
                             />
                         </div>
@@ -297,11 +325,18 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 options={allPlayers}
                                 value={cupQuarters}
                                 onChange={(e, newValue) => setCupQuarters(newValue)}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
+                                isOptionEqualToValue={(option, value) => {
+                                    const optionName = typeof option === 'string' ? option : option.name;
+                                    const valueName = typeof value === 'string' ? value : value?.name;
+                                    return optionName === valueName;
+                                }}
                                 renderInput={(params) => <TextField {...params} label="Cup Quarter Finalists" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 renderTags={(value, getTagProps) =>
-                                    value.map((option, index) => (
-                                        <Chip variant="outlined" label={option} {...getTagProps({ index })} />
-                                    ))
+                                    value.map((option, index) => {
+                                        const playerName = typeof option === 'string' ? option : (option.name || String(option));
+                                        return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
+                                    })
                                 }
                             />
                         </div>
@@ -315,6 +350,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 options={allPlayers}
                                 value={plateChampion}
                                 onChange={(e, newValue) => setPlateChampion(newValue)}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
+                                isOptionEqualToValue={(option, value) => {
+                                    const optionName = typeof option === 'string' ? option : option.name;
+                                    const valueName = typeof value === 'string' ? value : value?.name;
+                                    return optionName === valueName;
+                                }}
                                 renderInput={(params) => <TextField {...params} label="Plate Champion" variant="outlined" InputLabelProps={{ shrink: true }} />}
                             />
                         </div>
@@ -324,6 +365,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 options={allPlayers}
                                 value={plateRunnerUp}
                                 onChange={(e, newValue) => setPlateRunnerUp(newValue)}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
+                                isOptionEqualToValue={(option, value) => {
+                                    const optionName = typeof option === 'string' ? option : option.name;
+                                    const valueName = typeof value === 'string' ? value : value?.name;
+                                    return optionName === valueName;
+                                }}
                                 renderInput={(params) => <TextField {...params} label="Plate Runner Up" variant="outlined" InputLabelProps={{ shrink: true }} />}
                             />
                         </div>
@@ -334,11 +381,18 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 options={allPlayers}
                                 value={plateSemis}
                                 onChange={(e, newValue) => setPlateSemis(newValue)}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
+                                isOptionEqualToValue={(option, value) => {
+                                    const optionName = typeof option === 'string' ? option : option.name;
+                                    const valueName = typeof value === 'string' ? value : value?.name;
+                                    return optionName === valueName;
+                                }}
                                 renderInput={(params) => <TextField {...params} label="Plate Semi Finalists" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 renderTags={(value, getTagProps) =>
-                                    value.map((option, index) => (
-                                        <Chip variant="outlined" label={option} {...getTagProps({ index })} />
-                                    ))
+                                    value.map((option, index) => {
+                                        const playerName = typeof option === 'string' ? option : (option.name || String(option));
+                                        return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
+                                    })
                                 }
                             />
                         </div>
@@ -349,11 +403,18 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 options={allPlayers}
                                 value={plateQuarters}
                                 onChange={(e, newValue) => setPlateQuarters(newValue)}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
+                                isOptionEqualToValue={(option, value) => {
+                                    const optionName = typeof option === 'string' ? option : option.name;
+                                    const valueName = typeof value === 'string' ? value : value?.name;
+                                    return optionName === valueName;
+                                }}
                                 renderInput={(params) => <TextField {...params} label="Plate Quarter Finalists" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 renderTags={(value, getTagProps) =>
-                                    value.map((option, index) => (
-                                        <Chip variant="outlined" label={option} {...getTagProps({ index })} />
-                                    ))
+                                    value.map((option, index) => {
+                                        const playerName = typeof option === 'string' ? option : (option.name || String(option));
+                                        return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
+                                    })
                                 }
                             />
                         </div>
@@ -410,27 +471,13 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                 </DialogActions>
             </Dialog>
 
-            <Dialog open={showPasswordModal} onClose={() => setShowPasswordModal(false)}>
-                <DialogTitle>Admin Authentication</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Password"
-                        type="password"
-                        fullWidth
-                        variant="outlined"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setShowPasswordModal(false)}>Cancel</Button>
-                    <Button onClick={confirmUpload} variant="contained" disabled={isSubmitting}>
-                        {isSubmitting ? 'Verifying...' : 'Confirm'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <PasswordDialog
+                open={showPasswordModal}
+                onSuccess={confirmUpload}
+                onCancel={() => setShowPasswordModal(false)}
+                title="Admin Authentication"
+                description="Please enter the admin password to submit tournament results."
+            />
         </>
     );
 };

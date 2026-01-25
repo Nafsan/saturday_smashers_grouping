@@ -7,6 +7,7 @@ import {
 import { fetchPlayers, fetchFundSettings, fetchTournamentPlayersByDate, calculateTournamentCosts, saveTournamentCosts, createUnofficialTournament } from '../api/client';
 import { Plus, Calculator, Save, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getAdminAuthCookie, setAdminAuthCookie } from '../utils/cookieUtils';
 
 const AddTournamentCosts = () => {
     const navigate = useNavigate();
@@ -39,6 +40,12 @@ const AddTournamentCosts = () => {
 
     useEffect(() => {
         loadData();
+
+        // Check for stored admin password
+        const storedPassword = getAdminAuthCookie();
+        if (storedPassword) {
+            // Password will be used automatically in API calls
+        }
     }, []);
 
     const loadData = async () => {
@@ -105,10 +112,15 @@ const AddTournamentCosts = () => {
 
         try {
             setCreatingUnofficial(true);
+            const password = getAdminAuthCookie() || 'ss_admin_panel';
             await createUnofficialTournament(
                 { date: tournamentDate, tournament_players: tournamentPlayers },
-                'ss_admin_panel'
+                password
             );
+
+            // Store password in cookie after successful authentication
+            setAdminAuthCookie(password);
+
             setUnofficialTournamentCreated(true);
             setMessage({ type: 'success', text: 'Unofficial tournament created successfully! You can now calculate and save costs.' });
         } catch (error) {
@@ -168,7 +180,12 @@ const AddTournamentCosts = () => {
 
         try {
             setMessage(null);
-            const result = await calculateTournamentCosts(requestData, 'ss_admin_panel');
+            const password = getAdminAuthCookie() || 'ss_admin_panel';
+            const result = await calculateTournamentCosts(requestData, password);
+
+            // Store password in cookie after successful authentication
+            setAdminAuthCookie(password);
+
             setCalculation(result);
             setShowPreview(true);
         } catch (error) {
@@ -196,7 +213,12 @@ const AddTournamentCosts = () => {
             setSaving(true);
 
             // Unofficial tournament should already be created by now
-            await saveTournamentCosts(requestData, 'ss_admin_panel');
+            const password = getAdminAuthCookie() || 'ss_admin_panel';
+            await saveTournamentCosts(requestData, password);
+
+            // Store password in cookie after successful authentication
+            setAdminAuthCookie(password);
+
             setMessage({ type: 'success', text: 'Tournament costs saved and balances updated successfully!' });
             setShowPreview(false);
 
@@ -255,7 +277,7 @@ const AddTournamentCosts = () => {
                                 label="Venue Fee (per person)"
                                 type="number"
                                 value={venueFee}
-                                onChange={(e) => setVenueFee(parseFloat(e.target.value) || 0)}
+                                onChange={(e) => setVenueFee(parseFloat(e.target.value) || '')}
                                 InputProps={{
                                     startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
                                 }}
@@ -279,7 +301,7 @@ const AddTournamentCosts = () => {
                                 label="Ball Fee (per ball)"
                                 type="number"
                                 value={ballFee}
-                                onChange={(e) => setBallFee(parseFloat(e.target.value) || 0)}
+                                onChange={(e) => setBallFee(parseFloat(e.target.value) || '')}
                                 InputProps={{
                                     startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
                                 }}
@@ -326,7 +348,7 @@ const AddTournamentCosts = () => {
                     label="Number of WTT Balls Purchased"
                     type="number"
                     value={numBalls}
-                    onChange={(e) => setNumBalls(parseInt(e.target.value) || 0)}
+                    onChange={(e) => setNumBalls(parseInt(e.target.value) || '')}
                 />
 
                 {/* Common Miscellaneous Cost */}
@@ -340,7 +362,7 @@ const AddTournamentCosts = () => {
                         label="Amount"
                         type="number"
                         value={commonMiscCost}
-                        onChange={(e) => setCommonMiscCost(parseFloat(e.target.value) || 0)}
+                        onChange={(e) => setCommonMiscCost(parseFloat(e.target.value) || '')}
                         InputProps={{
                             startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
                         }}
@@ -384,7 +406,7 @@ const AddTournamentCosts = () => {
                                     type="number"
                                     size="small"
                                     value={cost.cost_amount}
-                                    onChange={(e) => updatePlayerSpecificCost(index, 'cost_amount', parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => updatePlayerSpecificCost(index, 'cost_amount', parseFloat(e.target.value) || '')}
                                     InputProps={{
                                         startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
                                     }}

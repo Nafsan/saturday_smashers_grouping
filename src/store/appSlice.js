@@ -65,7 +65,8 @@ const initialState = {
     customPlayers: [],
     temporaryPlayers: [], // { name, initialRank }
     status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
-    error: null
+    error: null,
+    theme: typeof window !== 'undefined' ? (localStorage.getItem('theme') || 'dark') : 'dark'
 };
 
 export const appSlice = createSlice({
@@ -137,6 +138,12 @@ export const appSlice = createSlice({
             state.temporaryPlayers = [];
             state.selectedPlayers = [];
             state.rankedPlayers = [];
+        },
+        toggleTheme: (state) => {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('theme', state.theme);
+            }
         }
     },
     extraReducers: (builder) => {
@@ -190,7 +197,7 @@ export const appSlice = createSlice({
     },
 });
 
-export const { togglePlayerSelection, calculateRanks, generateGroupsAction, resetGroups, setTournamentDate, addNewPlayer, addTemporaryPlayer, clearDraftState } = appSlice.actions;
+export const { togglePlayerSelection, calculateRanks, generateGroupsAction, resetGroups, setTournamentDate, addNewPlayer, addTemporaryPlayer, clearDraftState, toggleTheme } = appSlice.actions;
 
 // Selectors
 export const selectAllPlayerNames = (state) => {

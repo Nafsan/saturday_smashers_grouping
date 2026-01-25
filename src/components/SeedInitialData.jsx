@@ -171,7 +171,7 @@ const SeedInitialData = () => {
                                 label="Current Balance"
                                 type="number"
                                 value={player.current_balance}
-                                onChange={(e) => updatePlayer(index, 'current_balance', parseFloat(e.target.value) || 0)}
+                                onChange={(e) => updatePlayer(index, 'current_balance', parseFloat(e.target.value) || '')}
                                 InputProps={{
                                     startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
                                 }}
@@ -181,14 +181,14 @@ const SeedInitialData = () => {
                                 label="Days Played"
                                 type="number"
                                 value={player.days_played}
-                                onChange={(e) => updatePlayer(index, 'days_played', parseInt(e.target.value) || 0)}
+                                onChange={(e) => updatePlayer(index, 'days_played', parseInt(e.target.value) || '')}
                             />
 
                             <TextField
                                 label="Total Paid"
                                 type="number"
                                 value={player.total_paid}
-                                onChange={(e) => updatePlayer(index, 'total_paid', parseFloat(e.target.value) || 0)}
+                                onChange={(e) => updatePlayer(index, 'total_paid', parseFloat(e.target.value) || '')}
                                 InputProps={{
                                     startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
                                 }}
@@ -198,7 +198,7 @@ const SeedInitialData = () => {
                                 label="Total Cost"
                                 type="number"
                                 value={player.total_cost}
-                                onChange={(e) => updatePlayer(index, 'total_cost', parseFloat(e.target.value) || 0)}
+                                onChange={(e) => updatePlayer(index, 'total_cost', parseFloat(e.target.value) || '')}
                                 InputProps={{
                                     startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
                                 }}

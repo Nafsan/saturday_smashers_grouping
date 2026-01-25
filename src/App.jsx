@@ -12,7 +12,43 @@ import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { ToastProvider } from './context/ToastContext';
 import './styles/global.scss';
 
-// Create a custom dark theme matching the global SCSS variables
+// Create custom themes matching the global SCSS variables
+const lightTheme = createTheme({
+    palette: {
+        mode: 'light',
+        primary: {
+            main: '#0284c7', // --accent-primary (light)
+        },
+        secondary: {
+            main: '#6366f1', // --accent-secondary (light)
+        },
+        background: {
+            default: '#f8fafc', // --bg-primary (light)
+            paper: '#ffffff',   // --bg-card (light)
+        },
+        text: {
+            primary: '#0f172a', // --text-primary (light)
+            secondary: '#475569', // --text-secondary (light)
+        },
+        success: {
+            main: '#16a34a', // --accent-success (light)
+        },
+    },
+    typography: {
+        fontFamily: "'Inter', system-ui, sans-serif",
+    },
+    components: {
+        MuiDialog: {
+            styleOverrides: {
+                paper: {
+                    backgroundColor: '#ffffff',
+                    backgroundImage: 'none',
+                }
+            }
+        }
+    }
+});
+
 const darkTheme = createTheme({
     palette: {
         mode: 'dark',
@@ -51,7 +87,7 @@ const darkTheme = createTheme({
 
 const MainContent = () => {
     const dispatch = useDispatch();
-    const { isGroupsGenerated, status } = useSelector(state => state.app);
+    const { isGroupsGenerated, status, theme } = useSelector(state => state.app);
     const hasFetched = useRef(false);
 
     useEffect(() => {
@@ -63,6 +99,11 @@ const MainContent = () => {
             });
         }
     }, [status, dispatch]);
+
+    // Apply theme to document
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+    }, [theme]);
 
     return (
         <div className="container">
@@ -89,19 +130,28 @@ function App() {
 
     return (
         <Provider store={store}>
-            <ThemeProvider theme={darkTheme}>
-                <CssBaseline />
-                <ToastProvider>
-                    <HashRouter>
-                        <Routes>
-                            <Route path="/" element={<MainContent />} />
-                            <Route path="/fund" element={<FundManagement />} />
-                            <Route path="/fund/admin" element={<AdminConsole />} />
-                        </Routes>
-                    </HashRouter>
-                </ToastProvider>
-            </ThemeProvider>
+            <AppWithTheme basename={basename} />
         </Provider>
+    );
+}
+
+function AppWithTheme({ basename }) {
+    const theme = useSelector(state => state.app.theme);
+    const currentTheme = theme === 'light' ? lightTheme : darkTheme;
+
+    return (
+        <ThemeProvider theme={currentTheme}>
+            <CssBaseline />
+            <ToastProvider>
+                <HashRouter>
+                    <Routes>
+                        <Route path="/" element={<MainContent />} />
+                        <Route path="/fund" element={<FundManagement />} />
+                        <Route path="/fund/admin" element={<AdminConsole />} />
+                    </Routes>
+                </HashRouter>
+            </ToastProvider>
+        </ThemeProvider>
     );
 }
 

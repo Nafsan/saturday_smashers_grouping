@@ -1,76 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Database, DollarSign, Settings as SettingsIcon, Lock, Wallet, Receipt } from 'lucide-react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Tabs, Tab, Box } from '@mui/material';
+import { Tabs, Tab, Box } from '@mui/material';
 import SeedInitialData from './SeedInitialData';
 import AddTournamentCosts from './AddTournamentCosts';
 import FundSettings from './FundSettings';
 import RecordPayment from './RecordPayment';
 import AddPlayerMiscCost from './AddPlayerMiscCost';
+import PasswordDialog from './PasswordDialog';
+import { getAdminAuthCookie } from '../utils/cookieUtils';
 import './AdminConsole.scss';
 
 const AdminConsole = () => {
     const navigate = useNavigate();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [password, setPassword] = useState('');
-    const [passwordError, setPasswordError] = useState('');
+    const [showPasswordDialog, setShowPasswordDialog] = useState(false);
     const [activeTab, setActiveTab] = useState(0);
 
-    const handlePasswordSubmit = () => {
-        if (password === 'ss_admin_panel') {
+    // Check for stored password on mount
+    useEffect(() => {
+        const storedPassword = getAdminAuthCookie();
+        if (storedPassword && storedPassword === 'ss_admin_panel') {
+            // Auto-authenticate if valid cookie exists
             setIsAuthenticated(true);
-            setPasswordError('');
         } else {
-            setPasswordError('Invalid password');
+            // Show password dialog
+            setShowPasswordDialog(true);
         }
+    }, []);
+
+    const handleAuthSuccess = async (password) => {
+        setIsAuthenticated(true);
+        setShowPasswordDialog(false);
     };
 
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
-            handlePasswordSubmit();
-        }
+    const handleAuthCancel = () => {
+        navigate('/fund');
     };
 
+    // Show password dialog if not authenticated
     if (!isAuthenticated) {
         return (
-            <Dialog open={true} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Lock size={24} />
-                        Admin Authentication Required
-                    </Box>
-                </DialogTitle>
-                <DialogContent sx={{ mt: 3 }}>
-                    <TextField
-                        fullWidth
-                        type="password"
-                        label="Enter Admin Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        error={!!passwordError}
-                        helperText={passwordError}
-                        autoFocus
-                    />
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={() => navigate('/fund')} color="inherit">
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handlePasswordSubmit}
-                        variant="contained"
-                        sx={{
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                            '&:hover': {
-                                background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
-                            }
-                        }}
-                    >
-                        Submit
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <PasswordDialog
+                open={showPasswordDialog}
+                onSuccess={handleAuthSuccess}
+                onCancel={handleAuthCancel}
+                title="Admin Authentication Required"
+                description="Please enter the admin password to access the admin console."
+            />
         );
     }
 

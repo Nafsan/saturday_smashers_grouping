@@ -112,7 +112,7 @@ const AddPlayerMiscCost = () => {
                     label="Cost Amount (per player)"
                     type="number"
                     value={costAmount}
-                    onChange={(e) => setCostAmount(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => setCostAmount(parseFloat(e.target.value) || '')}
                     InputProps={{
                         startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
                     }}

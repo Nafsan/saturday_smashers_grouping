@@ -66,7 +66,7 @@ const FundSettings = () => {
                     label="Default Venue Fee (per person)"
                     type="number"
                     value={settings.default_venue_fee}
-                    onChange={(e) => setSettings({ ...settings, default_venue_fee: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => setSettings({ ...settings, default_venue_fee: parseFloat(e.target.value) || '' })}
                     InputProps={{
                         startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
                     }}
@@ -77,7 +77,7 @@ const FundSettings = () => {
                     label="Default Ball Fee (per ball)"
                     type="number"
                     value={settings.default_ball_fee}
-                    onChange={(e) => setSettings({ ...settings, default_ball_fee: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => setSettings({ ...settings, default_ball_fee: parseFloat(e.target.value) || '' })}
                     InputProps={{
                         startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
                     }}

@@ -29,6 +29,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
 
     const [ratingPromptOpen, setRatingPromptOpen] = useState(false);
     const [pendingUnratedPlayers, setPendingUnratedPlayers] = useState([]);
+    const [pendingSingleTournamentPlayers, setPendingSingleTournamentPlayers] = useState([]);
     const [initialRatings, setInitialRatings] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -77,12 +78,17 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
     // Filter players based on search query
     const filteredPlayers = useMemo(() => {
         const query = searchQuery.toLowerCase();
-        return allPlayers.filter(player =>
-            player.toLowerCase().includes(query)
-        ).sort((a, b) => {
+        return allPlayers.filter(player => {
+            // Ensure player is a string
+            const playerName = typeof player === 'string' ? player : (player.name || String(player));
+            return playerName.toLowerCase().includes(query);
+        }).sort((a, b) => {
+            // Get player names as strings
+            const nameA = typeof a === 'string' ? a : (a.name || String(a));
+            const nameB = typeof b === 'string' ? b : (b.name || String(b));
             // Sort by ranking position
-            const rankA = playerRankings[a]?.position || 999;
-            const rankB = playerRankings[b]?.position || 999;
+            const rankA = playerRankings[nameA]?.position || 999;
+            const rankB = playerRankings[nameB]?.position || 999;
             return rankA - rankB;
         });
     }, [allPlayers, searchQuery, playerRankings]);
@@ -93,15 +99,25 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
             return;
         }
 
-        // Check for unrated players
-        const unrated = selectedPlayers.filter(player => {
+        // Check for players needing attention
+        const unrated = [];
+        const singleTournament = [];
+
+        selectedPlayers.forEach(player => {
             const ranking = playerRankings[player];
-            // Check if player has no history AND is not already a temporary player (already assigned rank)
-            return ranking?.hasNoHistory && !ranking?.isTemporary;
+            // 1. No History: Needs mandatory initial rating
+            if (ranking?.hasNoHistory && !ranking?.isTemporary) {
+                unrated.push(player);
+            }
+            // 2. Single Tournament: Optional rating update
+            else if (ranking?.playedCount === 1 && !ranking?.isTemporary) {
+                singleTournament.push(player);
+            }
         });
 
-        if (unrated.length > 0) {
+        if (unrated.length > 0 || singleTournament.length > 0) {
             setPendingUnratedPlayers(unrated);
+            setPendingSingleTournamentPlayers(singleTournament);
             setRatingPromptOpen(true);
             return;
         }
@@ -111,14 +127,14 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
     };
 
     const handleConfirmRatings = () => {
-        // Validate all ratings are entered
+        // Validate unrated players (mandatory)
         const missingRatings = pendingUnratedPlayers.some(player => !initialRatings[player]);
         if (missingRatings) {
-            warningNotification("Please provide ratings for all players.");
+            warningNotification("Please provide ratings for all new players.");
             return;
         }
 
-        // Dispatch temporary players
+        // Dispatch new players (Mandatory)
         pendingUnratedPlayers.forEach(player => {
             dispatch(addTemporaryPlayer({
                 name: player,
@@ -126,8 +142,19 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
             }));
         });
 
+        // Dispatch single tournament players (Only if provided)
+        pendingSingleTournamentPlayers.forEach(player => {
+            if (initialRatings[player]) {
+                dispatch(addTemporaryPlayer({
+                    name: player,
+                    initialRank: parseInt(initialRatings[player])
+                }));
+            }
+        });
+
         setRatingPromptOpen(false);
         setPendingUnratedPlayers([]);
+        setPendingSingleTournamentPlayers([]);
         setInitialRatings({});
 
         onGenerate();
@@ -384,20 +411,21 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
 
                     <Box className="player-list">
                         {filteredPlayers.map(player => {
-                            const ranking = playerRankings[player];
-                            const isSelected = selectedPlayers.includes(player);
+                            const playerName = typeof player === 'string' ? player : (player.name || String(player));
+                            const ranking = playerRankings[playerName];
+                            const isSelected = selectedPlayers.includes(playerName);
 
                             return (
                                 <Box
-                                    key={player}
+                                    key={playerName}
                                     className={`player-item ${isSelected ? 'selected' : ''} ${ranking?.isTemporary ? 'temporary' : ''} ${ranking?.hasNoHistory ? 'no-history' : ''}`}
-                                    onClick={() => dispatch(togglePlayerSelection(player))}
+                                    onClick={() => dispatch(togglePlayerSelection(playerName))}
                                 >
                                     <FormControlLabel
                                         control={
                                             <Checkbox
                                                 checked={isSelected}
-                                                onChange={() => dispatch(togglePlayerSelection(player))}
+                                                onChange={() => dispatch(togglePlayerSelection(playerName))}
                                                 onClick={(e) => e.stopPropagation()}
                                             />
                                         }
@@ -408,7 +436,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                                                 </Box>
                                                 <Box sx={{ flex: 1 }}>
                                                     <Typography variant="body1">
-                                                        {player}
+                                                        {playerName}
                                                         {ranking?.isTemporary && (
                                                             <span className="temp-badge">TEMP</span>
                                                         )}
@@ -462,27 +490,75 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                 fullWidth
                 className="tournament-fixture-modal"
             >
-                <DialogTitle>Assign Initial Ratings</DialogTitle>
+                <DialogTitle>Assign / Update Initial Ratings</DialogTitle>
                 <DialogContent dividers>
                     <Typography variant="body2" sx={{ mb: 3, color: '#94a3b8' }}>
-                        The following players have no tournament history. Please assign an initial rank (1-20) for this tournament to help with group generation.
+                        Please assign ranks (1-20) where needed to help with balanced group generation.
                     </Typography>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        {pendingUnratedPlayers.map(player => (
-                            <Box key={player} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <Typography sx={{ flex: 1, fontWeight: 500 }}>{player}</Typography>
-                                <TextField
-                                    type="number"
-                                    label="Rank"
-                                    size="small"
-                                    value={initialRatings[player] || ''}
-                                    onChange={(e) => handleRatingChange(player, e.target.value)}
-                                    inputProps={{ min: 1, max: 20 }}
-                                    sx={{ width: 100 }}
-                                />
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {/* Section 1: New Players (Mandatory) */}
+                        {pendingUnratedPlayers.length > 0 && (
+                            <Box>
+                                <Typography variant="subtitle2" sx={{ mb: 1, color: '#f59e0b', fontWeight: 'bold' }}>
+                                    New Players (Rating Required)
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    {pendingUnratedPlayers.map(player => (
+                                        <Box key={player} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Typography sx={{ flex: 1, fontWeight: 500 }}>{player}</Typography>
+                                            <TextField
+                                                type="number"
+                                                label="Rank"
+                                                size="small"
+                                                value={initialRatings[player] || ''}
+                                                onChange={(e) => handleRatingChange(player, e.target.value)}
+                                                inputProps={{ min: 1, max: 20 }}
+                                                sx={{ width: 100 }}
+                                                required
+                                            />
+                                        </Box>
+                                    ))}
+                                </Box>
                             </Box>
-                        ))}
+                        )}
+
+                        {/* Section 2: Single Tournament Players (Optional) */}
+                        {pendingSingleTournamentPlayers.length > 0 && (
+                            <Box>
+                                <Typography variant="subtitle2" sx={{ mb: 1, color: '#818cf8', fontWeight: 'bold' }}>
+                                    Single Tournament Players (Optional Update)
+                                </Typography>
+                                <Typography variant="caption" sx={{ display: 'block', mb: 2, color: '#64748b' }}>
+                                    These players have a tentative rating. Enter a value to override it for this tournament.
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    {pendingSingleTournamentPlayers.map(player => {
+                                        const currentAvg = playerRankings[player]?.average;
+                                        return (
+                                            <Box key={player} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                <Typography sx={{ flex: 1, fontWeight: 500 }}>
+                                                    {player}
+                                                    <Typography component="span" variant="caption" sx={{ ml: 1, color: '#94a3b8' }}>
+                                                        (Current: {currentAvg})
+                                                    </Typography>
+                                                </Typography>
+                                                <TextField
+                                                    type="number"
+                                                    label="Override"
+                                                    placeholder={String(currentAvg)}
+                                                    size="small"
+                                                    value={initialRatings[player] || ''}
+                                                    onChange={(e) => handleRatingChange(player, e.target.value)}
+                                                    inputProps={{ min: 1, max: 20 }}
+                                                    sx={{ width: 100 }}
+                                                />
+                                            </Box>
+                                        );
+                                    })}
+                                </Box>
+                            </Box>
+                        )}
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ padding: '1.5rem' }}>

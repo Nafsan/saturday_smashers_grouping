@@ -12,6 +12,8 @@ const ThemeToggle = () => {
         dispatch(toggleTheme());
     };
 
+    // Temporarily hidden the button. Will reintroduce after it's implemented properly.
+    return null;
     return (
         <button
             className="theme-toggle"

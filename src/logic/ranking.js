@@ -25,12 +25,14 @@ export const calculateRankings = (history, activePlayers, temporaryPlayers = [])
 
     // Initialize stats for active players
     activePlayers.forEach(player => {
-        playerStats[player] = {
-            name: player,
+        // Ensure player is a string (handle case where it might be an object)
+        const playerName = typeof player === 'string' ? player : (player.name || String(player));
+        playerStats[playerName] = {
+            name: playerName,
             ranks: [],
             average: 0,
             playedCount: 0,
-            isTemporary: tempPlayerMap[player] !== undefined
+            isTemporary: tempPlayerMap[playerName] !== undefined
         };
     });
 
@@ -92,8 +94,11 @@ export const calculateRankings = (history, activePlayers, temporaryPlayers = [])
 
         // 4. If still tied (same average, same history, same match count), use random sorting
         // Use a deterministic random based on player names to ensure consistency within a session
-        const hashA = a.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const hashB = b.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        // Add defensive check to ensure name is a string
+        const nameA = typeof a.name === 'string' ? a.name : String(a.name || '');
+        const nameB = typeof b.name === 'string' ? b.name : String(b.name || '');
+        const hashA = nameA.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const hashB = nameB.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
         return (hashA % 2) - (hashB % 2); // Simple pseudo-random comparison
     });
 

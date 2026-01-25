@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { UserPlus, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import PasswordDialog from './PasswordDialog';
 import './AddPlayer.scss';
 
 const AddPlayer = ({ open, onClose }) => {
@@ -21,7 +22,6 @@ const AddPlayer = ({ open, onClose }) => {
     const [playerName, setPlayerName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-    const [password, setPassword] = useState('');
 
     const handleInitialSubmit = () => {
         // Validation
@@ -32,35 +32,25 @@ const AddPlayer = ({ open, onClose }) => {
         setShowPasswordPrompt(true);
     };
 
-    const handleFinalSubmit = async () => {
-        if (!password) {
-            warningNotification("Please enter the admin password.");
-            return;
-        }
-
+    const handleFinalSubmit = async (password) => {
         setIsSubmitting(true);
         try {
             await dispatch(addPlayerAsync({ playerName: playerName.trim(), password })).unwrap();
             successNotification(`Player "${playerName.trim()}" added successfully! 🎉`);
+
             setPlayerName('');
-            setPassword('');
             setShowPasswordPrompt(false);
             onClose();
         } catch (err) {
             errorNotification(`Failed to add player: ${err.message || 'Unknown error'}`);
-            if (err.message && err.message.includes('password')) {
-                // Keep password prompt open if it's just a password error
-                setIsSubmitting(false);
-            } else {
-                setShowPasswordPrompt(false);
-                setIsSubmitting(false);
-            }
+            throw err; // Re-throw to let PasswordDialog handle the error
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleClose = () => {
         setPlayerName('');
-        setPassword('');
         setShowPasswordPrompt(false);
         onClose();
     };
@@ -166,63 +156,13 @@ const AddPlayer = ({ open, onClose }) => {
             </Dialog>
 
             {/* Password Prompt Dialog */}
-            <Dialog
+            <PasswordDialog
                 open={showPasswordPrompt}
-                onClose={() => setShowPasswordPrompt(false)}
-                maxWidth="xs"
-                fullWidth
-                className="add-player-dialog"
-            >
-                <DialogTitle sx={{ background: '#1e293b', color: 'white' }}>Admin Authentication</DialogTitle>
-                <DialogContent sx={{ pt: 3, pb: 3, background: '#1e293b' }}>
-                    <Typography variant="body2" sx={{ mb: 2, color: '#94a3b8' }}>
-                        Please enter the admin password to confirm adding <strong>{playerName}</strong>.
-                    </Typography>
-                    <TextField
-                        autoFocus
-                        label="Password"
-                        type="password"
-                        fullWidth
-                        variant="outlined"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onKeyPress={(e) => {
-                            if (e.key === 'Enter' && !isSubmitting) {
-                                handleFinalSubmit();
-                            }
-                        }}
-                        sx={{
-                            '& .MuiOutlinedInput-root': {
-                                color: 'white',
-                                '& fieldset': { borderColor: '#475569' },
-                                '&:hover fieldset': { borderColor: '#667eea' },
-                                '&.Mui-focused fieldset': { borderColor: '#667eea' },
-                            },
-                            '& .MuiInputLabel-root': { color: '#94a3b8' },
-                            '& .MuiInputLabel-root.Mui-focused': { color: '#667eea' },
-                        }}
-                    />
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 3, background: '#1e293b' }}>
-                    <Button
-                        onClick={() => setShowPasswordPrompt(false)}
-                        sx={{ color: '#94a3b8' }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleFinalSubmit}
-                        variant="contained"
-                        disabled={isSubmitting}
-                        sx={{
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        {isSubmitting ? 'Verifying...' : 'Confirm'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                onSuccess={handleFinalSubmit}
+                onCancel={() => setShowPasswordPrompt(false)}
+                title="Admin Authentication"
+                description={`Please enter the admin password to confirm adding ${playerName}.`}
+            />
         </>
     );
 };

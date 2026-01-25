@@ -1,0 +1,193 @@
+.news-section {
+    padding: 2rem 0;
+    margin-top: 2rem;
+
+    h2 {
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 2rem;
+        color: var(--text-primary);
+        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .news-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .news-card {
+        background-color: var(--bg-card);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: transform 0.2s;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+
+        &:hover {
+            transform: translateY(-4px);
+        }
+
+        .image-gallery {
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+            background-color: var(--bg-secondary);
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.3s ease;
+            }
+
+            &:hover img {
+                transform: scale(1.05);
+            }
+
+            .gallery-indicator {
+                position: absolute;
+                bottom: 8px;
+                right: 8px;
+                background: rgba(0, 0, 0, 0.6);
+                color: white;
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 0.8rem;
+                backdrop-filter: blur(4px);
+            }
+        }
+
+        .news-content {
+            padding: 1.5rem;
+
+            h3 {
+                color: var(--text-primary);
+                margin-bottom: 0.5rem;
+                font-size: 1.25rem;
+                font-weight: 600;
+            }
+
+            .date {
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+                margin-bottom: 1rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            p {
+                color: var(--text-secondary); // Slightly lighter than primary for body text
+                font-size: 0.95rem;
+                line-height: 1.6;
+            }
+        }
+    }
+}
+
+// Carousel styles
+.news-carousel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0 3rem;
+
+    .carousel-track {
+        flex: 1;
+        overflow: hidden;
+        border-radius: 12px;
+    }
+
+    .carousel-items {
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+    }
+
+    .carousel-slide {
+        min-width: 100%;
+        flex-shrink: 0;
+    }
+
+    .carousel-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--bg-card);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-primary);
+        transition: all 0.2s;
+        z-index: 10;
+
+        &:hover {
+            background: var(--accent-primary);
+            color: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        &.carousel-arrow-left {
+            left: 0;
+        }
+
+        &.carousel-arrow-right {
+            right: 0;
+        }
+    }
+
+    .carousel-indicators {
+        position: absolute;
+        bottom: -2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 0.5rem;
+        z-index: 10;
+
+        .indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+
+            &.active {
+                background: var(--accent-primary);
+                width: 24px;
+                border-radius: 5px;
+            }
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.5);
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .news-carousel {
+        padding: 0 2.5rem;
+
+        .carousel-arrow {
+            width: 36px;
+            height: 36px;
+
+            svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    }
+}

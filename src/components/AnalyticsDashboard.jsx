@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { ChevronDown, ChevronUp, Trash2, Youtube } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, Youtube, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import Select from 'react-select';
 import { Edit } from 'lucide-react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
@@ -14,7 +14,8 @@ const AnalyticsDashboard = ({ onEdit }) => {
     const allPlayers = useSelector(selectAllPlayerNames);
     const dispatch = useDispatch();
     const { successNotification, errorNotification } = useToast();
-    const [showAllHistory, setShowAllHistory] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(5);
     const [selectedGraphPlayers, setSelectedGraphPlayers] = useState([]);
     const [expandedTournaments, setExpandedTournaments] = useState([]);
     const [timeRange, setTimeRange] = useState('10'); // '10', '20', 'all'
@@ -170,8 +171,53 @@ const AnalyticsDashboard = ({ onEdit }) => {
     // Colors for lines
     const colors = ['#38bdf8', '#818cf8', '#4ade80', '#f472b6', '#fbbf24'];
 
-    // Recent Tournaments List
-    const displayedHistory = showAllHistory ? history : history.slice(0, 5);
+    // Recent Tournaments List Pagination
+    const totalPages = Math.ceil(history.length / itemsPerPage);
+    const displayedHistory = history.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    const handleItemsPerPageChange = (e) => {
+        setItemsPerPage(Number(e.target.value));
+        setCurrentPage(1); // Reset to first page
+    };
+
+    // Generate page numbers with ellipsis
+    const getPageNumbers = () => {
+        const delta = 1; // Number of pages to show around current page
+        const range = [];
+        const rangeWithDots = [];
+        let l;
+
+        range.push(1);
+        for (let i = currentPage - delta; i <= currentPage + delta; i++) {
+            if (i < totalPages && i > 1) {
+                range.push(i);
+            }
+        }
+        if (totalPages > 1) range.push(totalPages);
+
+        for (let i of range) {
+            if (l) {
+                if (i - l === 2) {
+                    rangeWithDots.push(l + 1);
+                } else if (i - l !== 1) {
+                    rangeWithDots.push('...');
+                }
+            }
+            rangeWithDots.push(i);
+            l = i;
+        }
+
+        return rangeWithDots;
+    };
 
     return (
         <div className="analytics-dashboard">
@@ -326,11 +372,54 @@ const AnalyticsDashboard = ({ onEdit }) => {
                         );
                     })}
                 </div>
-                {history.length > 5 && (
-                    <button className="load-more" onClick={() => setShowAllHistory(!showAllHistory)}>
-                        {showAllHistory ? <><ChevronUp size={16} /> Show Less</> : <><ChevronDown size={16} /> Show Older</>}
-                    </button>
-                )}
+                <div className="pagination-container">
+                    <div className="pagination-info">
+                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, history.length)} of {history.length} results
+                    </div>
+
+                    <div className="pagination-controls">
+                        <button
+                            className="page-btn nav-btn"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+
+                        {getPageNumbers().map((page, index) => (
+                            page === '...' ? (
+                                <span key={`dots-${index}`} className="dots">
+                                    <MoreHorizontal size={16} />
+                                </span>
+                            ) : (
+                                <button
+                                    key={page}
+                                    className={`page-btn number-btn ${currentPage === page ? 'active' : ''}`}
+                                    onClick={() => handlePageChange(page)}
+                                >
+                                    {page}
+                                </button>
+                            )
+                        ))}
+
+                        <button
+                            className="page-btn nav-btn"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                        >
+                            <ChevronRight size={18} />
+                        </button>
+                    </div>
+
+                    <div className="items-per-page">
+                        <select value={itemsPerPage} onChange={handleItemsPerPageChange}>
+                            <option value={5}>5 per page</option>
+                            <option value={10}>10 per page</option>
+                            <option value={20}>20 per page</option>
+                            <option value={50}>50 per page</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             {/* Delete Confirmation Dialog */}

@@ -8,6 +8,7 @@ import GroupDisplay from './components/GroupDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
 import FundManagement from './components/FundManagement';
 import AdminConsole from './components/AdminConsole';
+import NewsPage from './components/NewsPage';
 import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { ToastProvider } from './context/ToastContext';
 import './styles/global.scss';
@@ -146,6 +147,7 @@ function AppWithTheme({ basename }) {
                 <HashRouter>
                     <Routes>
                         <Route path="/" element={<MainContent />} />
+                        <Route path="/news" element={<NewsPage />} />
                         <Route path="/fund" element={<FundManagement />} />
                         <Route path="/fund/admin" element={<AdminConsole />} />
                     </Routes>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { generateGroupsAction } from '../store/appSlice';
@@ -12,7 +12,6 @@ import AddPlayer from './AddPlayer';
 import DaysPlayedChart from './DaysPlayedChart';
 import PlayerStatsModal from './PlayerStatsModal';
 import ThemeToggle from './ThemeToggle';
-import NewsSection from './NewsSection';
 import './AppLandingPage.scss';
 
 
@@ -48,11 +47,7 @@ const AppLandingPage = () => {
         window.open('https://www.youtube.com/@PongTTT-bd', '_blank');
     };
 
-    const newsSectionRef = useRef(null);
 
-    const scrollToNews = () => {
-        newsSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
 
     return (
         <div className="app-landing-page-container">
@@ -68,7 +63,7 @@ const AppLandingPage = () => {
                     <button className="secondary-btn" onClick={handleOpenSubmit} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
                         <Trophy size={18} /> Submit Results
                     </button>
-                    <button className="secondary-btn" onClick={scrollToNews} style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' }}>
+                    <button className="secondary-btn" onClick={() => navigate('/news')} style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' }}>
                         <span style={{ fontSize: '18px' }}>📰</span> News & Updates
                     </button>
                     <Tooltip
@@ -128,10 +123,6 @@ const AppLandingPage = () => {
                         <BarChart3 size={18} /> Player Stats
                     </button>
                 </div>
-            </div>
-
-            <div ref={newsSectionRef}>
-                <NewsSection />
             </div>
 
             <AnalyticsDashboard onEdit={handleEditTournament} />

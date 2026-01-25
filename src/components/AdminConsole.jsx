@@ -7,7 +7,9 @@ import AddTournamentCosts from './AddTournamentCosts';
 import FundSettings from './FundSettings';
 import RecordPayment from './RecordPayment';
 import AddPlayerMiscCost from './AddPlayerMiscCost';
+import AddNews from './AddNews';
 import PasswordDialog from './PasswordDialog';
+
 import { getAdminAuthCookie } from '../utils/cookieUtils';
 import './AdminConsole.scss';
 
@@ -107,8 +109,12 @@ const AdminConsole = () => {
                             iconPosition="start"
                         />
                         <Tab
-                            icon={<SettingsIcon size={18} />}
                             label="Settings"
+                            iconPosition="start"
+                        />
+                        <Tab
+                            icon={<span style={{ fontSize: '20px' }}>📰</span>}
+                            label="News & Achievements"
                             iconPosition="start"
                         />
                     </Tabs>
@@ -119,6 +125,7 @@ const AdminConsole = () => {
                     {activeTab === 1 && <AddPlayerMiscCost />}
                     {activeTab === 2 && <AddTournamentCosts />}
                     {activeTab === 3 && <FundSettings />}
+                    {activeTab === 4 && <AddNews />}
                 </div>
             </div>
         </div>

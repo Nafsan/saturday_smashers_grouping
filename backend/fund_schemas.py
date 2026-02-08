@@ -152,3 +152,26 @@ class AddPlayerMiscCostRequest(BaseModel):
     cost_amount: float
     cost_description: Optional[str] = None
     cost_date: Optional[date] = None
+
+
+# ============ Payment History ============
+class PaymentTransactionResponse(BaseModel):
+    id: int
+    player_id: int
+    player_name: str
+    amount: float
+    payment_date: datetime
+    notes: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PaginatedPaymentHistoryResponse(BaseModel):
+    items: List[PaymentTransactionResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+

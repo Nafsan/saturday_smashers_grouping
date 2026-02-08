@@ -119,6 +119,18 @@ async def record_payment(
     return await services.record_player_payment(payment_data, db)
 
 
+@router.get("/payments/history", response_model=fund_schemas.PaginatedPaymentHistoryResponse)
+async def get_payment_history(
+    page: int = 1,
+    page_size: int = 20,
+    player_name: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get paginated payment history"""
+    return await services.get_payment_history(page, page_size, player_name, db)
+
+
+
 # ============ Days Played Comparison ============
 @router.get("/days-played-comparison")
 async def get_days_played_comparison(db: AsyncSession = Depends(get_db)):

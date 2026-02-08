@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 from sqlalchemy.orm import selectinload
 from datetime import datetime, date
 from typing import List, Optional
@@ -626,3 +627,59 @@ async def add_player_misc_cost(
         "description": cost_data.cost_description,
         "updated_balances": updated_balances
     }
+
+
+async def get_payment_history(
+    page: int,
+    page_size: int,
+    player_name: Optional[str],
+    db: AsyncSession
+) -> fund_schemas.PaginatedPaymentHistoryResponse:
+    """Get paginated payment history with optional filtering by player name"""
+    
+    # Base query
+    query = select(fund_models.PaymentTransaction).options(
+        selectinload(fund_models.PaymentTransaction.player)
+    )
+    
+    # Apply player name filter if provided
+    if player_name:
+        query = query.join(models.Player).where(
+            models.Player.name.ilike(f"%{player_name}%")
+        )
+    
+    # Get total count
+    count_stmt = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar() or 0
+    
+    # Apply sorting and pagination
+    query = query.order_by(fund_models.PaymentTransaction.payment_date.desc())
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(query)
+    transactions = result.scalars().all()
+    
+    # Transform to response
+    items = []
+    for t in transactions:
+        items.append(fund_schemas.PaymentTransactionResponse(
+            id=t.id,
+            player_id=t.player_id,
+            player_name=t.player.name if t.player else "Unknown",
+            amount=t.amount,
+            payment_date=t.payment_date,
+            notes=t.notes,
+            created_at=t.created_at or datetime.utcnow()
+        ))
+        
+    total_pages = (total + page_size - 1) // page_size if page_size > 0 else 0
+    
+    return fund_schemas.PaginatedPaymentHistoryResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages
+    )
+

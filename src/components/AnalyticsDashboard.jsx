@@ -1,11 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { ChevronDown, ChevronUp, Trash2, Youtube, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, MoreHorizontal, FileText, Youtube } from 'lucide-react';
 import Select from 'react-select';
-import { Edit } from 'lucide-react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
-import { deleteRankingAsync, selectAllPlayerNames } from '../store/appSlice';
+import { selectAllPlayerNames } from '../store/appSlice';
 import { useToast } from '../context/ToastContext';
 import './AnalyticsDashboard.scss';
 
@@ -21,11 +20,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
     const [timeRange, setTimeRange] = useState('10'); // '10', '20', 'all'
 
 
-    // Delete State
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [tournamentToDelete, setTournamentToDelete] = useState(null);
-    const [deletePassword, setDeletePassword] = useState('');
-    const [isDeleting, setIsDeleting] = useState(false);
+
 
     // YouTube Modal State
     const [showYouTubeModal, setShowYouTubeModal] = useState(false);
@@ -49,31 +44,6 @@ const AnalyticsDashboard = ({ onEdit }) => {
         setExpandedTournaments(prev =>
             prev.includes(id) ? prev.filter(tId => tId !== id) : [...prev, id]
         );
-    };
-
-    const handleDeleteClick = (tournament) => {
-        setTournamentToDelete(tournament);
-        setShowDeleteModal(true);
-    };
-
-    const confirmDelete = async () => {
-        if (deletePassword !== "ss_admin_panel") {
-            errorNotification("Incorrect Password!");
-            return;
-        }
-
-        setIsDeleting(true);
-        try {
-            await dispatch(deleteRankingAsync({ id: tournamentToDelete.id, password: deletePassword })).unwrap();
-            successNotification("Tournament Deleted Successfully!");
-            setShowDeleteModal(false);
-            setTournamentToDelete(null);
-            setDeletePassword('');
-        } catch (err) {
-            errorNotification(`Delete Failed: ${err.message}`);
-        } finally {
-            setIsDeleting(false);
-        }
     };
 
     const handleYouTubeClick = (tournament) => {
@@ -313,28 +283,21 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                         {onEdit && (
                                             <button
                                                 onClick={() => onEdit(t)}
-                                                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
-                                                title="Edit Tournament"
+                                                style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', padding: '4px' }}
+                                                title="View Tournament Details"
                                             >
-                                                <Edit size={16} />
+                                                <FileText size={20} />
                                             </button>
                                         )}
-                                        {t.playlist_url && (
+                                        {(t.playlist_url || t.embed_url) && (
                                             <button
                                                 onClick={() => handleYouTubeClick(t)}
                                                 style={{ background: 'none', border: 'none', color: '#FF0000', cursor: 'pointer', padding: '4px' }}
                                                 title="Watch on YouTube"
                                             >
-                                                <Youtube size={16} />
+                                                <Youtube size={20} />
                                             </button>
                                         )}
-                                        <button
-                                            onClick={() => handleDeleteClick(t)}
-                                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
-                                            title="Delete Tournament"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
                                     </div>
                                 </div>
                                 <div className="ranks-preview">
@@ -430,31 +393,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
                 </div>
             </div>
 
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={showDeleteModal} onClose={() => setShowDeleteModal(false)}>
-                <DialogTitle>Confirm Deletion</DialogTitle>
-                <DialogContent>
-                    <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>
-                        Are you sure you want to delete the tournament from <strong>{tournamentToDelete?.date}</strong>? This action cannot be undone.
-                    </p>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Admin Password"
-                        type="password"
-                        fullWidth
-                        variant="outlined"
-                        value={deletePassword}
-                        onChange={(e) => setDeletePassword(e.target.value)}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setShowDeleteModal(false)}>Cancel</Button>
-                    <Button onClick={confirmDelete} color="error" variant="contained" disabled={isDeleting}>
-                        {isDeleting ? 'Deleting...' : 'Delete'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+
 
             {/* YouTube Embed Modal */}
             <Dialog
@@ -509,7 +448,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </div>
+        </div >
     );
 };
 

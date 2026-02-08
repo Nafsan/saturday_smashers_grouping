@@ -4,6 +4,7 @@ import { ArrowLeft, Settings, Search, TrendingUp, TrendingDown, Users, FileText 
 import { fetchFundBalances } from '../api/client';
 import LoadingSpinner from './LoadingSpinner';
 import TournamentCostViewerModal from './TournamentCostViewerModal';
+import PaymentHistoryModal from './PaymentHistoryModal';
 import ThemeToggle from './ThemeToggle';
 import './FundManagement.scss';
 
@@ -14,6 +15,7 @@ const FundManagement = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('all'); // 'all', 'positive', 'negative'
     const [isCostModalOpen, setIsCostModalOpen] = useState(false);
+    const [isPaymentHistoryOpen, setIsPaymentHistoryOpen] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -36,7 +38,7 @@ const FundManagement = () => {
         const matchesFilter =
             filterType === 'all' ||
             (filterType === 'positive' && player.current_balance > 0) ||
-            (filterType === 'negative' && player.current_balance < 0);
+            (filterType === 'negative' && player.current_balance < -1);
         return matchesSearch && matchesFilter;
     });
 
@@ -69,6 +71,10 @@ const FundManagement = () => {
                             <FileText size={20} />
                             View Tournament Costs
                         </button>
+                        <button className="cost-btn" onClick={() => setIsPaymentHistoryOpen(true)}>
+                            <FileText size={20} />
+                            Payment History
+                        </button>
                         <button className="admin-btn" onClick={() => navigate('/fund/admin')}>
                             <Settings size={20} />
                             Admin Console
@@ -80,6 +86,11 @@ const FundManagement = () => {
             <TournamentCostViewerModal
                 open={isCostModalOpen}
                 onClose={() => setIsCostModalOpen(false)}
+            />
+
+            <PaymentHistoryModal
+                open={isPaymentHistoryOpen}
+                onClose={() => setIsPaymentHistoryOpen(false)}
             />
 
             <div className="fund-content">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { uploadRankingAsync, updateRankingAsync, selectAllPlayerNames } from '../store/appSlice';
+import { uploadRankingAsync, updateRankingAsync, deleteRankingAsync, selectAllPlayerNames } from '../store/appSlice';
 import {
     TextField,
     Autocomplete,
@@ -14,9 +14,9 @@ import {
     Chip,
     IconButton
 } from '@mui/material';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Lock, Trash2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
-import { getAdminAuthCookie } from '../utils/cookieUtils';
+import { setAdminAuthCookie, getAdminAuthCookie } from '../utils/cookieUtils';
 import PasswordDialog from './PasswordDialog';
 import './RankSubmission.scss';
 
@@ -40,6 +40,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
     const [playlistUrl, setPlaylistUrl] = useState('');
     const [embedUrl, setEmbedUrl] = useState('');
 
+    // Admin State
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     // Populate form if editing
     useEffect(() => {
         if (initialData) {
@@ -60,8 +66,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
             setPlateRunnerUp(findPlayers(6)[0] || null);
             setPlateSemis(findPlayers(7));
             setPlateQuarters(findPlayers(8));
-            setPlaylistUrl(initialData.playlist_url || '');
             setEmbedUrl(initialData.embed_url || '');
+            setPlaylistUrl(initialData.playlist_url || '');
         } else {
             // Reset form if not editing
             setCupChampion(null);
@@ -75,6 +81,14 @@ const RankSubmission = ({ open, onClose, initialData }) => {
             setTournamentDate(new Date().toISOString().split('T')[0]);
             setPlaylistUrl('');
             setEmbedUrl('');
+        }
+
+        // Check Admin Cookie
+        const storedPassword = getAdminAuthCookie();
+        if (storedPassword === 'ss_admin_panel') {
+            setIsAdmin(true);
+        } else {
+            setIsAdmin(false);
         }
     }, [initialData, open]);
 
@@ -137,7 +151,6 @@ const RankSubmission = ({ open, onClose, initialData }) => {
         const ranks = [];
 
         // Cup - Dynamic rank assignment
-        // Champion: 1, Runner Up: 2, Semi Finalists: 3 (both get rank 3), Quarter Finalists: 5 (all get rank 5)
         let cupRank = 1;
         let ratingCounter = 1;
 
@@ -173,7 +186,6 @@ const RankSubmission = ({ open, onClose, initialData }) => {
             cupQuarters.length;
 
         // Plate - Dynamic ranks based on cup players
-        // Plate Champion rank = total cup players + 1
         let plateStartRank = totalCupPlayers + 1;
 
         if (plateChampion) {
@@ -234,11 +246,43 @@ const RankSubmission = ({ open, onClose, initialData }) => {
         }
     };
 
+    const handleLoginSuccess = (password) => {
+        if (password === "ss_admin_panel") {
+            setAdminAuthCookie(password);
+            setIsAdmin(true);
+            setShowLoginModal(false);
+            successNotification("Logged in as Admin");
+        } else {
+            errorNotification("Incorrect Password");
+        }
+    };
+
+    const handleDelete = async (password) => {
+        // Password here comes from confirmation logic or we use "ss_admin_panel"
+        // If coming from PasswordDialog (if we used it), it would be passed.
+        // If calling directly with "ss_admin_panel", it works.
+        const effectivePassword = password || "ss_admin_panel";
+
+        setIsDeleting(true);
+        try {
+            await dispatch(deleteRankingAsync({ id: initialData.id, password: effectivePassword })).unwrap();
+            successNotification("Tournament Deleted Successfully!");
+            setShowDeleteConfirm(false);
+            if (onClose) onClose();
+        } catch (err) {
+            errorNotification(`Delete Failed: ${err.message}`);
+            // If we used a dialog that expects throwing, we should throw. 
+            // But here we use standard Dialog, so we just log/notify.
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <>
             <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth className="rank-submission-dialog">
                 <DialogTitle>
-                    {initialData ? 'Edit Tournament Results' : 'Submit Tournament Results'}
+                    {initialData ? (isAdmin ? 'Edit Tournament Results' : 'Tournament Details') : 'Submit Tournament Results'}
                     <IconButton
                         aria-label="close"
                         onClick={onClose}
@@ -261,6 +305,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                             onChange={(e) => setTournamentDate(e.target.value)}
                             fullWidth
                             InputLabelProps={{ shrink: true }}
+                            disabled={!isAdmin}
                         />
                     </Box>
 
@@ -279,6 +324,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                     return optionName === valueName;
                                 }}
                                 renderInput={(params) => <TextField {...params} label="Cup Champion" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                                disabled={!isAdmin}
+                                readOnly={!isAdmin}
                             />
                         </div>
 
@@ -294,6 +341,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                     return optionName === valueName;
                                 }}
                                 renderInput={(params) => <TextField {...params} label="Cup Runner Up" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                                disabled={!isAdmin}
+                                readOnly={!isAdmin}
                             />
                         </div>
 
@@ -316,6 +365,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                         return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
                                     })
                                 }
+                                disabled={!isAdmin}
+                                readOnly={!isAdmin}
                             />
                         </div>
 
@@ -338,6 +389,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                         return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
                                     })
                                 }
+                                disabled={!isAdmin}
+                                readOnly={!isAdmin}
                             />
                         </div>
                     </div>
@@ -357,6 +410,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                     return optionName === valueName;
                                 }}
                                 renderInput={(params) => <TextField {...params} label="Plate Champion" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                                disabled={!isAdmin}
+                                readOnly={!isAdmin}
                             />
                         </div>
 
@@ -372,6 +427,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                     return optionName === valueName;
                                 }}
                                 renderInput={(params) => <TextField {...params} label="Plate Runner Up" variant="outlined" InputLabelProps={{ shrink: true }} />}
+                                disabled={!isAdmin}
+                                readOnly={!isAdmin}
                             />
                         </div>
 
@@ -394,6 +451,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                         return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
                                     })
                                 }
+                                disabled={!isAdmin}
+                                readOnly={!isAdmin}
                             />
                         </div>
 
@@ -416,61 +475,101 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                         return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
                                     })
                                 }
+                                disabled={!isAdmin}
+                                readOnly={!isAdmin}
                             />
                         </div>
                     </div>
 
-                    {/* YouTube Fields */}
-                    <Box sx={{ mt: 4, mb: 2 }}>
-                        <Typography variant="h6" sx={{ mb: 2, color: '#FF0000', fontWeight: 'bold' }}>
-                            📺 YouTube Links (Optional)
-                        </Typography>
+                    {/* YouTube Fields - Only Visible to Admin */}
+                    {isAdmin && (
+                        <Box sx={{ mt: 4, mb: 2 }}>
+                            <Typography variant="h6" sx={{ mb: 2, color: '#FF0000', fontWeight: 'bold' }}>
+                                📺 YouTube Links (Optional)
+                            </Typography>
 
-                        <Box sx={{ mb: 2 }}>
-                            <TextField
-                                label="YouTube Playlist URL"
-                                type="url"
-                                value={playlistUrl}
-                                onChange={(e) => setPlaylistUrl(e.target.value)}
-                                fullWidth
-                                placeholder="https://www.youtube.com/playlist?list=..."
-                                helperText="Link to tournament video playlist"
-                            />
-                        </Box>
+                            <Box sx={{ mb: 2 }}>
+                                <TextField
+                                    label="YouTube Playlist URL"
+                                    type="url"
+                                    value={playlistUrl}
+                                    onChange={(e) => setPlaylistUrl(e.target.value)}
+                                    fullWidth
+                                    placeholder="https://www.youtube.com/playlist?list=..."
+                                    helperText="Link to tournament video playlist"
+                                />
+                            </Box>
 
-                        <Box>
-                            <TextField
-                                label="YouTube Embed Code"
-                                multiline
-                                rows={3}
-                                value={embedUrl}
-                                onChange={(e) => setEmbedUrl(e.target.value)}
-                                fullWidth
-                                placeholder='<iframe width="560" height="315" src="https://www.youtube.com/embed/..." ...></iframe>'
-                                helperText="Paste the full iframe embed code from YouTube"
-                            />
+                            <Box>
+                                <TextField
+                                    label="YouTube Embed Code"
+                                    multiline
+                                    rows={3}
+                                    value={embedUrl}
+                                    onChange={(e) => setEmbedUrl(e.target.value)}
+                                    fullWidth
+                                    placeholder='<iframe width="560" height="315" src="https://www.youtube.com/embed/..." ...></iframe>'
+                                    helperText="Paste the full iframe embed code from YouTube"
+                                />
+                            </Box>
                         </Box>
-                    </Box>
+                    )}
                 </DialogContent>
                 <DialogActions sx={{ padding: '1.5rem' }}>
-                    <Button onClick={onClose} color="inherit" sx={{ marginRight: 'auto' }}>
-                        Cancel
+
+                    {!isAdmin && (
+                        <Button
+                            onClick={() => setShowLoginModal(true)}
+                            color="primary"
+                            startIcon={<Lock size={18} />}
+                            sx={{ marginRight: 'auto' }}
+                        >
+                            Login as Admin
+                        </Button>
+                    )}
+
+                    {isAdmin && initialData && (
+                        <Button
+                            onClick={() => setShowDeleteConfirm(true)}
+                            color="error"
+                            startIcon={<Trash2 size={18} />}
+                            sx={{ marginRight: 'auto' }}
+                        >
+                            Delete Tournament
+                        </Button>
+                    )}
+
+                    <Button onClick={onClose} color="inherit">
+                        {isAdmin ? 'Cancel' : 'Close'}
                     </Button>
-                    <Button
-                        onClick={handleSubmit}
-                        variant="contained"
-                        startIcon={<Upload size={18} />}
-                        sx={{
-                            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                            padding: '0.5rem 1.5rem',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        {initialData ? 'Update Results' : 'Upload Results'}
-                    </Button>
+
+                    {isAdmin && (
+                        <Button
+                            onClick={handleSubmit}
+                            variant="contained"
+                            startIcon={<Upload size={18} />}
+                            sx={{
+                                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                padding: '0.5rem 1.5rem',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            {initialData ? 'Update Results' : 'Upload Results'}
+                        </Button>
+                    )}
                 </DialogActions>
             </Dialog>
 
+            {/* Login Modal */}
+            <PasswordDialog
+                open={showLoginModal}
+                onSuccess={handleLoginSuccess}
+                onCancel={() => setShowLoginModal(false)}
+                title="Admin Login"
+                description="Enter admin password to edit details."
+            />
+
+            {/* Upload/Update Authentication (Only if not already admin authenticated via cookie) */}
             <PasswordDialog
                 open={showPasswordModal}
                 onSuccess={confirmUpload}
@@ -478,6 +577,27 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                 title="Admin Authentication"
                 description="Please enter the admin password to submit tournament results."
             />
+
+            {/* Simple Delete Confirmation Dialog */}
+            <Dialog open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)}>
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete this tournament? This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+                    <Button
+                        onClick={() => handleDelete("ss_admin_panel")}
+                        color="error"
+                        variant="contained"
+                        disabled={isDeleting}
+                    >
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 };

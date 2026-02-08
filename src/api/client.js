@@ -121,6 +121,15 @@ export const recordPayment = async (data, password) => {
     return response.data;
 };
 
+export const fetchPaymentHistory = async (page = 1, pageSize = 20, playerName = null) => {
+    const params = { page, page_size: pageSize };
+    if (playerName) params.player_name = playerName;
+
+    const response = await client.get('/fund/payments/history', { params });
+    return response.data;
+};
+
+
 export const fetchDaysPlayedComparison = async () => {
     const response = await client.get('/fund/days-played-comparison');
     return response.data;

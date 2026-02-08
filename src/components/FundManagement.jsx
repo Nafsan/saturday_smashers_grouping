@@ -66,7 +66,7 @@ const FundManagement = () => {
                         Back to Home
                     </button>
                     <h1 className="fund-title">Saturday Smashers Fund</h1>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div className="header-actions">
                         <button className="cost-btn" onClick={() => setIsCostModalOpen(true)}>
                             <FileText size={20} />
                             View Tournament Costs

@@ -12,7 +12,8 @@ import {
     Typography,
     Box,
     Chip,
-    IconButton
+    IconButton,
+    CircularProgress
 } from '@mui/material';
 import { Upload, X, Lock, Trash2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
@@ -547,14 +548,15 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                         <Button
                             onClick={handleSubmit}
                             variant="contained"
-                            startIcon={<Upload size={18} />}
+                            disabled={isSubmitting}
+                            startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <Upload size={18} />}
                             sx={{
                                 background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                                 padding: '0.5rem 1.5rem',
                                 fontWeight: 'bold'
                             }}
                         >
-                            {initialData ? 'Update Results' : 'Upload Results'}
+                            {isSubmitting ? 'Processing...' : (initialData ? 'Update Results' : 'Upload Results')}
                         </Button>
                     )}
                 </DialogActions>

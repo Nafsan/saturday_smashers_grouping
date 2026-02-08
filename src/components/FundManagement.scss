@@ -39,6 +39,24 @@
             }
         }
 
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+
+            @media (max-width: 768px) {
+                width: 100%;
+                flex-wrap: wrap;
+                justify-content: center;
+
+                button {
+                    flex: 1;
+                    min-width: 200px;
+                    justify-content: center;
+                }
+            }
+        }
+
         .back-btn,
         .admin-btn,
         .cost-btn {

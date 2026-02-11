@@ -48,10 +48,11 @@ class PlayerSpecificCost(Base):
     __tablename__ = "player_specific_costs"
 
     id = Column(Integer, primary_key=True, index=True)
-    tournament_cost_id = Column(Integer, ForeignKey("tournament_costs.id"), nullable=False)
+    tournament_cost_id = Column(Integer, ForeignKey("tournament_costs.id"), nullable=True)
     player_id = Column(Integer, ForeignKey("players.id"), nullable=False)
     cost_amount = Column(Float, nullable=False)
     cost_name = Column(String(255), nullable=True)
+    cost_date = Column(DateTime, nullable=True)
 
     tournament_cost = relationship("TournamentCost", back_populates="player_specific_costs")
     player = relationship("Player")

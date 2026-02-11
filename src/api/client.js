@@ -159,5 +159,19 @@ export const createUnofficialTournament = async (data, password) => {
     return response.data;
 };
 
+export const fetchPlayerTournamentCosts = async (playerId, page = 1, pageSize = 10) => {
+    const response = await client.get(`/fund/players/${playerId}/tournament-costs`, {
+        params: { page, page_size: pageSize }
+    });
+    return response.data;
+};
+
+export const fetchPlayerMiscCosts = async (playerId, page = 1, pageSize = 10) => {
+    const response = await client.get(`/fund/players/${playerId}/misc-costs`, {
+        params: { page, page_size: pageSize }
+    });
+    return response.data;
+};
+
 export default client;
 

@@ -614,6 +614,16 @@ async def add_player_misc_cost(
         player_fund.total_cost += cost_data.cost_amount
         player_fund.last_updated = datetime.utcnow()
         
+        # Create player specific cost record
+        misc_cost = fund_models.PlayerSpecificCost(
+            player_id=player.id,
+            cost_amount=cost_data.cost_amount,
+            cost_name=cost_data.cost_description,
+            cost_date=cost_data.cost_date,
+            tournament_cost_id=None  # Explicitly None for misc costs not tied to a tournament
+        )
+        db.add(misc_cost)
+
         updated_balances.append({
             "player_name": player_name,
             "new_balance": player_fund.current_balance,
@@ -654,7 +664,7 @@ async def get_payment_history(
     total = total_result.scalar() or 0
     
     # Apply sorting and pagination
-    query = query.order_by(fund_models.PaymentTransaction.payment_date.desc())
+    query = query.order_by(fund_models.PaymentTransaction.id.desc())
     query = query.offset((page - 1) * page_size).limit(page_size)
     
     result = await db.execute(query)
@@ -675,6 +685,7 @@ async def get_payment_history(
         
     total_pages = (total + page_size - 1) // page_size if page_size > 0 else 0
     
+
     return fund_schemas.PaginatedPaymentHistoryResponse(
         items=items,
         total=total,
@@ -682,4 +693,148 @@ async def get_payment_history(
         page_size=page_size,
         total_pages=total_pages
     )
+
+
+async def get_player_tournament_costs(
+    player_id: int,
+    page: int,
+    page_size: int,
+    db: AsyncSession
+) -> fund_schemas.PaginatedPlayerTournamentCostResponse:
+    """Get paginated tournament costs for a specific player"""
+    
+    # Base query: Get tournament attendance for the player
+    # Joined with Tournament and TournamentCost to get all details
+    # We sort by tournament date desc
+    
+    query = select(fund_models.TournamentAttendance, models.Tournament, fund_models.TournamentCost)\
+        .join(models.Tournament, fund_models.TournamentAttendance.tournament_id == models.Tournament.id)\
+        .join(fund_models.TournamentCost, models.Tournament.id == fund_models.TournamentCost.tournament_id)\
+        .where(fund_models.TournamentAttendance.player_id == player_id)
+    
+    # Get total count
+    count_stmt = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar() or 0
+    
+    # Apply sorting and pagination
+    query = query.order_by(models.Tournament.date.desc())
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(query)
+    rows = result.all()
+    
+    items = []
+    
+    for attendance, tournament, cost_record in rows:
+        # We need to calculate the cost share for this player in this tournament.
+        # This requires knowing the total number of players in that tournament.
+        
+        # Fetch total players count for this tournament
+        # We can optimize this by pre-fetching or subquery, but for now a separate query per row is simpler 
+        # (given page size 10, it's 10 extra queries, which is acceptable)
+        
+        players_count_result = await db.execute(
+            select(func.count(fund_models.TournamentAttendance.id))
+            .where(fund_models.TournamentAttendance.tournament_id == tournament.id)
+        )
+        num_players = players_count_result.scalar() or 0
+        
+        if num_players == 0:
+            continue # Should not happen if attendance exists
+            
+        # Per player costs
+        ball_cost_per_player = cost_record.total_ball_cost / num_players
+        misc_cost_per_player = cost_record.common_misc_cost / num_players
+        
+        # Venue cost
+        venue_cost = 0.0 if attendance.is_club_member else cost_record.venue_fee_per_person
+        
+        # Player specific costs for this tournament
+        specific_cost_result = await db.execute(
+            select(func.sum(fund_models.PlayerSpecificCost.cost_amount))
+            .where(
+                fund_models.PlayerSpecificCost.tournament_cost_id == cost_record.id,
+                fund_models.PlayerSpecificCost.player_id == player_id
+            )
+        )
+        player_specific_cost = specific_cost_result.scalar() or 0.0
+        
+        # Fetch specific cost description if any (concat if multiple)
+        specific_cost_desc_result = await db.execute(
+             select(fund_models.PlayerSpecificCost.cost_name)
+            .where(
+                fund_models.PlayerSpecificCost.tournament_cost_id == cost_record.id,
+                fund_models.PlayerSpecificCost.player_id == player_id
+            )
+        )
+        descriptions = [d for d in specific_cost_desc_result.scalars().all() if d]
+        description = ", ".join(descriptions) if descriptions else None
+        
+        total_cost = venue_cost + ball_cost_per_player + misc_cost_per_player + player_specific_cost
+        
+        items.append(fund_schemas.PlayerTournamentCostResponse(
+            tournament_id=tournament.id,
+            tournament_date=tournament.date,
+            venue_cost=venue_cost,
+            ball_cost=ball_cost_per_player,
+            common_misc_cost=misc_cost_per_player,
+            player_specific_cost=player_specific_cost,
+            total_cost=total_cost,
+            is_club_member=attendance.is_club_member,
+            description=description
+        ))
+        
+    total_pages = (total + page_size - 1) // page_size if page_size > 0 else 0
+    
+    return fund_schemas.PaginatedPlayerTournamentCostResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages
+    )
+
+
+async def get_player_misc_costs(
+    player_id: int,
+    page: int,
+    page_size: int,
+    db: AsyncSession
+) -> fund_schemas.PaginatedPlayerMiscCostResponse:
+    """Get paginated miscellaneous (non-tournament) costs for a specific player"""
+    
+    # Base query: PlayerSpecificCost where tournament_cost_id is NULL
+    query = select(fund_models.PlayerSpecificCost).where(
+        fund_models.PlayerSpecificCost.player_id == player_id,
+        fund_models.PlayerSpecificCost.tournament_cost_id.is_(None)
+    )
+    
+    # Get total count
+    count_stmt = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar() or 0
+    
+    # Apply sorting (by cost_date desc if available, else id desc)
+    # Using coalesce to handle null dates if strictly needed, but ID desc is a good proxy for creation time usually.
+    # User requested: "Sort in desc order of the id."
+    query = query.order_by(fund_models.PlayerSpecificCost.id.desc())
+    
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    
+    result = await db.execute(query)
+    costs = result.scalars().all()
+    
+    items = [fund_schemas.PlayerMiscCostResponse.from_orm(c) for c in costs]
+        
+    total_pages = (total + page_size - 1) // page_size if page_size > 0 else 0
+    
+    return fund_schemas.PaginatedPlayerMiscCostResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages
+    )
+
 

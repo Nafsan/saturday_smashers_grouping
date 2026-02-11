@@ -149,4 +149,27 @@ async def add_player_misc_cost(
     if password != "ss_admin_panel":
         raise HTTPException(status_code=403, detail="Invalid password")
     
+    
     return await services.add_player_misc_cost(cost_data, db)
+
+
+@router.get("/players/{player_id}/tournament-costs", response_model=fund_schemas.PaginatedPlayerTournamentCostResponse)
+async def get_player_tournament_costs(
+    player_id: int,
+    page: int = 1,
+    page_size: int = 10,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get paginated tournament costs for a specific player"""
+    return await services.get_player_tournament_costs(player_id, page, page_size, db)
+
+
+@router.get("/players/{player_id}/misc-costs", response_model=fund_schemas.PaginatedPlayerMiscCostResponse)
+async def get_player_misc_costs(
+    player_id: int,
+    page: int = 1,
+    page_size: int = 10,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get paginated miscellaneous (non-tournament) costs for a specific player"""
+    return await services.get_player_misc_costs(player_id, page, page_size, db)

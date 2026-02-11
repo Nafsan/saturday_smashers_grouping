@@ -175,3 +175,39 @@ class PaginatedPaymentHistoryResponse(BaseModel):
     page_size: int
     total_pages: int
 
+
+# ============ Player Expenses ============
+class PlayerTournamentCostResponse(BaseModel):
+    tournament_id: str
+    tournament_date: date
+    venue_cost: float
+    ball_cost: float
+    common_misc_cost: float
+    player_specific_cost: float
+    total_cost: float
+    is_club_member: bool
+    description: Optional[str] = None # Details about specific cost if any
+
+class PaginatedPlayerTournamentCostResponse(BaseModel):
+    items: List[PlayerTournamentCostResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+class PlayerMiscCostResponse(BaseModel):
+    id: int
+    cost_amount: float
+    cost_name: Optional[str] = None
+    cost_date: Optional[date] = None
+    
+    class Config:
+        from_attributes = True
+
+class PaginatedPlayerMiscCostResponse(BaseModel):
+    items: List[PlayerMiscCostResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+

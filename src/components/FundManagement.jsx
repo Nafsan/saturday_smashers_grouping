@@ -5,6 +5,7 @@ import { fetchFundBalances } from '../api/client';
 import LoadingSpinner from './LoadingSpinner';
 import TournamentCostViewerModal from './TournamentCostViewerModal';
 import PaymentHistoryModal from './PaymentHistoryModal';
+import TrackExpensesModal from './TrackExpensesModal';
 import ThemeToggle from './ThemeToggle';
 import './FundManagement.scss';
 
@@ -16,6 +17,8 @@ const FundManagement = () => {
     const [filterType, setFilterType] = useState('all'); // 'all', 'positive', 'negative'
     const [isCostModalOpen, setIsCostModalOpen] = useState(false);
     const [isPaymentHistoryOpen, setIsPaymentHistoryOpen] = useState(false);
+    const [isTrackExpensesOpen, setIsTrackExpensesOpen] = useState(false);
+
 
     useEffect(() => {
         loadData();
@@ -38,7 +41,7 @@ const FundManagement = () => {
         const matchesFilter =
             filterType === 'all' ||
             (filterType === 'positive' && player.current_balance > 0) ||
-            (filterType === 'negative' && player.current_balance < -1);
+            (filterType === 'negative' && player.current_balance < 0);
         return matchesSearch && matchesFilter;
     });
 
@@ -69,12 +72,17 @@ const FundManagement = () => {
                     <div className="header-actions">
                         <button className="cost-btn" onClick={() => setIsCostModalOpen(true)}>
                             <FileText size={20} />
-                            View Tournament Costs
+                            Tournament Costs
                         </button>
                         <button className="cost-btn" onClick={() => setIsPaymentHistoryOpen(true)}>
                             <FileText size={20} />
                             Payment History
                         </button>
+                        <button className="cost-btn" onClick={() => setIsTrackExpensesOpen(true)} style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)' }}>
+                            <TrendingDown size={20} />
+                            Track Expenses
+                        </button>
+
                         <button className="admin-btn" onClick={() => navigate('/fund/admin')}>
                             <Settings size={20} />
                             Admin Console
@@ -92,6 +100,14 @@ const FundManagement = () => {
                 open={isPaymentHistoryOpen}
                 onClose={() => setIsPaymentHistoryOpen(false)}
             />
+
+            <TrackExpensesModal
+                open={isTrackExpensesOpen}
+                onClose={() => setIsTrackExpensesOpen(false)}
+                players={balances}
+            />
+
+
 
             <div className="fund-content">
                 {/* Bkash Payment Info */}

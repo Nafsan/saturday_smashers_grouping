@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { generateGroupsAction } from '../store/appSlice';
-import { Trophy, Sparkles, DollarSign, Youtube, UserPlus, BarChart3 } from 'lucide-react';
+import { Trophy, Sparkles, DollarSign, Youtube, UserPlus, BarChart3, Calculator } from 'lucide-react';
 import { Tooltip } from '@mui/material';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import RankSubmission from './RankSubmission';
@@ -59,6 +59,13 @@ const AppLandingPage = () => {
                     </button>
                     <button className="secondary-btn" onClick={handleOpenSubmit} style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
                         <Trophy size={18} /> Submit Results
+                    </button>
+                    <button
+                        className="secondary-btn"
+                        onClick={() => navigate('/gtt-elo-calculator')}
+                        style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' }}
+                    >
+                        <Calculator size={18} /> GTT ELO Calculator
                     </button>
                     <Tooltip
                         title={

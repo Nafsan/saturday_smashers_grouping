@@ -22,9 +22,10 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    InputAdornment
+    InputAdornment,
+    Autocomplete
 } from '@mui/material';
-import { Calculator, Copy, ArrowLeft, RefreshCw, Plus, Search } from 'lucide-react';
+import { Calculator, Copy, ArrowLeft, RefreshCw, Plus, Search, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 
@@ -37,7 +38,7 @@ const GttEloCalculator = () => {
 
     // Bonus Dialog States
     const [bonusDialogOpen, setBonusDialogOpen] = useState(false);
-    const [bonusInput, setBonusInput] = useState('');
+    const [bonusRows, setBonusRows] = useState([{ player: null, points: '' }]);
 
     // Search State
     const [standingsSearch, setStandingsSearch] = useState('');
@@ -97,23 +98,36 @@ const GttEloCalculator = () => {
         return value.toString();
     };
 
+    const handleAddBonusRow = () => {
+        if (bonusRows.length < 4) {
+            setBonusRows([...bonusRows, { player: null, points: '' }]);
+        }
+    };
+
+    const handleRemoveBonusRow = (index) => {
+        const newRows = bonusRows.filter((_, i) => i !== index);
+        setBonusRows(newRows.length > 0 ? newRows : [{ player: null, points: '' }]);
+    };
+
+    const handleBonusRowChange = (index, field, value) => {
+        const newRows = [...bonusRows];
+        newRows[index][field] = value;
+        setBonusRows(newRows);
+    };
+
     const handleBonusSubmit = () => {
-        if (!bonusInput.trim() || !calculatedData) {
+        if (!calculatedData) {
             setBonusDialogOpen(false);
             return;
         }
 
-        const lines = bonusInput.trim().split('\n');
         const updatedStandings = [...calculatedData.standings];
         let count = 0;
 
-        lines.forEach(line => {
-            const parts = line.split(/\t+/);
-            if (parts.length >= 2) {
-                const name = normalizeName(parts[0]);
-                const bonus = parseInt(parts[1].replace(/[^0-9-]/g, '')) || 0;
-
-                const playerIndex = updatedStandings.findIndex(p => normalizeName(p.name) === name);
+        bonusRows.forEach(row => {
+            if (row.player && row.points) {
+                const bonus = parseInt(row.points) || 0;
+                const playerIndex = updatedStandings.findIndex(p => normalizeName(p.name) === normalizeName(row.player.name));
                 if (playerIndex !== -1) {
                     updatedStandings[playerIndex].rating += bonus;
                     updatedStandings[playerIndex].ratingChange += bonus;
@@ -137,12 +151,10 @@ const GttEloCalculator = () => {
                 standings: updatedStandings
             });
             successNotification(`Applied bonus to ${count} players!`);
-        } else {
-            errorNotification("No matching players found for bonus");
         }
 
         setBonusDialogOpen(false);
-        setBonusInput('');
+        setBonusRows([{ player: null, points: '' }]);
     };
 
     const handleCalculate = () => {
@@ -621,24 +633,60 @@ const GttEloCalculator = () => {
 
             {/* Bonus Points Dialog */}
             <Dialog open={bonusDialogOpen} onClose={() => setBonusDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Add Bonus Points</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 'bold' }}>Add Bonus Points</DialogTitle>
                 <DialogContent>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Paste players and bonus points (Name \t Points). One per line.
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                        Select players and enter bonus points (Max 4 players).
                     </Typography>
-                    <TextField
-                        fullWidth
-                        multiline
-                        rows={10}
-                        placeholder={`Kawsar\t50\nShommo\t30`}
-                        value={bonusInput}
-                        onChange={(e) => setBonusInput(e.target.value)}
-                        sx={{ fontFamily: 'monospace' }}
-                    />
+                    <Stack spacing={2}>
+                        {bonusRows.map((row, index) => (
+                            <Box key={index} sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                <Autocomplete
+                                    fullWidth
+                                    size="small"
+                                    options={calculatedData?.standings || []}
+                                    getOptionLabel={(option) => option.name}
+                                    value={row.player}
+                                    onChange={(_, newValue) => handleBonusRowChange(index, 'player', newValue)}
+                                    renderInput={(params) => <TextField {...params} label="Select Player" />}
+                                />
+                                <TextField
+                                    label="Points"
+                                    size="small"
+                                    type="number"
+                                    value={row.points}
+                                    onChange={(e) => handleBonusRowChange(index, 'points', e.target.value)}
+                                    sx={{ width: 120 }}
+                                />
+                                {bonusRows.length > 1 && (
+                                    <IconButton onClick={() => handleRemoveBonusRow(index)} color="error" size="small">
+                                        <Trash2 size={18} />
+                                    </IconButton>
+                                )}
+                            </Box>
+                        ))}
+                    </Stack>
+                    {bonusRows.length < 4 && (
+                        <Button
+                            startIcon={<Plus size={16} />}
+                            onClick={handleAddBonusRow}
+                            sx={{ mt: 2 }}
+                            size="small"
+                        >
+                            Add Player Row
+                        </Button>
+                    )}
                 </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
+                <DialogActions sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)' }}>
                     <Button onClick={() => setBonusDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleBonusSubmit} variant="contained" color="primary">Apply Bonus</Button>
+                    <Button
+                        onClick={handleBonusSubmit}
+                        variant="contained"
+                        color="primary"
+                        disabled={!bonusRows.some(r => r.player && r.points)}
+                    >
+                        Apply Bonus
+                    </Button>
                 </DialogActions>
             </Dialog>
         </div>

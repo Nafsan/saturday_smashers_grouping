@@ -186,7 +186,12 @@ const GttEloCalculator = () => {
                 const { value, status } = parseRating(ratingStr);
 
                 if (name) {
-                    players[normalizeName(name)] = {
+                    const key = normalizeName(name);
+                    if (players[key]) {
+                        errorNotification(`Duplicate player name found: "${name.trim()}". Please use unique names.`);
+                        return;
+                    }
+                    players[key] = {
                         name: name.trim(),
                         rating: value,
                         status: status,

@@ -40,8 +40,9 @@ const GttEloCalculator = () => {
     const [bonusDialogOpen, setBonusDialogOpen] = useState(false);
     const [bonusRows, setBonusRows] = useState([{ player: null, points: '' }]);
 
-    // Search State
+    // Search States
     const [standingsSearch, setStandingsSearch] = useState('');
+    const [matchSearch, setMatchSearch] = useState('');
 
     // ELO Rating Difference Table
     // Format: [min_diff, max_diff, expected_points, unexpected_points]
@@ -247,6 +248,26 @@ const GttEloCalculator = () => {
             const s1 = parseInt(scoreParts[0]);
             const s2 = parseInt(scoreParts[1]);
 
+            // Abandoned match logic (0-0)
+            if (s1 === 0 && s2 === 0) {
+                processedMatches.push({
+                    p1: match.p1Name,
+                    p2: match.p2Name,
+                    result: '0-0',
+                    winner: match.p1Name, // No real winner, just for UI consistency
+                    loser: match.p2Name,
+                    points: 0,
+                    isExpected: true,
+                    winnerRatingBefore: formatRating(players[p1Key].rating, players[p1Key].status),
+                    loserRatingBefore: formatRating(players[p2Key].rating, players[p2Key].status),
+                    winnerRatingAfter: formatRating(players[p1Key].rating, players[p1Key].status),
+                    loserRatingAfter: formatRating(players[p2Key].rating, players[p2Key].status),
+                    eloDiff: Math.abs(players[p1Key].rating - players[p2Key].rating),
+                    isAbandoned: true
+                });
+                return;
+            }
+
             let winner, loser, winnerRatingBefore, loserRatingBefore;
             let winnerStatusBefore, loserStatusBefore;
 
@@ -320,7 +341,7 @@ const GttEloCalculator = () => {
             processedMatches.push({
                 p1: match.p1Name,
                 p2: match.p2Name,
-                result: match.result,
+                result: `${Math.max(s1, s2)}-${Math.min(s1, s2)}`,
                 winner: winner.name,
                 loser: loser.name,
                 points: pointChange,
@@ -363,20 +384,50 @@ const GttEloCalculator = () => {
         successNotification("Standings copied to clipboard!");
     };
 
-    const copyMatchesToClipboard = () => {
+    const copyMatchesToClipboard = async () => {
         if (!calculatedData) return;
 
-        let text = "";
-        calculatedData.matches.forEach((match) => {
-            // Using quotes and newlines to match the UI layout and ensure correct spreadsheet pasting
-            const winnerCell = `"${match.winner}\n${match.winnerRatingBefore} → ${match.winnerRatingAfter}"`;
-            const loserCell = `"${match.loser}\n${match.loserRatingBefore} → ${match.loserRatingAfter}"`;
+        let plainText = "";
+        let htmlText = `<table border="1" style="border-collapse: collapse; font-family: sans-serif;">`;
 
-            text += `${winnerCell}\t${loserCell}\t${match.result}\t${match.eloDiff}\t${match.points}\n`;
+        calculatedData.matches.forEach((match) => {
+            const winnerInfo = `${match.winner}\n${match.winnerRatingBefore} → ${match.winnerRatingAfter}`;
+            const loserInfo = `${match.loser}\n${match.loserRatingBefore} → ${match.loserRatingAfter}`;
+
+            plainText += `${match.winner} (${match.winnerRatingBefore}→${match.winnerRatingAfter})\t${match.loser} (${match.loserRatingBefore}→${match.loserRatingAfter})\t${match.result}\t${match.eloDiff}\t${match.points}\n`;
+
+            htmlText += `<tr>
+                <td style="padding: 8px; color: ${match.isAbandoned ? '#6b7280' : '#16a34a'}; font-weight: bold;">
+                    <div style="font-weight: bold;">${match.winner}</div>
+                    <div style="font-size: 0.8em; color: #6b7280;">${match.winnerRatingBefore} → ${match.winnerRatingAfter}</div>
+                </td>
+                <td style="padding: 8px; color: ${match.isAbandoned ? '#6b7280' : '#dc2626'};">
+                    <div style="font-weight: bold;">${match.loser}</div>
+                    <div style="font-size: 0.8em; color: #6b7280;">${match.loserRatingBefore} → ${match.loserRatingAfter}</div>
+                </td>
+                <td style="padding: 8px; text-align: center;">${match.result}</td>
+                <td style="padding: 8px; text-align: right;">${match.eloDiff}</td>
+                <td style="padding: 8px; text-align: right; font-weight: bold;">${match.points > 0 ? '+' : ''}${match.points}</td>
+            </tr>`;
         });
 
-        navigator.clipboard.writeText(text);
-        successNotification("Match analysis copied to clipboard!");
+        htmlText += '</table>';
+
+        try {
+            const textBlob = new Blob([plainText], { type: 'text/plain' });
+            const htmlBlob = new Blob([htmlText], { type: 'text/html' });
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    'text/plain': textBlob,
+                    'text/html': htmlBlob
+                })
+            ]);
+            successNotification("Match analysis copied with formatting!");
+        } catch (err) {
+            // Fallback for older browsers
+            navigator.clipboard.writeText(plainText);
+            successNotification("Match analysis copied (plain text)!");
+        }
     };
 
     return (
@@ -477,9 +528,23 @@ const GttEloCalculator = () => {
                         {/* Match Analysis */}
                         <Box>
                             <Paper elevation={3} sx={{ p: 0, overflow: 'hidden', borderRadius: 4, bgcolor: 'background.paper' }}>
-                                <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderBottom: '1px solid divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderBottom: '1px solid divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                                     <Typography variant="h6" fontWeight="bold">Match Analysis</Typography>
-                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexGrow: 1, justifyContent: 'flex-end' }}>
+                                        <TextField
+                                            size="small"
+                                            placeholder="Search name..."
+                                            value={matchSearch}
+                                            onChange={(e) => setMatchSearch(e.target.value)}
+                                            sx={{ maxWidth: 200 }}
+                                            InputProps={{
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <Search size={16} />
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                        />
                                         <Button
                                             size="small"
                                             startIcon={<Copy size={16} />}
@@ -511,35 +576,42 @@ const GttEloCalculator = () => {
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {calculatedData.matches.map((match, idx) => (
-                                                <TableRow key={idx} hover>
-                                                    <TableCell>
-                                                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                                            <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 'bold' }}>
-                                                                {match.winner}
-                                                            </Typography>
-                                                            <Typography variant="caption" color="text.secondary">
-                                                                {match.winnerRatingBefore} &rarr; {match.winnerRatingAfter}
-                                                            </Typography>
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                                            <Typography variant="body2" sx={{ color: 'error.main' }}>
-                                                                {match.loser}
-                                                            </Typography>
-                                                            <Typography variant="caption" color="text.secondary">
-                                                                {match.loserRatingBefore} &rarr; {match.loserRatingAfter}
-                                                            </Typography>
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell align="center" sx={{ color: 'text.secondary' }}>{match.result}</TableCell>
-                                                    <TableCell align="right" sx={{ color: 'text.secondary' }}>{match.eloDiff}</TableCell>
-                                                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                                                        {match.points > 0 ? `+${match.points}` : match.points}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                            {calculatedData.matches
+                                                .filter(match => {
+                                                    const searchStr = matchSearch.trim().toLowerCase();
+                                                    return !searchStr ||
+                                                        match.winner.toLowerCase().includes(searchStr) ||
+                                                        match.loser.toLowerCase().includes(searchStr);
+                                                })
+                                                .map((match, idx) => (
+                                                    <TableRow key={idx} hover>
+                                                        <TableCell>
+                                                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 'bold' }}>
+                                                                    {match.winner}
+                                                                </Typography>
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    {match.winnerRatingBefore} &rarr; {match.winnerRatingAfter}
+                                                                </Typography>
+                                                            </Box>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <Typography variant="body2" sx={{ color: 'error.main', fontWeight: 'bold' }}>
+                                                                    {match.loser}
+                                                                </Typography>
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    {match.loserRatingBefore} &rarr; {match.loserRatingAfter}
+                                                                </Typography>
+                                                            </Box>
+                                                        </TableCell>
+                                                        <TableCell align="center" sx={{ color: 'text.secondary' }}>{match.result}</TableCell>
+                                                        <TableCell align="right" sx={{ color: 'text.secondary' }}>{match.eloDiff}</TableCell>
+                                                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                                                            {match.points > 0 ? `+${match.points}` : match.points}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
                                         </TableBody>
                                     </Table>
                                 </TableContainer>
@@ -595,7 +667,7 @@ const GttEloCalculator = () => {
                                         </TableHead>
                                         <TableBody>
                                             {calculatedData.standings
-                                                .filter(p => p.name.toLowerCase().includes(standingsSearch.toLowerCase()))
+                                                .filter(p => p.name.toLowerCase().includes(standingsSearch.trim().toLowerCase()))
                                                 .map((player, idx) => (
                                                     <TableRow key={idx} hover>
                                                         <TableCell>

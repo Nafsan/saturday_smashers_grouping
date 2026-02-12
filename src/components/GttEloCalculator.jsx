@@ -466,7 +466,7 @@ const GttEloCalculator = () => {
                                 multiline
                                 rows={15}
                                 variant="outlined"
-                                placeholder={`1\tKawsar\t2340\n2\tShommo\t2331...`}
+                                placeholder={`1\tWang Chuqin\t2340\n2\tLin Shidong\t2331...`}
                                 value={standingsInput}
                                 onChange={(e) => setStandingsInput(e.target.value)}
                                 sx={{
@@ -493,7 +493,7 @@ const GttEloCalculator = () => {
                                 multiline
                                 rows={15}
                                 variant="outlined"
-                                placeholder={`AR Fahim\tMd. Imran Sheikh\t3-0\n...`}
+                                placeholder={`Timo Boll\tHarimoto\t3-0\n...`}
                                 value={matchesInput}
                                 onChange={(e) => setMatchesInput(e.target.value)}
                                 sx={{

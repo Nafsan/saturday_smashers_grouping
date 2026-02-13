@@ -142,26 +142,28 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
                                 })}
                             </Typography>
                             <Grid container spacing={2}>
-                                <Grid item xs={6} sm={3}>
+                                <Grid item xs={details.total_misc_cost > 0 ? 6 : 4} sm={3}>
                                     <Typography variant="caption" color="textSecondary">Venue Cost</Typography>
                                     <Typography variant="body1" fontWeight="bold">৳{details.total_venue_cost.toFixed(2)}</Typography>
                                 </Grid>
-                                <Grid item xs={6} sm={3}>
+                                <Grid item xs={details.total_misc_cost > 0 ? 6 : 4} sm={3}>
                                     <Typography variant="caption" color="textSecondary">Ball Cost</Typography>
                                     <Typography variant="body1" fontWeight="bold">৳{details.total_ball_cost.toFixed(2)}</Typography>
                                 </Grid>
-                                <Grid item xs={6} sm={3}>
-                                    <Typography variant="caption" color="textSecondary">Misc Cost</Typography>
-                                    <Typography variant="body1" fontWeight="bold">৳{details.total_misc_cost.toFixed(2)}</Typography>
-                                </Grid>
-                                <Grid item xs={6} sm={3}>
+                                {details.total_misc_cost > 0 && (
+                                    <Grid item xs={6} sm={3}>
+                                        <Typography variant="caption" color="textSecondary">Misc Cost</Typography>
+                                        <Typography variant="body1" fontWeight="bold">৳{details.total_misc_cost.toFixed(2)}</Typography>
+                                    </Grid>
+                                )}
+                                <Grid item xs={details.total_misc_cost > 0 ? 6 : 4} sm={3}>
                                     <Typography variant="caption" color="textSecondary">Grand Total</Typography>
-                                    <Typography variant="h6" color="success.main" fontWeight="bold">৳{details.total_cost.toFixed(2)}</Typography>
+                                    <Typography variant="body1" color="success.main" fontWeight="bold">৳{details.total_cost.toFixed(2)}</Typography>
                                 </Grid>
                             </Grid>
                         </Box>
 
-                        <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 400 }}>
+                        <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 460 }}>
                             <Table stickyHeader size="small">
                                 <TableHead>
                                     <TableRow>

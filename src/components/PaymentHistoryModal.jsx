@@ -57,7 +57,7 @@ const PaymentHistoryModal = ({ open, onClose }) => {
             PaperProps={{
                 sx: {
                     width: isMobile ? '97%' : undefined,
-                    maxHeight: isMobile ? '100vh' : undefined,
+                    maxHeight: isMobile ? '95vh' : undefined,
                     margin: isMobile ? '8px' : undefined
                 }
             }}

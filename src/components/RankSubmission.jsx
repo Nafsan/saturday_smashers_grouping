@@ -297,42 +297,44 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                     }
                 }}
             >
-                <DialogTitle>
+                <DialogTitle sx={{ p: isMobile ? 1.5 : 2, pr: 6 }}>
                     {initialData ? (isAdmin ? 'Edit Tournament Results' : 'Tournament Details') : 'Submit Tournament Results'}
                     <IconButton
                         aria-label="close"
                         onClick={onClose}
                         sx={{
                             position: 'absolute',
-                            right: 8,
-                            top: 8,
+                            right: isMobile ? 4 : 8,
+                            top: isMobile ? 4 : 8,
                             color: (theme) => theme.palette.grey[500],
                         }}
                     >
                         <X />
                     </IconButton>
                 </DialogTitle>
-                <DialogContent dividers>
-                    <Box sx={{ mb: 3 }}>
+                <DialogContent dividers sx={{ p: isMobile ? 1.5 : 3 }}>
+                    <Box sx={{ mb: isMobile ? 1.5 : 3 }}>
                         <TextField
                             label="Tournament Date"
                             type="date"
                             value={tournamentDate}
                             onChange={(e) => setTournamentDate(e.target.value)}
                             fullWidth
+                            size={isMobile ? "small" : "medium"}
                             InputLabelProps={{ shrink: true }}
                             disabled={!isAdmin}
                         />
                     </Box>
 
                     <div className="rank-section">
-                        <Typography variant="h6" className="section-title cup" style={{ marginBottom: '1rem' }}>🏆 Cup Bracket</Typography>
+                        <Typography variant="h6" className="section-title cup" style={{ marginBottom: isMobile ? '0.5rem' : '1rem' }}>🏆 Cup Bracket</Typography>
 
-                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <div className="form-group" style={{ marginBottom: isMobile ? '0.75rem' : '1rem' }}>
                             <Autocomplete
                                 options={allPlayers}
                                 value={cupChampion}
                                 onChange={(e, newValue) => setCupChampion(newValue)}
+                                size={isMobile ? "small" : "medium"}
                                 getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
                                 isOptionEqualToValue={(option, value) => {
                                     const optionName = typeof option === 'string' ? option : option.name;
@@ -345,11 +347,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                             />
                         </div>
 
-                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <div className="form-group" style={{ marginBottom: isMobile ? '0.75rem' : '1rem' }}>
                             <Autocomplete
                                 options={allPlayers}
                                 value={cupRunnerUp}
                                 onChange={(e, newValue) => setCupRunnerUp(newValue)}
+                                size={isMobile ? "small" : "medium"}
                                 getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
                                 isOptionEqualToValue={(option, value) => {
                                     const optionName = typeof option === 'string' ? option : option.name;
@@ -362,12 +365,13 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                             />
                         </div>
 
-                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <div className="form-group" style={{ marginBottom: isMobile ? '0.75rem' : '1rem' }}>
                             <Autocomplete
                                 multiple
                                 options={allPlayers}
                                 value={cupSemis}
                                 onChange={(e, newValue) => setCupSemis(newValue)}
+                                size={isMobile ? "small" : "medium"}
                                 getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
                                 isOptionEqualToValue={(option, value) => {
                                     const optionName = typeof option === 'string' ? option : option.name;
@@ -378,7 +382,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 renderTags={(value, getTagProps) =>
                                     value.map((option, index) => {
                                         const playerName = typeof option === 'string' ? option : (option.name || String(option));
-                                        return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
+                                        return <Chip key={index} variant="outlined" label={playerName} size={isMobile ? "small" : "medium"} {...getTagProps({ index })} />;
                                     })
                                 }
                                 disabled={!isAdmin}
@@ -386,12 +390,13 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                             />
                         </div>
 
-                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <div className="form-group" style={{ marginBottom: isMobile ? '0.75rem' : '1rem' }}>
                             <Autocomplete
                                 multiple
                                 options={allPlayers}
                                 value={cupQuarters}
                                 onChange={(e, newValue) => setCupQuarters(newValue)}
+                                size={isMobile ? "small" : "medium"}
                                 getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
                                 isOptionEqualToValue={(option, value) => {
                                     const optionName = typeof option === 'string' ? option : option.name;
@@ -402,7 +407,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 renderTags={(value, getTagProps) =>
                                     value.map((option, index) => {
                                         const playerName = typeof option === 'string' ? option : (option.name || String(option));
-                                        return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
+                                        return <Chip key={index} variant="outlined" label={playerName} size={isMobile ? "small" : "medium"} {...getTagProps({ index })} />;
                                     })
                                 }
                                 disabled={!isAdmin}
@@ -412,13 +417,14 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                     </div>
 
                     <div className="rank-section">
-                        <Typography variant="h6" className="section-title plate" style={{ marginBottom: '1rem' }}>🍽️ Plate Bracket</Typography>
+                        <Typography variant="h6" className="section-title plate" style={{ marginBottom: isMobile ? '0.5rem' : '1rem' }}>🍽️ Plate Bracket</Typography>
 
-                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <div className="form-group" style={{ marginBottom: isMobile ? '0.75rem' : '1rem' }}>
                             <Autocomplete
                                 options={allPlayers}
                                 value={plateChampion}
                                 onChange={(e, newValue) => setPlateChampion(newValue)}
+                                size={isMobile ? "small" : "medium"}
                                 getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
                                 isOptionEqualToValue={(option, value) => {
                                     const optionName = typeof option === 'string' ? option : option.name;
@@ -431,11 +437,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                             />
                         </div>
 
-                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <div className="form-group" style={{ marginBottom: isMobile ? '0.75rem' : '1rem' }}>
                             <Autocomplete
                                 options={allPlayers}
                                 value={plateRunnerUp}
                                 onChange={(e, newValue) => setPlateRunnerUp(newValue)}
+                                size={isMobile ? "small" : "medium"}
                                 getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
                                 isOptionEqualToValue={(option, value) => {
                                     const optionName = typeof option === 'string' ? option : option.name;
@@ -448,12 +455,13 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                             />
                         </div>
 
-                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <div className="form-group" style={{ marginBottom: isMobile ? '0.75rem' : '1rem' }}>
                             <Autocomplete
                                 multiple
                                 options={allPlayers}
                                 value={plateSemis}
                                 onChange={(e, newValue) => setPlateSemis(newValue)}
+                                size={isMobile ? "small" : "medium"}
                                 getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
                                 isOptionEqualToValue={(option, value) => {
                                     const optionName = typeof option === 'string' ? option : option.name;
@@ -464,7 +472,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 renderTags={(value, getTagProps) =>
                                     value.map((option, index) => {
                                         const playerName = typeof option === 'string' ? option : (option.name || String(option));
-                                        return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
+                                        return <Chip key={index} variant="outlined" label={playerName} size={isMobile ? "small" : "medium"} {...getTagProps({ index })} />;
                                     })
                                 }
                                 disabled={!isAdmin}
@@ -472,12 +480,13 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                             />
                         </div>
 
-                        <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <div className="form-group" style={{ marginBottom: isMobile ? '0.75rem' : '1rem' }}>
                             <Autocomplete
                                 multiple
                                 options={allPlayers}
                                 value={plateQuarters}
                                 onChange={(e, newValue) => setPlateQuarters(newValue)}
+                                size={isMobile ? "small" : "medium"}
                                 getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
                                 isOptionEqualToValue={(option, value) => {
                                     const optionName = typeof option === 'string' ? option : option.name;
@@ -488,7 +497,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 renderTags={(value, getTagProps) =>
                                     value.map((option, index) => {
                                         const playerName = typeof option === 'string' ? option : (option.name || String(option));
-                                        return <Chip key={index} variant="outlined" label={playerName} {...getTagProps({ index })} />;
+                                        return <Chip key={index} variant="outlined" label={playerName} size={isMobile ? "small" : "medium"} {...getTagProps({ index })} />;
                                     })
                                 }
                                 disabled={!isAdmin}
@@ -531,7 +540,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                         </Box>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ padding: '1.5rem' }}>
+                <DialogActions sx={{ padding: isMobile ? '0.75rem 1rem' : '1.5rem' }}>
 
                     {!isAdmin && (
                         <Button

@@ -57,6 +57,13 @@ const GttEloCalculator = () => {
         [0, 14, 8, 8]
     ];
 
+    const PLAYER_STATUS = {
+        NEW: 'NEW',
+        TEMP1: 'TEMP1',
+        TEMP2: 'TEMP2',
+        PERMANENT: 'PERMANENT'
+    };
+
     const getPoints = (ratingDiff) => {
         const diff = Math.abs(ratingDiff);
         for (const [min, max, expected, unexpected] of RATING_logic) {
@@ -74,24 +81,24 @@ const GttEloCalculator = () => {
     };
 
     const parseRating = (ratingStr) => {
-        if (!ratingStr) return { value: 0, status: 'NEW' };
+        if (!ratingStr) return { value: 0, status: PLAYER_STATUS.NEW };
 
         const cleanStr = ratingStr.trim().toLowerCase();
-        if (cleanStr === '-' || cleanStr === 'new') return { value: 0, status: 'NEW' };
+        if (cleanStr === '-' || cleanStr === 'new') return { value: 0, status: PLAYER_STATUS.NEW };
 
         if (cleanStr.startsWith('t')) {
             const value = parseInt(cleanStr.replace(/[^0-9]/g, '')) || 0;
-            if (cleanStr.endsWith('**')) return { value, status: 'TEMP2' };
-            if (cleanStr.endsWith('*')) return { value, status: 'TEMP1' };
+            if (cleanStr.endsWith('**')) return { value, status: PLAYER_STATUS.TEMP2 };
+            if (cleanStr.endsWith('*')) return { value, status: PLAYER_STATUS.TEMP1 };
         }
 
-        return { value: parseInt(cleanStr.replace(/[^0-9]/g, '')) || 0, status: 'PERMANENT' };
+        return { value: parseInt(cleanStr.replace(/[^0-9]/g, '')) || 0, status: PLAYER_STATUS.PERMANENT };
     };
 
     const formatRating = (value, status) => {
-        if (status === 'NEW') return 'new';
-        if (status === 'TEMP1') return `T ${value} *`;
-        if (status === 'TEMP2') return `T ${value} **`;
+        if (status === PLAYER_STATUS.NEW) return 'new';
+        if (status === PLAYER_STATUS.TEMP1) return `T ${value} *`;
+        if (status === PLAYER_STATUS.TEMP2) return `T ${value} **`;
         return value.toString();
     };
 
@@ -147,7 +154,12 @@ const GttEloCalculator = () => {
         if (count > 0) {
             // Re-sort standings
             updatedStandings.sort((a, b) => {
-                const statusPriority = { 'PERMANENT': 3, 'TEMP2': 2, 'TEMP1': 1, 'NEW': 0 };
+                const statusPriority = {
+                    [PLAYER_STATUS.PERMANENT]: 3,
+                    [PLAYER_STATUS.TEMP2]: 2,
+                    [PLAYER_STATUS.TEMP1]: 1,
+                    [PLAYER_STATUS.NEW]: 0
+                };
                 if (statusPriority[b.status] !== statusPriority[a.status]) {
                     return statusPriority[b.status] - statusPriority[a.status];
                 }
@@ -244,11 +256,11 @@ const GttEloCalculator = () => {
             let p2 = players[p2Key];
 
             if (!p1) {
-                p1 = { name: match.p1Name, rating: 0, status: 'NEW', initialRating: 0, initialStatus: 'NEW', ratingChange: 0 };
+                p1 = { name: match.p1Name, rating: 0, status: PLAYER_STATUS.NEW, initialRating: 0, initialStatus: PLAYER_STATUS.NEW, ratingChange: 0 };
                 players[p1Key] = p1;
             }
             if (!p2) {
-                p2 = { name: match.p2Name, rating: 0, status: 'NEW', initialRating: 0, initialStatus: 'NEW', ratingChange: 0 };
+                p2 = { name: match.p2Name, rating: 0, status: PLAYER_STATUS.NEW, initialRating: 0, initialStatus: PLAYER_STATUS.NEW, ratingChange: 0 };
                 players[p2Key] = p2;
             }
 
@@ -302,24 +314,24 @@ const GttEloCalculator = () => {
             let isExpectedWin = winnerRatingBefore >= loserRatingBefore;
 
             // --- Rating Logic ---
-            if (winnerStatusBefore === 'NEW' || winnerStatusBefore === 'TEMP1' || winnerStatusBefore === 'TEMP2') {
+            if (winnerStatusBefore === PLAYER_STATUS.NEW || winnerStatusBefore === PLAYER_STATUS.TEMP1 || winnerStatusBefore === PLAYER_STATUS.TEMP2) {
                 // Winner is New/Temp
-                if (winnerStatusBefore === 'NEW') {
+                if (winnerStatusBefore === PLAYER_STATUS.NEW) {
                     // Win 1
                     winnerRatingAfter = loserRatingBefore;
-                    winnerStatusAfter = 'TEMP1';
-                } else if (winnerStatusBefore === 'TEMP1') {
+                    winnerStatusAfter = PLAYER_STATUS.TEMP1;
+                } else if (winnerStatusBefore === PLAYER_STATUS.TEMP1) {
                     // Win 2
                     winnerRatingAfter = Math.max(winnerRatingBefore, loserRatingBefore);
-                    winnerStatusAfter = 'TEMP2';
-                } else if (winnerStatusBefore === 'TEMP2') {
+                    winnerStatusAfter = PLAYER_STATUS.TEMP2;
+                } else if (winnerStatusBefore === PLAYER_STATUS.TEMP2) {
                     // Win 3
                     winnerRatingAfter = Math.round((winnerRatingBefore + loserRatingBefore) / 2);
-                    winnerStatusAfter = 'PERMANENT';
+                    winnerStatusAfter = PLAYER_STATUS.PERMANENT;
                 }
 
                 // Loser logic if loser is NOT New
-                if (loserStatusBefore !== 'NEW') {
+                if (loserStatusBefore !== PLAYER_STATUS.NEW) {
                     // Standard ELO based on numerical values
                     const { expected, unexpected } = getPoints(winnerRatingBefore - loserRatingBefore);
                     const lostPoints = (winnerRatingBefore < loserRatingBefore) ? unexpected : expected;
@@ -328,7 +340,7 @@ const GttEloCalculator = () => {
                 }
             } else {
                 // Winner is PERMANENT
-                if (loserStatusBefore === 'NEW') {
+                if (loserStatusBefore === PLAYER_STATUS.NEW) {
                     // Losing as NEW results in 0 points for opponent
                     pointChange = 0;
                 } else {
@@ -370,7 +382,12 @@ const GttEloCalculator = () => {
         // 4. Generate Final Standings
         // Sort: PERMANENT (by value desc) > TEMP (by value desc) > NEW
         const finalStandings = Object.values(players).sort((a, b) => {
-            const statusPriority = { 'PERMANENT': 3, 'TEMP2': 2, 'TEMP1': 1, 'NEW': 0 };
+            const statusPriority = {
+                [PLAYER_STATUS.PERMANENT]: 3,
+                [PLAYER_STATUS.TEMP2]: 2,
+                [PLAYER_STATUS.TEMP1]: 1,
+                [PLAYER_STATUS.NEW]: 0
+            };
             if (statusPriority[b.status] !== statusPriority[a.status]) {
                 return statusPriority[b.status] - statusPriority[a.status];
             }

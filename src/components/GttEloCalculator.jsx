@@ -11,10 +11,6 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Grid,
-    Card,
-    CardContent,
-    Container,
     IconButton,
     Tooltip,
     Stack,
@@ -124,14 +120,25 @@ const GttEloCalculator = () => {
 
         const updatedStandings = [...calculatedData.standings];
         let count = 0;
+        const newBonuses = [];
 
         bonusRows.forEach(row => {
             if (row.player && row.points) {
-                const bonus = parseInt(row.points) || 0;
-                const playerIndex = updatedStandings.findIndex(p => normalizeName(p.name) === normalizeName(row.player.name));
-                if (playerIndex !== -1) {
-                    updatedStandings[playerIndex].rating += bonus;
-                    updatedStandings[playerIndex].ratingChange += bonus;
+                const bonusPoints = parseInt(row.points) || 0;
+                const index = updatedStandings.findIndex(p => normalizeName(p.name) === normalizeName(row.player.name));
+                if (index !== -1) {
+                    const p = updatedStandings[index];
+                    const ratingBefore = formatRating(p.rating, p.status);
+                    p.rating += bonusPoints;
+                    p.ratingChange += bonusPoints;
+                    const ratingAfter = formatRating(p.rating, p.status);
+
+                    newBonuses.push({
+                        name: p.name,
+                        points: bonusPoints,
+                        ratingBefore,
+                        ratingAfter
+                    });
                     count++;
                 }
             }
@@ -149,7 +156,8 @@ const GttEloCalculator = () => {
 
             setCalculatedData({
                 ...calculatedData,
-                standings: updatedStandings
+                standings: updatedStandings,
+                bonuses: [...(calculatedData.bonuses || []), ...newBonuses]
             });
             successNotification(`Applied bonus to ${count} players!`);
         }
@@ -371,29 +379,67 @@ const GttEloCalculator = () => {
 
         setCalculatedData({
             matches: processedMatches,
-            standings: finalStandings
+            standings: finalStandings,
+            bonuses: []
         });
 
         successNotification("Calculation complete!");
     };
 
-    const copyToClipboard = () => {
+    const copyToClipboard = async () => {
         if (!calculatedData) return;
 
-        let text = "No.\tName\tElo Rating\n";
-        calculatedData.standings.forEach((p, idx) => {
-            text += `${idx + 1}\t${p.name}\t${formatRating(p.rating, p.status)}\n`;
-        });
+        let plainText = "No.\tName\tElo Rating\tRecent Change\n";
+        let htmlText = `<table border="1" style="border-collapse: collapse; font-family: sans-serif;">
+            <tr style="background-color: #f3f4f6;">
+                <th style="padding: 8px;">No.</th>
+                <th style="padding: 8px;">Name</th>
+                <th style="padding: 8px;">Elo Rating</th>
+                <th style="padding: 8px;">Recent Change</th>
+            </tr>`;
 
-        navigator.clipboard.writeText(text);
-        successNotification("Standings copied to clipboard!");
+        calculatedData.standings.forEach((p, idx) => {
+            const formattedRating = formatRating(p.rating, p.status);
+            const formattedChange = p.ratingChange !== 0 ? (p.ratingChange > 0 ? `+${p.ratingChange}` : p.ratingChange) : '-';
+
+            plainText += `${idx + 1}\t${p.name}\t${formattedRating}\t${formattedChange}\n`;
+            htmlText += `<tr>
+                <td style="padding: 8px; text-align: center;">${idx + 1}</td>
+                <td style="padding: 8px;">${p.name}</td>
+                <td style="padding: 8px; text-align: right;">${formattedRating}</td>
+                <td style="padding: 8px; text-align: right; color: ${p.ratingChange > 0 ? '#16a34a' : p.ratingChange < 0 ? '#dc2626' : '#6b7280'};">${formattedChange}</td>
+            </tr>`;
+        });
+        htmlText += '</table>';
+
+        try {
+            const textBlob = new Blob([plainText], { type: 'text/plain' });
+            const htmlBlob = new Blob([htmlText], { type: 'text/html' });
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    'text/plain': textBlob,
+                    'text/html': htmlBlob
+                })
+            ]);
+            successNotification("Standings copied with formatting!");
+        } catch (err) {
+            navigator.clipboard.writeText(plainText);
+            successNotification("Standings copied (plain text)!");
+        }
     };
 
     const copyMatchesToClipboard = async () => {
         if (!calculatedData) return;
 
-        let plainText = "";
-        let htmlText = `<table border="1" style="border-collapse: collapse; font-family: sans-serif;">`;
+        let plainText = "Winner\tLoser\tResult\tElo Difference\tPoints\n";
+        let htmlText = `<table border="1" style="border-collapse: collapse; font-family: sans-serif;">
+            <tr style="background-color: #f3f4f6;">
+                <th style="padding: 8px;">Winner</th>
+                <th style="padding: 8px;">Loser</th>
+                <th style="padding: 8px;">Result</th>
+                <th style="padding: 8px;">Elo Difference</th>
+                <th style="padding: 8px;">Points</th>
+            </tr>`;
 
         calculatedData.matches.forEach((match) => {
             const winnerInfo = `${match.winner}\n${match.winnerRatingBefore} → ${match.winnerRatingAfter}`;
@@ -415,6 +461,24 @@ const GttEloCalculator = () => {
                 <td style="padding: 8px; text-align: right; font-weight: bold;">${match.points > 0 ? '+' : ''}${match.points}</td>
             </tr>`;
         });
+
+        // Add Bonuses to clipboard
+        if (calculatedData.bonuses && calculatedData.bonuses.length > 0) {
+            plainText += "\n\nTournament Performance Bonus:\nPlayer\tBonus Points\n";
+            htmlText += `<tr><td colspan="5" style="padding: 16px 8px 8px; font-weight: bold; background-color: #f9fafb;">Bonus</td></tr>`;
+
+            calculatedData.bonuses.forEach(bonus => {
+                plainText += `${bonus.name}\n${bonus.ratingBefore} → ${bonus.ratingAfter}\t+${bonus.points}\n`;
+                htmlText += `<tr>
+                    <td colspan="2" style="padding: 8px; color: #4f46e5;">
+                        <div style="font-weight: bold;">${bonus.name}</div>
+                        <div style="font-size: 0.8em; color: #6b7280;">${bonus.ratingBefore} → ${bonus.ratingAfter}</div>
+                    </td>
+                    <td colspan="2" style="padding: 8px; text-align: center;">Bonus Points</td>
+                    <td style="padding: 8px; text-align: right; font-weight: bold; color: #4f46e5;">+${bonus.points}</td>
+                </tr>`;
+            });
+        }
 
         htmlText += '</table>';
 
@@ -576,8 +640,8 @@ const GttEloCalculator = () => {
                                                 <TableCell>Winner (Before &rarr; After)</TableCell>
                                                 <TableCell>Loser (Before &rarr; After)</TableCell>
                                                 <TableCell align="center">Result</TableCell>
-                                                <TableCell align="right">Elo Diff</TableCell>
-                                                <TableCell align="right">Pts</TableCell>
+                                                <TableCell align="right">Elo Difference</TableCell>
+                                                <TableCell align="right">Points</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -623,6 +687,47 @@ const GttEloCalculator = () => {
                             </Paper>
                         </Box>
 
+                        {/* Applied Bonuses Section */}
+                        {calculatedData.bonuses && calculatedData.bonuses.length > 0 && (
+                            <Box>
+                                <Paper elevation={3} sx={{ p: 0, overflow: 'hidden', borderRadius: 4, bgcolor: 'background.paper' }}>
+                                    <Box sx={{ p: 2, bgcolor: 'rgba(79, 70, 229, 0.05)', borderBottom: '1px solid divider', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Plus size={18} color="#4f46e5" />
+                                        <Typography variant="h6" fontWeight="bold">Tournament Performance Bonus</Typography>
+                                    </Box>
+                                    <TableContainer>
+                                        <Table size="small">
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell sx={{ fontWeight: 'bold' }}>Player Name</TableCell>
+                                                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>Bonus Points</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {calculatedData.bonuses.map((bonus, idx) => (
+                                                    <TableRow key={idx} hover>
+                                                        <TableCell>
+                                                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                                                    {bonus.name}
+                                                                </Typography>
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    {bonus.ratingBefore} &rarr; {bonus.ratingAfter}
+                                                                </Typography>
+                                                            </Box>
+                                                        </TableCell>
+                                                        <TableCell align="right" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                                                            +{bonus.points}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </Paper>
+                            </Box>
+                        )}
+
                         {/* Updated Standings */}
                         <Box>
                             <Paper elevation={3} sx={{ p: 0, overflow: 'hidden', borderRadius: 4, bgcolor: 'background.paper', height: '100%' }}>
@@ -653,11 +758,15 @@ const GttEloCalculator = () => {
                                         >
                                             Add Bonus
                                         </Button>
-                                        <Tooltip title="Copy for Excel/Sheets">
-                                            <IconButton onClick={copyToClipboard} color="primary" sx={{ bgcolor: 'rgba(59, 130, 246, 0.1)' }}>
-                                                <Copy size={20} />
-                                            </IconButton>
-                                        </Tooltip>
+                                        <Button
+                                            size="small"
+                                            startIcon={<Copy size={16} />}
+                                            onClick={copyToClipboard}
+                                            variant="outlined"
+                                            sx={{ borderRadius: 2 }}
+                                        >
+                                            Copy Updated Ranking
+                                        </Button>
                                     </Box>
                                 </Box>
                                 <TableContainer sx={{ maxHeight: 600 }}>
@@ -667,7 +776,7 @@ const GttEloCalculator = () => {
                                                 <TableCell>#</TableCell>
                                                 <TableCell>Name</TableCell>
                                                 <TableCell align="right">Rating</TableCell>
-                                                <TableCell align="right">Diff</TableCell>
+                                                <TableCell align="right">Recent Change</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>

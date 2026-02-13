@@ -101,7 +101,8 @@ const RankParser = () => {
     };
 
     const confirmUpload = async () => {
-        if (password !== "ss_admin_panel") {
+        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+        if (password !== adminPassword) {
             alert("Incorrect Password!");
             return;
         }

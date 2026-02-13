@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Alert, Autocomplete } from '@mui/material';
 import { fetchPlayers, recordPayment } from '../api/client';
+import { getAdminAuthCookie } from '../utils/cookieUtils';
 import { DollarSign, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -47,12 +48,13 @@ const RecordPayment = () => {
         try {
             setSaving(true);
             setMessage(null);
+            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
             const result = await recordPayment({
                 player_name: playerName,
                 amount: amount,
                 payment_date: paymentDate,
                 notes: notes || null
-            }, 'ss_admin_panel');
+            }, adminPassword);
 
             setMessage({
                 type: 'success',

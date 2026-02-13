@@ -88,7 +88,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
 
         // Check Admin Cookie
         const storedPassword = getAdminAuthCookie();
-        if (storedPassword === 'ss_admin_panel') {
+        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+        if (storedPassword === adminPassword) {
             setIsAdmin(true);
         } else {
             setIsAdmin(false);
@@ -141,7 +142,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
         }
         // Check if we have a stored password in cookie
         const storedPassword = getAdminAuthCookie();
-        if (storedPassword && storedPassword === 'ss_admin_panel') {
+        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+        if (storedPassword && storedPassword === adminPassword) {
             // Auto-submit with stored password without showing dialog
             confirmUpload(storedPassword);
         } else {
@@ -223,7 +225,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
     };
 
     const confirmUpload = async (password) => {
-        if (password !== "ss_admin_panel") {
+        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+        if (password !== adminPassword) {
             errorNotification("Incorrect Password!");
             throw new Error("Incorrect Password"); // Throw error to be caught by PasswordDialog
         }
@@ -250,7 +253,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
     };
 
     const handleLoginSuccess = (password) => {
-        if (password === "ss_admin_panel") {
+        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+        if (password === adminPassword) {
             setAdminAuthCookie(password);
             setIsAdmin(true);
             setShowLoginModal(false);
@@ -261,10 +265,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
     };
 
     const handleDelete = async (password) => {
-        // Password here comes from confirmation logic or we use "ss_admin_panel"
-        // If coming from PasswordDialog (if we used it), it would be passed.
-        // If calling directly with "ss_admin_panel", it works.
-        const effectivePassword = password || "ss_admin_panel";
+        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+        const effectivePassword = password || adminPassword;
 
         setIsDeleting(true);
         try {
@@ -618,7 +620,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                 <DialogActions>
                     <Button onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
                     <Button
-                        onClick={() => handleDelete("ss_admin_panel")}
+                        onClick={() => handleDelete(getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || "ss_admin_panel")}
                         color="error"
                         variant="contained"
                         disabled={isDeleting}

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from typing import List
-from database import get_db
+from database import get_db, ADMIN_PASSWORD
 from player import services
 
 router = APIRouter(prefix="/players", tags=["players"])
@@ -24,7 +24,7 @@ async def add_player(
     database_session: AsyncSession = Depends(get_db)
 ):
     """Add a new player"""
-    if password != "ss_admin_panel":
+    if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
     return await services.create_player(player.name, database_session)
 

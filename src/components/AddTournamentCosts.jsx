@@ -113,14 +113,14 @@ const AddTournamentCosts = () => {
 
         try {
             setCreatingUnofficial(true);
-            const password = getAdminAuthCookie() || 'ss_admin_panel';
+            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
             await createUnofficialTournament(
                 { date: tournamentDate, tournament_players: tournamentPlayers },
-                password
+                adminPassword
             );
 
             // Store password in cookie after successful authentication
-            setAdminAuthCookie(password);
+            setAdminAuthCookie(adminPassword);
 
             setUnofficialTournamentCreated(true);
             setMessage({ type: 'success', text: 'Unofficial tournament created successfully! You can now calculate and save costs.' });
@@ -181,11 +181,11 @@ const AddTournamentCosts = () => {
 
         try {
             setMessage(null);
-            const password = getAdminAuthCookie() || 'ss_admin_panel';
-            const result = await calculateTournamentCosts(requestData, password);
+            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+            const result = await calculateTournamentCosts(requestData, adminPassword);
 
             // Store password in cookie after successful authentication
-            setAdminAuthCookie(password);
+            setAdminAuthCookie(adminPassword);
 
             setCalculation(result);
             setShowPreview(true);
@@ -214,11 +214,11 @@ const AddTournamentCosts = () => {
             setSaving(true);
 
             // Unofficial tournament should already be created by now
-            const password = getAdminAuthCookie() || 'ss_admin_panel';
-            await saveTournamentCosts(requestData, password);
+            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+            await saveTournamentCosts(requestData, adminPassword);
 
             // Store password in cookie after successful authentication
-            setAdminAuthCookie(password);
+            setAdminAuthCookie(adminPassword);
 
             setMessage({ type: 'success', text: 'Tournament costs saved and balances updated successfully!' });
             setShowPreview(false);

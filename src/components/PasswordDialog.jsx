@@ -48,7 +48,8 @@ const PasswordDialog = ({
             return;
         }
 
-        if (passwordToVerify !== 'ss_admin_panel') {
+        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+        if (passwordToVerify !== adminPassword) {
             setError('Incorrect password');
             return;
         }

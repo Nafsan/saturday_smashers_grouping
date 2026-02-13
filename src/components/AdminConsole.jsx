@@ -20,7 +20,8 @@ const AdminConsole = () => {
     // Check for stored password on mount
     useEffect(() => {
         const storedPassword = getAdminAuthCookie();
-        if (storedPassword && storedPassword === 'ss_admin_panel') {
+        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+        if (storedPassword && storedPassword === adminPassword) {
             // Auto-authenticate if valid cookie exists
             setIsAuthenticated(true);
         } else {

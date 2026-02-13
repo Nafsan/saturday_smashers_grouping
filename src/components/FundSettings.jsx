@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Alert } from '@mui/material';
 import { fetchFundSettings, updateFundSettings } from '../api/client';
+import { getAdminAuthCookie } from '../utils/cookieUtils';
 import { Save } from 'lucide-react';
 
 const FundSettings = () => {
@@ -36,7 +37,8 @@ const FundSettings = () => {
         try {
             setSaving(true);
             setMessage(null);
-            await updateFundSettings(settings, 'ss_admin_panel');
+            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+            await updateFundSettings(settings, adminPassword);
             setMessage({ type: 'success', text: 'Settings saved successfully!' });
         } catch (error) {
             console.error('Error saving settings:', error);

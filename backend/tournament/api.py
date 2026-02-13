@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 import schemas
-from database import get_db
+from database import get_db, ADMIN_PASSWORD
 from tournament import services
 
 router = APIRouter(prefix="/history", tags=["tournaments"])
@@ -21,7 +21,7 @@ async def add_tournament(
     database_session: AsyncSession = Depends(get_db)
 ):
     """Create a new tournament"""
-    if password != "ss_admin_panel":
+    if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
 
     services.validate_tournament_rules(tournament)
@@ -36,7 +36,7 @@ async def update_tournament(
     database_session: AsyncSession = Depends(get_db)
 ):
     """Update an existing tournament"""
-    if password != "ss_admin_panel":
+    if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
 
     services.validate_tournament_rules(tournament)
@@ -50,7 +50,7 @@ async def delete_tournament(
     database_session: AsyncSession = Depends(get_db)
 ):
     """Delete a tournament"""
-    if password != "ss_admin_panel":
+    if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
 
     return await services.delete_tournament(tournament_id, database_session)
@@ -66,7 +66,7 @@ async def get_tournament_players_by_date(
     try:
         tournament_date = datetime.strptime(date, "%Y-%m-%d").date()
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
     
     return await services.get_tournament_players_by_date(tournament_date, database_session)
 
@@ -78,7 +78,7 @@ async def create_unofficial_tournament(
     database_session: AsyncSession = Depends(get_db)
 ):
     """Create an unofficial tournament entry for cost tracking"""
-    if password != "ss_admin_panel":
+    if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.create_unofficial_tournament(request, database_session)

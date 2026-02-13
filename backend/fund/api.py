@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from datetime import date
-from database import get_db
+from database import get_db, ADMIN_PASSWORD
 from fund import services
 import fund_schemas
 
@@ -24,7 +24,7 @@ async def update_fund_settings(
     db: AsyncSession = Depends(get_db)
 ):
     """Update fund settings (password protected)"""
-    if password != "ss_admin_panel":
+    if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
     
     updated_settings = await services.update_fund_settings(settings, db)
@@ -39,7 +39,7 @@ async def seed_initial_data(
     db: AsyncSession = Depends(get_db)
 ):
     """Seed initial player fund data (password protected)"""
-    if password != "ss_admin_panel":
+    if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.seed_initial_player_data(seed_data, db)
@@ -64,7 +64,7 @@ async def calculate_tournament_costs(
     db: AsyncSession = Depends(get_db)
 ):
     """Calculate tournament costs without saving (password protected)"""
-    if password != "ss_admin_panel":
+    if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.calculate_tournament_costs(cost_request, db)
@@ -77,7 +77,7 @@ async def save_tournament_costs(
     db: AsyncSession = Depends(get_db)
 ):
     """Save tournament costs and update player balances (password protected)"""
-    if password != "ss_admin_panel":
+    if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.save_tournament_costs_and_update_balances(cost_request, db)
@@ -113,7 +113,7 @@ async def record_payment(
     db: AsyncSession = Depends(get_db)
 ):
     """Record a payment made by a player (password protected)"""
-    if password != "ss_admin_panel":
+    if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.record_player_payment(payment_data, db)
@@ -146,7 +146,7 @@ async def add_player_misc_cost(
     db: AsyncSession = Depends(get_db)
 ):
     """Add miscellaneous cost for players (password protected)"""
-    if password != "ss_admin_panel":
+    if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
     
     

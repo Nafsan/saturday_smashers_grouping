@@ -21,6 +21,7 @@ if DATABASE_URL:
 
 # Enable SQL logging only in development (when DEBUG=True)
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "ss_admin_panel")
 
 # Connection pool configuration for Supabase Transaction Pooler
 # Supabase uses pgbouncer in transaction mode, which doesn't support prepared statements

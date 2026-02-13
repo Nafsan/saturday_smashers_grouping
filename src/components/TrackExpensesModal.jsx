@@ -3,7 +3,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button,
     FormControl, InputLabel, Select, MenuItem,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-    IconButton, Grid, Typography, Box, Pagination, Chip
+    IconButton, Grid, Typography, Box, Pagination, Chip, Autocomplete, TextField
 } from '@mui/material';
 import { X, Calendar } from 'lucide-react';
 import { fetchPlayerTournamentCosts, fetchPlayerMiscCosts } from '../api/client';
@@ -83,20 +83,24 @@ const TrackExpensesModal = ({ open, onClose, players }) => {
             </DialogTitle>
             <DialogContent dividers>
                 <div style={{ marginBottom: '2rem' }}>
-                    <FormControl fullWidth>
-                        <InputLabel>Select Player</InputLabel>
-                        <Select
-                            value={selectedPlayerId}
-                            label="Select Player"
-                            onChange={(e) => setSelectedPlayerId(e.target.value)}
-                        >
-                            {players.map(p => (
-                                <MenuItem key={p.player_id} value={p.player_id}>
-                                    {p.player_name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
+                    <Autocomplete
+                        options={players}
+                        getOptionLabel={(option) => option.player_name || ''}
+                        value={players.find(p => p.player_id === selectedPlayerId) || null}
+                        onChange={(event, newValue) => {
+                            setSelectedPlayerId(newValue ? newValue.player_id : '');
+                        }}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Select Player"
+                                variant="outlined"
+                                placeholder="Start typing name..."
+                            />
+                        )}
+                        noOptionsText="No player found"
+                        clearOnEscape
+                    />
                 </div>
 
                 {selectedPlayerId && (

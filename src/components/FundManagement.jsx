@@ -61,33 +61,39 @@ const FundManagement = () => {
 
     return (
         <div className="fund-management">
-            <ThemeToggle />
-            <div className="fund-header">
-                <div className="header-content">
+            <div className="fund-header-section">
+                <div className="header-top">
                     <button className="back-btn" onClick={() => navigate('/')}>
-                        <ArrowLeft size={20} />
-                        Back to Home
+                        <ArrowLeft size={18} />
+                        <span>Back to Home</span>
                     </button>
-                    <h1 className="fund-title">Saturday Smashers Fund</h1>
-                    <div className="header-actions">
-                        <button className="cost-btn" onClick={() => setIsCostModalOpen(true)}>
-                            <FileText size={20} />
-                            Tournament Costs
-                        </button>
-                        <button className="cost-btn" onClick={() => setIsPaymentHistoryOpen(true)}>
-                            <FileText size={20} />
-                            Payment History
-                        </button>
-                        <button className="cost-btn" onClick={() => setIsTrackExpensesOpen(true)} style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)' }}>
-                            <TrendingDown size={20} />
-                            Track Expenses
-                        </button>
+                    <ThemeToggle />
+                </div>
 
-                        <button className="admin-btn" onClick={() => navigate('/fund/admin')}>
-                            <Settings size={20} />
-                            Admin Console
-                        </button>
-                    </div>
+                <div className="header-main">
+                    <h1 className="fund-title">
+                        <span className="title-text">Saturday Smashers Fund</span>
+                    </h1>
+                    <p className="fund-subtitle">Manage tournament finances and track player balances</p>
+                </div>
+
+                <div className="header-actions">
+                    <button className="action-btn tournament-costs" onClick={() => setIsCostModalOpen(true)}>
+                        <FileText size={20} />
+                        <span>Tournament Costs</span>
+                    </button>
+                    <button className="action-btn payment-history" onClick={() => setIsPaymentHistoryOpen(true)}>
+                        <FileText size={20} />
+                        <span>Payment History</span>
+                    </button>
+                    <button className="action-btn track-expenses" onClick={() => setIsTrackExpensesOpen(true)}>
+                        <TrendingDown size={20} />
+                        <span>Track Expenses</span>
+                    </button>
+                    <button className="action-btn admin" onClick={() => navigate('/fund/admin')}>
+                        <Settings size={20} />
+                        <span>Admin Console</span>
+                    </button>
                 </div>
             </div>
 
@@ -145,30 +151,30 @@ const FundManagement = () => {
                 {/* Stats Cards */}
                 <div className="stats-grid">
                     <div className="stat-card">
-                        <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)' }}>
+                        <div className="stat-icon users">
                             <Users size={24} />
                         </div>
                         <div className="stat-info">
-                            <div className="stat-label">Total Players</div>
-                            <div className="stat-value">{balances.length}</div>
+                            <span className="stat-label">Total Players</span>
+                            <span className="stat-value">{balances.length}</span>
                         </div>
                     </div>
                     <div className="stat-card">
-                        <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)' }}>
+                        <div className="stat-icon positive">
                             <TrendingUp size={24} />
                         </div>
                         <div className="stat-info">
-                            <div className="stat-label">Positive Balance</div>
-                            <div className="stat-value">{balances.filter(p => p.current_balance >= 0).length}</div>
+                            <span className="stat-label">Positive Balance</span>
+                            <span className="stat-value">{balances.filter(p => p.current_balance >= 0).length}</span>
                         </div>
                     </div>
                     <div className="stat-card">
-                        <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f87171 0%, #ef4444 100%)' }}>
+                        <div className="stat-icon negative">
                             <TrendingDown size={24} />
                         </div>
                         <div className="stat-info">
-                            <div className="stat-label">Negative Balance</div>
-                            <div className="stat-value">{balances.filter(p => p.current_balance < 0).length}</div>
+                            <span className="stat-label">Negative Balance</span>
+                            <span className="stat-value">{balances.filter(p => p.current_balance < 0).length}</span>
                         </div>
                     </div>
                 </div>

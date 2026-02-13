@@ -108,12 +108,6 @@ const MainContent = () => {
 
     return (
         <div className="container">
-            <header style={{ textAlign: 'center', padding: '2rem 0' }}>
-                <h1 style={{ fontSize: '2.5rem', fontWeight: '800', background: 'linear-gradient(to right, #38bdf8, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    Saturday Smashers
-                </h1>
-            </header>
-
             <main>
                 {status === 'loading' ? (
                     <LoadingSpinner />

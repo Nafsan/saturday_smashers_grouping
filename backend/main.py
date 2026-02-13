@@ -29,8 +29,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
+    logger.info("Starting up and initializing database...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database initialization complete.")
 
 # Health check endpoints
 @app.get("/health")

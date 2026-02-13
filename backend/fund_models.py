@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, Date
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -41,6 +41,7 @@ class FundSettings(Base):
     id = Column(Integer, primary_key=True, index=True)
     default_venue_fee = Column(Float, nullable=False)
     default_ball_fee = Column(Float, nullable=False)
+    next_tournament_date = Column(Date, nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 

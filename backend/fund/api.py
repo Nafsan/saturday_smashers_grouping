@@ -31,6 +31,20 @@ async def update_fund_settings(
     return updated_settings
 
 
+@router.post("/settings/next-tournament")
+async def update_next_tournament_date(
+    next_date: Optional[date],
+    password: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Update next tournament date (password protected)"""
+    if password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=403, detail="Invalid password")
+    
+    updated_settings = await services.update_next_tournament_date(next_date, db)
+    return {"next_tournament_date": updated_settings.next_tournament_date}
+
+
 # ============ Seed Initial Data ============
 @router.post("/seed")
 async def seed_initial_data(

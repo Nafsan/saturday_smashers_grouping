@@ -173,5 +173,13 @@ export const fetchPlayerMiscCosts = async (playerId, page = 1, pageSize = 10) =>
     return response.data;
 };
 
+export const updateNextTournamentDate = async (date, password) => {
+    const response = await client.post('/fund/settings/next-tournament', null, {
+        params: { next_date: date, password }
+    });
+    return response.data;
+};
+
 export default client;
+
 

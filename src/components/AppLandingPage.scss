@@ -1,221 +1,53 @@
 .app-landing-page-container {
-    padding: 2rem 0;
+    min-height: 100vh;
+    background: var(--bg-primary);
 
-    h2 {
-        text-align: center;
-        margin-bottom: 1rem;
-        color: var(--accent-primary);
-    }
+    // Content Sections
+    .content-section {
+        max-width: 1400px;
+        margin: 0 auto 4rem;
+        padding: 0 2rem;
 
-    .config-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-        gap: 1rem;
+        .section-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
 
-        .date-picker {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            background-color: var(--bg-card);
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
+            h2 {
+                font-size: 2.5rem;
+                font-weight: 800;
+                margin-bottom: 0.75rem;
+                background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
 
-            label {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
+            p {
+                font-size: 1.1rem;
                 color: var(--text-secondary);
-                font-size: 0.9rem;
-            }
-
-            input {
-                background: none;
-                border: none;
-                color: var(--text-primary);
-                font-family: inherit;
-                font-size: 1rem;
-
-                &::-webkit-calendar-picker-indicator {
-                    filter: invert(1);
-                    cursor: pointer;
-                }
-
-                &:focus {
-                    outline: none;
-                }
-            }
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .secondary-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            border: none;
-            color: white;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-
-            &:hover:not(:disabled) {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
-                filter: brightness(1.1);
-            }
-
-            &:active {
-                transform: scale(0.98);
-            }
-
-            &.coming-soon-btn {
-                position: relative;
-                animation: subtle-pulse 3s ease-in-out infinite;
-
-                &::after {
-                    content: '';
-                    position: absolute;
-                    top: -2px;
-                    right: -2px;
-                    width: 12px;
-                    height: 12px;
-                    background: #ef4444;
-                    border-radius: 50%;
-                    animation: pulse-dot 2s ease-in-out infinite;
-                }
-            }
-        }
-
-        @keyframes subtle-pulse {
-
-            0%,
-            100% {
-                opacity: 0.85;
-            }
-
-            50% {
-                opacity: 1;
-            }
-        }
-
-        @keyframes pulse-dot {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.3);
-                opacity: 0.7;
+                max-width: 600px;
+                margin: 0 auto;
             }
         }
     }
 
-    .add-player-form {
-        max-width: 400px;
-        margin: 0 auto 2rem;
-
-        form {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        input {
-            flex: 1;
-            background-color: var(--bg-card);
-            border: 1px solid transparent;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            color: var(--text-primary);
-
-            &:focus {
-                outline: none;
-                border-color: var(--accent-primary);
-            }
-        }
-
-        button {
-            background-color: var(--bg-card);
-            color: var(--accent-success);
+    // Responsive
+    @media (max-width: 768px) {
+        .content-section {
             padding: 0 1rem;
-            border-radius: 8px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            margin-bottom: 3rem;
 
-            &:hover:not(:disabled) {
-                background-color: var(--accent-success);
-                color: #0f172a;
+            .section-header {
+                margin-bottom: 2rem;
+
+                h2 {
+                    font-size: 2rem;
+                }
+
+                p {
+                    font-size: 1rem;
+                }
             }
-
-            &:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-        }
-    }
-
-    .players-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .player-card {
-        background-color: var(--bg-card);
-        padding: 1rem;
-        border-radius: 12px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border: 2px solid transparent;
-        user-select: none;
-
-        &:hover {
-            transform: translateY(-2px);
-            background-color: lighten(#334155, 5%);
-        }
-
-        &.selected {
-            border-color: var(--accent-primary);
-            background-color: rgba(56, 189, 248, 0.1);
-            color: var(--accent-primary);
-            font-weight: bold;
-        }
-    }
-
-    .generate-btn {
-        display: block;
-        width: 100%;
-        max-width: 300px;
-        margin: 0 auto;
-        padding: 1rem;
-        background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-        color: white;
-        border-radius: 50px;
-        font-size: 1.1rem;
-        font-weight: bold;
-        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
-        transition: transform 0.2s;
-
-        &:active {
-            transform: scale(0.98);
         }
     }
 }

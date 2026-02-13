@@ -51,6 +51,20 @@ async def update_fund_settings(
     return settings
 
 
+async def update_next_tournament_date(
+    next_date: Optional[date],
+    db: AsyncSession
+) -> fund_models.FundSettings:
+    """Update next tournament date in fund settings"""
+    settings = await get_or_create_fund_settings(db)
+    settings.next_tournament_date = next_date
+    settings.updated_at = datetime.utcnow()
+    
+    await db.commit()
+    await db.refresh(settings)
+    return settings
+
+
 async def seed_initial_player_data(
     seed_data: fund_schemas.SeedInitialDataRequest,
     db: AsyncSession

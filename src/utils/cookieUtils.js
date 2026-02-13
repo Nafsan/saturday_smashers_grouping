@@ -91,9 +91,13 @@ export const clearAdminAuthCookie = () => {
 };
 
 /**
- * Check if admin is authenticated (cookie exists)
+ * Check if admin is authenticated (cookie exists and matches VITE_ADMIN_PASSWORD)
  * @returns {boolean}
  */
 export const isAdminAuthenticated = () => {
-    return getAdminAuthCookie() !== null;
+    const storedPassword = getAdminAuthCookie();
+    if (!storedPassword) return false;
+
+    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+    return storedPassword === adminPassword;
 };

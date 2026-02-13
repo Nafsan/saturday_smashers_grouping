@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { Upload, X, Lock, Trash2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
-import { setAdminAuthCookie, getAdminAuthCookie } from '../utils/cookieUtils';
+import { setAdminAuthCookie, getAdminAuthCookie, isAdminAuthenticated } from '../utils/cookieUtils';
 import PasswordDialog from './PasswordDialog';
 import './RankSubmission.scss';
 
@@ -86,14 +86,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
             setEmbedUrl('');
         }
 
-        // Check Admin Cookie
-        const storedPassword = getAdminAuthCookie();
-        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-        if (storedPassword === adminPassword) {
-            setIsAdmin(true);
-        } else {
-            setIsAdmin(false);
-        }
+        // Check Admin Auth
+        setIsAdmin(isAdminAuthenticated());
     }, [initialData, open]);
 
     // Upload State
@@ -140,12 +134,9 @@ const RankSubmission = ({ open, onClose, initialData }) => {
             warningNotification("A player cannot be selected multiple times!");
             return;
         }
-        // Check if we have a stored password in cookie
-        const storedPassword = getAdminAuthCookie();
-        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-        if (storedPassword && storedPassword === adminPassword) {
+        if (isAdminAuthenticated()) {
             // Auto-submit with stored password without showing dialog
-            confirmUpload(storedPassword);
+            confirmUpload(getAdminAuthCookie());
         } else {
             // Show password dialog
             setShowPasswordModal(true);

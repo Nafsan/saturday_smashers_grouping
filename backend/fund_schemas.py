@@ -6,6 +6,7 @@ from datetime import date, datetime
 class FundSettingsBase(BaseModel):
     default_venue_fee: float
     default_ball_fee: float
+    next_tournament_date: Optional[date] = None
 
 class FundSettingsCreate(FundSettingsBase):
     pass

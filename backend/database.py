@@ -3,6 +3,8 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 from dotenv import load_dotenv
 
+import urllib.parse
+
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -12,8 +14,27 @@ if not DATABASE_URL:
     print("WARNING: DATABASE_URL not set in .env")
     DATABASE_URL = "postgresql+asyncpg://user:password@localhost/dbname"
 
-# Fix for Render/Heroku which use postgres:// or postgresql:// but SQLAlchemy needs postgresql+asyncpg://
+# Fix for Render/Heroku/Supabase which use postgres:// or postgresql:// 
+# but SQLAlchemy needs postgresql+asyncpg://
 if DATABASE_URL:
+    try:
+        # Handle auto-encoding of special characters in password (like @)
+        if "://" in DATABASE_URL and "@" in DATABASE_URL:
+            scheme_part, rest = DATABASE_URL.split("://", 1)
+            # Find the LAST @, which separates userinfo from host
+            if "@" in rest:
+                userinfo, hostinfo = rest.rsplit("@", 1)
+                # Split userinfo into user:password
+                if ":" in userinfo:
+                    user, password = userinfo.split(":", 1)
+                    # If password contains unescaped @, encode it
+                    if "@" in password:
+                        password = urllib.parse.quote_plus(password)
+                        DATABASE_URL = f"{scheme_part}://{user}:{password}@{hostinfo}"
+                        print("Automatically encoded special characters in DATABASE_URL password.")
+    except Exception as e:
+        print(f"Warning: Failed to process DATABASE_URL encoding: {e}")
+
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
     elif DATABASE_URL.startswith("postgresql://") and "asyncpg" not in DATABASE_URL:

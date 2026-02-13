@@ -3,7 +3,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button,
     FormControl, InputLabel, Select, MenuItem,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-    IconButton, Grid, Typography, Box, Pagination, Chip, Autocomplete, TextField
+    IconButton, Grid, Typography, Box, Pagination, Chip, Autocomplete, TextField, useMediaQuery
 } from '@mui/material';
 import { X, Calendar } from 'lucide-react';
 import { fetchPlayerTournamentCosts, fetchPlayerMiscCosts } from '../api/client';
@@ -14,6 +14,7 @@ const TrackExpensesModal = ({ open, onClose, players }) => {
     const [tournamentCosts, setTournamentCosts] = useState({ items: [], total: 0, page: 1, total_pages: 0 });
     const [miscCosts, setMiscCosts] = useState({ items: [], total: 0, page: 1, total_pages: 0 });
     const [loading, setLoading] = useState(false);
+    const isMobile = useMediaQuery('(max-width:600px)');
 
     // Reset state when modal opens/closes
     useEffect(() => {
@@ -70,7 +71,19 @@ const TrackExpensesModal = ({ open, onClose, players }) => {
     const formatDate = (dateString) => new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    width: isMobile ? '97%' : undefined,
+                    maxHeight: isMobile ? '100vh' : undefined,
+                    margin: isMobile ? '8px' : undefined
+                }
+            }}
+        >
             <DialogTitle>
                 Track Player Expenses
                 <IconButton

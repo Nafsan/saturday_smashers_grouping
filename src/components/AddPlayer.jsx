@@ -9,7 +9,8 @@ import {
     TextField,
     Button,
     Typography,
-    IconButton
+    IconButton,
+    useMediaQuery
 } from '@mui/material';
 import { UserPlus, X } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
@@ -19,6 +20,7 @@ import './AddPlayer.scss';
 const AddPlayer = ({ open, onClose }) => {
     const dispatch = useDispatch();
     const { successNotification, errorNotification, warningNotification } = useToast();
+    const isMobile = useMediaQuery('(max-width:600px)');
     const [playerName, setPlayerName] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
@@ -63,6 +65,13 @@ const AddPlayer = ({ open, onClose }) => {
                 maxWidth="sm"
                 fullWidth
                 className="add-player-dialog"
+                PaperProps={{
+                    sx: {
+                        width: isMobile ? '97%' : undefined,
+                        maxHeight: isMobile ? '100vh' : undefined,
+                        margin: isMobile ? '8px' : undefined
+                    }
+                }}
             >
                 <DialogTitle sx={{
                     display: 'flex',

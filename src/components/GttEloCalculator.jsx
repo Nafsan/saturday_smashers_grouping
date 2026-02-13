@@ -19,7 +19,8 @@ import {
     DialogContent,
     DialogActions,
     InputAdornment,
-    Autocomplete
+    Autocomplete,
+    useMediaQuery
 } from '@mui/material';
 import { Calculator, Copy, ArrowLeft, RefreshCw, Plus, Search, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -28,6 +29,7 @@ import { useToast } from '../context/ToastContext';
 const GttEloCalculator = () => {
     const navigate = useNavigate();
     const { successNotification, errorNotification } = useToast();
+    const isMobile = useMediaQuery('(max-width:600px)');
     const [standingsInput, setStandingsInput] = useState('');
     const [matchesInput, setMatchesInput] = useState('');
     const [calculatedData, setCalculatedData] = useState(null);
@@ -835,7 +837,19 @@ const GttEloCalculator = () => {
             )}
 
             {/* Bonus Points Dialog */}
-            <Dialog open={bonusDialogOpen} onClose={() => setBonusDialogOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog
+                open={bonusDialogOpen}
+                onClose={() => setBonusDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        width: isMobile ? '97%' : undefined,
+                        maxHeight: isMobile ? '100vh' : undefined,
+                        margin: isMobile ? '8px' : undefined
+                    }
+                }}
+            >
                 <DialogTitle sx={{ fontWeight: 'bold' }}>Add Bonus Points</DialogTitle>
                 <DialogContent>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>

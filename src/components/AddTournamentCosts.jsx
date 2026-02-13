@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     TextField, Button, Alert, Checkbox, FormControlLabel, Autocomplete,
     Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody,
-    TableCell, TableContainer, TableHead, TableRow, Paper
+    TableCell, TableContainer, TableHead, TableRow, Paper, useMediaQuery
 } from '@mui/material';
 import { fetchPlayers, fetchFundSettings, fetchTournamentPlayersByDate, calculateTournamentCosts, saveTournamentCosts, createUnofficialTournament } from '../api/client';
 import { Plus, Calculator, Save, Sparkles } from 'lucide-react';
@@ -11,6 +11,7 @@ import { getAdminAuthCookie, setAdminAuthCookie } from '../utils/cookieUtils';
 
 const AddTournamentCosts = () => {
     const navigate = useNavigate();
+    const isMobile = useMediaQuery('(max-width:600px)');
     const [allPlayers, setAllPlayers] = useState([]);
     const [settings, setSettings] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -473,7 +474,19 @@ const AddTournamentCosts = () => {
             </div>
 
             {/* Preview Dialog */}
-            <Dialog open={showPreview} onClose={() => setShowPreview(false)} maxWidth="md" fullWidth>
+            <Dialog
+                open={showPreview}
+                onClose={() => setShowPreview(false)}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        width: isMobile ? '97%' : undefined,
+                        maxHeight: isMobile ? '100vh' : undefined,
+                        margin: isMobile ? '8px' : undefined
+                    }
+                }}
+            >
                 <DialogTitle>Tournament Cost Breakdown</DialogTitle>
                 <DialogContent>
                     {calculation && (
@@ -538,7 +551,17 @@ const AddTournamentCosts = () => {
             </Dialog>
 
             {/* Unofficial Tournament Dialog */}
-            <Dialog open={showUnofficialDialog} onClose={() => setShowUnofficialDialog(false)}>
+            <Dialog
+                open={showUnofficialDialog}
+                onClose={() => setShowUnofficialDialog(false)}
+                PaperProps={{
+                    sx: {
+                        width: isMobile ? '97%' : undefined,
+                        maxHeight: isMobile ? '100vh' : undefined,
+                        margin: isMobile ? '8px' : undefined
+                    }
+                }}
+            >
                 <DialogTitle>No Tournament Found</DialogTitle>
                 <DialogContent>
                     <p style={{ color: '#94a3b8', marginBottom: '1rem' }}>

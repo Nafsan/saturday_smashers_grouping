@@ -3,7 +3,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
     List, ListItem, ListItemText, ListItemButton, Divider, TextField, InputAdornment, Box, Typography,
-    IconButton, Grid
+    IconButton, Grid, useMediaQuery
 } from '@mui/material';
 import { Search, ChevronRight, ArrowLeft } from 'lucide-react';
 import { fetchTournamentCostDates, fetchTournamentCostDetails } from '../api/client';
@@ -15,6 +15,7 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
     const [details, setDetails] = useState(null);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const isMobile = useMediaQuery('(max-width:600px)');
 
     const filteredDates = dates.filter(date => {
         const formattedDate = new Date(date).toLocaleDateString(undefined, {
@@ -61,7 +62,19 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    width: isMobile ? '97%' : undefined,
+                    maxHeight: isMobile ? '100vh' : undefined,
+                    margin: isMobile ? '8px' : undefined
+                }
+            }}
+        >
             <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 {selectedDate && (
                     <IconButton size="small" onClick={() => { setSelectedDate(''); setDetails(null); }}>

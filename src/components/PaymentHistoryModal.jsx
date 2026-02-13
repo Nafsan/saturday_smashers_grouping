@@ -3,7 +3,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, TextField, IconButton,
-    Box, Pagination
+    Box, Pagination, useMediaQuery
 } from '@mui/material';
 import { X, Search } from 'lucide-react';
 import { fetchPaymentHistory } from '../api/client';
@@ -15,6 +15,7 @@ const PaymentHistoryModal = ({ open, onClose }) => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+    const isMobile = useMediaQuery('(max-width:600px)');
     const [debouncedSearch, setDebouncedSearch] = useState('');
 
     useEffect(() => {
@@ -48,7 +49,19 @@ const PaymentHistoryModal = ({ open, onClose }) => {
     const formatDate = (dateString) => new Date(dateString).toLocaleDateString();
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    width: isMobile ? '97%' : undefined,
+                    maxHeight: isMobile ? '100vh' : undefined,
+                    margin: isMobile ? '8px' : undefined
+                }
+            }}
+        >
             <DialogTitle>
                 Payment History
                 <IconButton

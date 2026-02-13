@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, MoreHorizontal, FileText, Youtube } from 'lucide-react';
 import Select from 'react-select';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, useMediaQuery } from '@mui/material';
 import { selectAllPlayerNames } from '../store/appSlice';
 import { useToast } from '../context/ToastContext';
 import './AnalyticsDashboard.scss';
@@ -13,6 +13,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
     const allPlayers = useSelector(selectAllPlayerNames);
     const dispatch = useDispatch();
     const { successNotification, errorNotification } = useToast();
+    const isMobile = useMediaQuery('(max-width:600px)');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [selectedGraphPlayers, setSelectedGraphPlayers] = useState([]);
@@ -401,6 +402,13 @@ const AnalyticsDashboard = ({ onEdit }) => {
                 onClose={() => setShowYouTubeModal(false)}
                 maxWidth="lg"
                 fullWidth
+                PaperProps={{
+                    sx: {
+                        width: isMobile ? '97%' : undefined,
+                        maxHeight: isMobile ? '100vh' : undefined,
+                        margin: isMobile ? '8px' : undefined
+                    }
+                }}
             >
                 <DialogTitle sx={{ background: 'linear-gradient(135deg, #FF0000 0%, #CC0000 100%)', color: 'white' }}>
                     📺 Tournament Video

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Box } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Box, useMediaQuery } from '@mui/material';
 import { Lock } from 'lucide-react';
 import { getAdminAuthCookie, setAdminAuthCookie } from '../utils/cookieUtils';
 
@@ -23,6 +23,7 @@ const PasswordDialog = ({
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const isMobile = useMediaQuery('(max-width:600px)');
 
     // Auto-load password from cookie when dialog opens
     useEffect(() => {
@@ -76,7 +77,19 @@ const PasswordDialog = ({
     };
 
     return (
-        <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
+        <Dialog
+            open={open}
+            onClose={onCancel}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    width: isMobile ? '97%' : undefined,
+                    maxHeight: isMobile ? '100vh' : undefined,
+                    margin: isMobile ? '8px' : undefined
+                }
+            }}
+        >
             <DialogTitle sx={{
                 background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                 color: 'white'

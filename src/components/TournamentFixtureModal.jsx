@@ -12,7 +12,8 @@ import {
     Box,
     Typography,
     IconButton,
-    InputAdornment
+    InputAdornment,
+    useMediaQuery
 } from '@mui/material';
 import { X, Search, UserPlus, Calendar, ClipboardPaste, ChevronDown, ChevronUp, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { togglePlayerSelection, setTournamentDate, addTemporaryPlayer, selectAllPlayerNames } from '../store/appSlice';
@@ -22,6 +23,7 @@ import { Collapse, Alert, Chip, Stack } from '@mui/material';
 import './TournamentFixtureModal.scss';
 
 const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
+    const isMobile = useMediaQuery('(max-width:600px)');
     const dispatch = useDispatch();
     const allPlayers = useSelector(selectAllPlayerNames);
     const { selectedPlayers, history, tournamentDate, temporaryPlayers } = useSelector(state => state.app);
@@ -238,6 +240,13 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                 maxWidth="md"
                 fullWidth
                 className="tournament-fixture-modal"
+                PaperProps={{
+                    sx: {
+                        width: isMobile ? '97%' : undefined,
+                        maxHeight: isMobile ? '100vh' : undefined,
+                        margin: isMobile ? '8px' : undefined
+                    }
+                }}
             >
                 <DialogTitle>
                     Create Tournament Fixture
@@ -489,6 +498,13 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                 maxWidth="sm"
                 fullWidth
                 className="tournament-fixture-modal"
+                PaperProps={{
+                    sx: {
+                        width: isMobile ? '97%' : undefined,
+                        maxHeight: isMobile ? '100vh' : undefined,
+                        margin: isMobile ? '8px' : undefined
+                    }
+                }}
             >
                 <DialogTitle>Assign / Update Initial Ratings</DialogTitle>
                 <DialogContent dividers>

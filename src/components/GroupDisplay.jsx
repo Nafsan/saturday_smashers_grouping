@@ -4,13 +4,14 @@ import { generateGroupsAction, resetGroups, clearDraftState } from '../store/app
 import { generateKnockoutFixtures } from '../logic/knockout';
 import { toPng } from 'html-to-image';
 import { Download, RefreshCw, ArrowLeft, Trophy, Medal, FileImage, Layers } from 'lucide-react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Menu, MenuItem, ListItemIcon, ListItemText, useMediaQuery } from '@mui/material';
 import ThemeToggle from './ThemeToggle';
 import './GroupDisplay.scss';
 
 const GroupDisplay = () => {
     const { groups, rankedPlayers, tournamentDate } = useSelector(state => state.app);
     const dispatch = useDispatch();
+    const isMobile = useMediaQuery('(max-width:600px)');
     const exportRef = useRef(null); // Main container (for full export)
     const groupsRef = useRef(null); // Specific groups container
     const knockoutRef = useRef(null); // Specific bracket container
@@ -263,7 +264,17 @@ const GroupDisplay = () => {
             </div>
 
             {/* Back Confirmation Dialog */}
-            <Dialog open={showBackConfirmation} onClose={() => setShowBackConfirmation(false)}>
+            <Dialog
+                open={showBackConfirmation}
+                onClose={() => setShowBackConfirmation(false)}
+                PaperProps={{
+                    sx: {
+                        width: isMobile ? '97%' : undefined,
+                        maxHeight: isMobile ? '100vh' : undefined,
+                        margin: isMobile ? '8px' : undefined
+                    }
+                }}
+            >
                 <DialogTitle>Discard Draft Changes?</DialogTitle>
                 <DialogContent>
                     <Typography>

@@ -13,7 +13,8 @@ import {
     Box,
     Chip,
     IconButton,
-    CircularProgress
+    CircularProgress,
+    useMediaQuery
 } from '@mui/material';
 import { Upload, X, Lock, Trash2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
@@ -25,6 +26,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
     const dispatch = useDispatch();
     const allPlayers = useSelector(selectAllPlayerNames);
     const { successNotification, errorNotification, warningNotification } = useToast();
+    const isMobile = useMediaQuery('(max-width:600px)');
 
     // Form State
     const [cupChampion, setCupChampion] = useState(null);
@@ -281,7 +283,20 @@ const RankSubmission = ({ open, onClose, initialData }) => {
 
     return (
         <>
-            <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth className="rank-submission-dialog">
+            <Dialog
+                open={open}
+                onClose={onClose}
+                maxWidth="md"
+                fullWidth
+                className="rank-submission-dialog"
+                PaperProps={{
+                    sx: {
+                        width: isMobile ? '97%' : undefined,
+                        maxHeight: isMobile ? '100vh' : undefined,
+                        margin: isMobile ? '8px' : undefined
+                    }
+                }}
+            >
                 <DialogTitle>
                     {initialData ? (isAdmin ? 'Edit Tournament Results' : 'Tournament Details') : 'Submit Tournament Results'}
                     <IconButton
@@ -581,7 +596,17 @@ const RankSubmission = ({ open, onClose, initialData }) => {
             />
 
             {/* Simple Delete Confirmation Dialog */}
-            <Dialog open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)}>
+            <Dialog
+                open={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                PaperProps={{
+                    sx: {
+                        width: isMobile ? '97%' : undefined,
+                        maxHeight: isMobile ? '100vh' : undefined,
+                        margin: isMobile ? '8px' : undefined
+                    }
+                }}
+            >
                 <DialogTitle>Confirm Deletion</DialogTitle>
                 <DialogContent>
                     <Typography>

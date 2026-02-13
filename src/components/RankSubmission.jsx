@@ -559,28 +559,21 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                             color="error"
                             startIcon={<Trash2 size={18} />}
                             sx={{ marginRight: 'auto' }}
-                        >
-                            Delete Tournament
-                        </Button>
+                        />
                     )}
-
-                    <Button onClick={onClose} color="inherit">
-                        {isAdmin ? 'Cancel' : 'Close'}
-                    </Button>
 
                     {isAdmin && (
                         <Button
                             onClick={handleSubmit}
                             variant="contained"
                             disabled={isSubmitting}
-                            startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : <Upload size={18} />}
+                            startIcon={isSubmitting ? <CircularProgress size={18} color="inherit" /> : <Upload size={18} />}
                             sx={{
                                 background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                                padding: '0.5rem 1.5rem',
                                 fontWeight: 'bold'
                             }}
                         >
-                            {isSubmitting ? 'Processing...' : (initialData ? 'Update Results' : 'Upload Results')}
+                            {isSubmitting ? 'Processing...' : 'Save'}
                         </Button>
                     )}
                 </DialogActions>

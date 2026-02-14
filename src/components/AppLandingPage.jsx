@@ -59,7 +59,7 @@ const AppLandingPage = () => {
             <HeroSection
                 onPlayerStats={() => setIsPlayerStatsOpen(true)}
                 onViewRankings={() => setShowGlobalRanking(true)}
-                onCreateFixture={isLoggedIn ? () => setIsFixtureModalOpen(true) : null}
+                onCreateFixture={() => setIsFixtureModalOpen(true)}
             />
 
             {/* Stats Overview */}
@@ -71,7 +71,7 @@ const AppLandingPage = () => {
                     <h2>Recent Tournaments</h2>
                     <p>View results and standings from our latest competitions</p>
                 </div>
-                <AnalyticsDashboard onEdit={isLoggedIn ? handleEditTournament : null} />
+                <AnalyticsDashboard onEdit={handleEditTournament} />
             </section>
 
             {/* Activity Insights Section */}

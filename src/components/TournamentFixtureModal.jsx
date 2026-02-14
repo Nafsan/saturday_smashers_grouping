@@ -313,7 +313,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                                 <TextField
                                     multiline
                                     rows={4}
-                                    placeholder={`Paste list example:\n1. Rejaul\n2. Sakib\n3. Mizan Bhai`}
+                                    placeholder={`Paste list example:\n1. Ma Long\n2. Ma Lin\n3. Wang Hao`}
                                     value={pastedText}
                                     onChange={(e) => setPastedText(e.target.value)}
                                     fullWidth

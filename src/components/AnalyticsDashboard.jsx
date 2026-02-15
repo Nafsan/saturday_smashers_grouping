@@ -18,7 +18,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
     const [itemsPerPage, setItemsPerPage] = useState(5);
     const [selectedGraphPlayers, setSelectedGraphPlayers] = useState([]);
     const [expandedTournaments, setExpandedTournaments] = useState([]);
-    const [timeRange, setTimeRange] = useState('10'); // '10', '20', 'all'
+    const [timeRange, setTimeRange] = useState('all'); // '10', '20', 'all'
 
 
 

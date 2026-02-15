@@ -76,6 +76,10 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
                         <DollarSign size={18} />
                         <span>Fund</span>
                     </a>
+                    <a onClick={() => navigate('/national-ranking')} className="nav-link">
+                        <Trophy size={18} />
+                        <span>National Ranking</span>
+                    </a>
                     <a
                         href="https://www.youtube.com/@PongTTT-bd"
                         target="_blank"
@@ -145,6 +149,10 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
                     <a onClick={() => { navigate('/fund'); setMobileMenuOpen(false); }} className="mobile-link">
                         <DollarSign size={18} />
                         <span>Fund</span>
+                    </a>
+                    <a onClick={() => { navigate('/national-ranking'); setMobileMenuOpen(false); }} className="mobile-link">
+                        <Trophy size={18} />
+                        <span>National Ranking</span>
                     </a>
                     <a
                         href="https://www.youtube.com/@PongTTT-bd"

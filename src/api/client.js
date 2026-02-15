@@ -180,6 +180,13 @@ export const updateNextTournamentDate = async (date, password) => {
     return response.data;
 };
 
+export const fetchRankingProxy = async (url, forceRefresh = false) => {
+    const response = await client.get('/ranking/proxy', {
+        params: { url, force_refresh: forceRefresh }
+    });
+    return response.data;
+};
+
 export default client;
 
 

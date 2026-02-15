@@ -290,9 +290,9 @@ const NationalRanking = () => {
                                                 </td>
                                                 <td>
                                                     <div
-                                                        className={`player-info ${isMobile ? 'clickable' : ''}`}
-                                                        onClick={() => isMobile && setSelectedPlayer(player)}
-                                                        title={isMobile ? "Click for details" : ""}
+                                                        className="player-info clickable"
+                                                        onClick={() => setSelectedPlayer(player)}
+                                                        title="Click for details"
                                                     >
                                                         <span className="player-name">{playerName}</span>
                                                         <span className="player-sn">Serial No. {player['SN']}</span>
@@ -443,7 +443,7 @@ const NationalRanking = () => {
             <Dialog
                 open={!!selectedPlayer}
                 onClose={() => setSelectedPlayer(null)}
-                maxWidth="xs"
+                maxWidth="sm"
                 fullWidth
                 PaperProps={{
                     sx: {
@@ -451,8 +451,9 @@ const NationalRanking = () => {
                         background: 'var(--bg-card, #1e293b)',
                         color: 'var(--text-primary)',
                         backgroundImage: 'none',
-                        width: isMobile ? '97%' : 'auto',
-                        margin: isMobile ? '8px' : '32px'
+                        width: isMobile ? '97%' : '100%',
+                        maxWidth: isMobile ? 'none' : '600px',
+                        margin: isMobile ? '8px' : 'auto'
                     }
                 }}
             >

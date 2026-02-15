@@ -299,18 +299,19 @@ const NationalRanking = () => {
                                         const sn = getVal(player, 'SN');
 
                                         return (
-                                            <tr key={index} className={comparePlayers.find(p => getVal(p, 'Player') === playerName) ? 'comparing' : ''}>
+                                            <tr
+                                                key={index}
+                                                className={`clickable-row ${comparePlayers.find(p => getVal(p, 'Player') === playerName) ? 'comparing' : ''}`}
+                                                onClick={() => setSelectedPlayer(player)}
+                                                title="Click for details"
+                                            >
                                                 <td>
                                                     <span className="rank-simple">
                                                         {pos}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <div
-                                                        className="player-info clickable"
-                                                        onClick={() => setSelectedPlayer(player)}
-                                                        title="Click for details"
-                                                    >
+                                                    <div className="player-info">
                                                         <span className="player-name">{playerName}</span>
                                                         <span className="player-sn">Serial No. {sn}</span>
                                                     </div>

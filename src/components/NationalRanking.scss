@@ -281,15 +281,6 @@
                         gap: 2px;
                         transition: all 0.2s;
 
-                        &.clickable {
-                            cursor: pointer;
-
-                            &:hover .player-name {
-                                color: var(--accent-primary);
-                                text-decoration: underline;
-                            }
-                        }
-
                         .player-name {
                             font-weight: 700;
                             color: #fff;
@@ -308,8 +299,17 @@
                 tr {
                     transition: all 0.2s;
 
-                    &:hover {
-                        background: rgba(255, 255, 255, 0.03);
+                    &.clickable-row {
+                        cursor: pointer;
+
+                        &:hover {
+                            background: rgba(255, 255, 255, 0.05);
+
+                            .player-name {
+                                color: var(--accent-primary);
+                                text-decoration: underline;
+                            }
+                        }
                     }
 
                     &.comparing {

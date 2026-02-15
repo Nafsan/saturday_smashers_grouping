@@ -128,13 +128,29 @@ const NationalRanking = () => {
         fetchRankingByCategory(activeTab, true);
     };
 
+    const getVal = (obj, conceptualKey) => {
+        if (!obj) return '';
+        const mapping = {
+            'SN': ['SN', 'S.N.', 'SL', 'S.L.', 'Serial No', 'Serial', 'S/N'],
+            'Pos': ['Pos', 'Position', 'Rank', 'Ranking'],
+            'Player': ['Player', 'Players', 'Name', 'Player Name'],
+            'Total': ['Total Point', 'Total', 'Points', 'Total Points', 'Point']
+        };
+        const possibilities = (mapping[conceptualKey] || []).map(s => s.toUpperCase());
+        const foundKey = Object.keys(obj).find(k => possibilities.includes(k.trim().toUpperCase()));
+        return foundKey ? obj[foundKey] : '';
+    };
+
     const currentData = rankings[activeTab] || [];
 
     // Dynamically get headers from the first row of data, excluding structural ones
     const tableHeaders = useMemo(() => {
         if (currentData.length === 0) return [];
-        const excluded = ['SN', 'Pos', 'Player', 'Players', 'Total Point', 'Total'];
-        return Object.keys(currentData[0]).filter(h => !excluded.includes(h));
+        const structural = ['SN', 'S.N.', 'SL', 'S.L.', 'SERIAL NO', 'SERIAL', 'S/N', 'POS', 'POSITION', 'RANK', 'RANKING', 'PLAYER', 'PLAYERS', 'NAME', 'PLAYER NAME', 'TOTAL POINT', 'TOTAL', 'TOTAL POINTS', 'POINTS', 'POINT'];
+        return Object.keys(currentData[0]).filter(h => {
+            const up = h.trim().toUpperCase();
+            return !structural.includes(up);
+        });
     }, [currentData]);
 
     const filteredRankings = useMemo(() => {
@@ -142,15 +158,15 @@ const NationalRanking = () => {
 
         const query = searchQuery.toLowerCase().trim();
         return currentData.filter(player => {
-            const playerName = (player['Players'] || player['Player'] || '').toLowerCase();
+            const playerName = String(getVal(player, 'Player') || '').toLowerCase();
             return playerName.includes(query);
         });
     }, [currentData, searchQuery]);
 
     const handleCompareToggle = (player) => {
-        const playerName = player['Players'] || player['Player'];
-        if (comparePlayers.find(p => (p['Players'] || p['Player']) === playerName)) {
-            setComparePlayers(prev => prev.filter(p => (p['Players'] || p['Player']) !== playerName));
+        const playerName = getVal(player, 'Player');
+        if (comparePlayers.find(p => getVal(p, 'Player') === playerName)) {
+            setComparePlayers(prev => prev.filter(p => getVal(p, 'Player') !== playerName));
         } else {
             if (comparePlayers.length >= 10) {
                 alert("You can compare at most 10 players at a time.");
@@ -166,7 +182,7 @@ const NationalRanking = () => {
         return tableHeaders.map(key => {
             const dataPoint = { name: key };
             comparePlayers.forEach(p => {
-                const pName = p['Players'] || p['Player'];
+                const pName = getVal(p, 'Player');
                 dataPoint[pName] = p[key] || 0;
             });
             return dataPoint;
@@ -277,12 +293,13 @@ const NationalRanking = () => {
                             <tbody>
                                 {filteredRankings.length > 0 ? (
                                     filteredRankings.map((player, index) => {
-                                        const playerName = player['Players'] || player['Player'];
-                                        const pos = player['Pos'] || index + 1;
-                                        const total = player['Total Point'] || player['Total'];
+                                        const playerName = getVal(player, 'Player');
+                                        const pos = getVal(player, 'Pos') || index + 1;
+                                        const total = getVal(player, 'Total');
+                                        const sn = getVal(player, 'SN');
 
                                         return (
-                                            <tr key={index}>
+                                            <tr key={index} className={comparePlayers.find(p => getVal(p, 'Player') === playerName) ? 'comparing' : ''}>
                                                 <td>
                                                     <span className="rank-simple">
                                                         {pos}
@@ -295,7 +312,7 @@ const NationalRanking = () => {
                                                         title="Click for details"
                                                     >
                                                         <span className="player-name">{playerName}</span>
-                                                        <span className="player-sn">Serial No. {player['SN']}</span>
+                                                        <span className="player-sn">Serial No. {sn}</span>
                                                     </div>
                                                 </td>
                                                 {tableHeaders.map(header => (
@@ -470,20 +487,20 @@ const NationalRanking = () => {
                     {selectedPlayer && (
                         <div className="player-detail-view">
                             <div className="detail-header-new">
-                                <h3 className="player-name">{selectedPlayer['Players'] || selectedPlayer['Player']}</h3>
+                                <h3 className="player-name">{getVal(selectedPlayer, 'Player')}</h3>
                                 <div className="player-meta-info">
                                     <div className="meta-card pos">
                                         <Trophy size={16} />
                                         <div className="text-content">
                                             <span className="meta-label">Position</span>
-                                            <span className="meta-value">#{selectedPlayer['Pos']}</span>
+                                            <span className="meta-value">#{getVal(selectedPlayer, 'Pos')}</span>
                                         </div>
                                     </div>
                                     <div className="meta-card sn">
                                         <Users size={16} />
                                         <div className="text-content">
                                             <span className="meta-label">Serial No</span>
-                                            <span className="meta-value">{selectedPlayer['SN']}</span>
+                                            <span className="meta-value">{getVal(selectedPlayer, 'SN')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -517,7 +534,7 @@ const NationalRanking = () => {
                             <div className="detail-footer-new">
                                 <div className="total-display">
                                     <span className="total-label">Final Score</span>
-                                    <span className="total-value">{selectedPlayer['Total Point'] || selectedPlayer['Total']}</span>
+                                    <span className="total-value">{getVal(selectedPlayer, 'Total')}</span>
                                 </div>
                             </div>
                         </div>

@@ -14,7 +14,7 @@ import hashlib
 from typing import Dict, Any, Optional
 
 CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "cache")
-CACHE_EXPIRY = 7 * 24 * 60 * 60  # 7 days in seconds
+CACHE_EXPIRY = 365 * 24 * 60 * 60  # 1 year in seconds
 
 if not os.path.exists(CACHE_DIR):
     os.makedirs(CACHE_DIR, exist_ok=True)
@@ -26,7 +26,7 @@ def get_cache_path(url: str):
 @router.get("/proxy")
 async def proxy_ranking(url: str, force_refresh: bool = False):
     """
-    Proxies a request to BTTF website with 7-day caching
+    Proxy a request to the BTTF website with 1-year caching.
     """
     if not url.startswith("https://bttf.org.bd/"):
         raise HTTPException(status_code=400, detail="Invalid URL. Only bttf.org.bd allowed.")

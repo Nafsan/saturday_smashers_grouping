@@ -199,7 +199,9 @@ const NationalRanking = () => {
                         <ChevronLeft size={20} />
                         <span>Back</span>
                     </button>
-                    <ThemeToggle />
+                    <div className="top-actions">
+                        <ThemeToggle />
+                    </div>
                 </div>
                 <div className="loading-overlay">
                     <div className="loading-card">

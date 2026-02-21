@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getAllPlayers, calculateRankings } from '../logic/ranking';
 import { generateGroups } from '../logic/grouping';
 import { fetchHistory, addTournament, updateTournament, deleteTournament, fetchPlayers } from '../api/client';
+import { getThemeCookie, setThemeCookie } from '../utils/cookieUtils';
 
 // Async Thunks
 export const fetchPlayersAsync = createAsyncThunk(
@@ -66,7 +67,7 @@ const initialState = {
     temporaryPlayers: [], // { name, initialRank }
     status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
-    theme: typeof window !== 'undefined' ? (localStorage.getItem('theme') || 'dark') : 'dark'
+    theme: typeof window !== 'undefined' ? (getThemeCookie() || 'dark') : 'dark'
 };
 
 export const appSlice = createSlice({
@@ -142,7 +143,7 @@ export const appSlice = createSlice({
         toggleTheme: (state) => {
             state.theme = state.theme === 'dark' ? 'light' : 'dark';
             if (typeof window !== 'undefined') {
-                localStorage.setItem('theme', state.theme);
+                setThemeCookie(state.theme);
             }
         }
     },

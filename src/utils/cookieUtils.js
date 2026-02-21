@@ -91,7 +91,7 @@ export const clearAdminAuthCookie = () => {
 };
 
 const THEME_COOKIE_NAME = 'ss_theme';
-const THEME_EXPIRY_DAYS = 365; // 1 year
+const THEME_EXPIRY_DAYS = 3650; // ~10 years (Browser max is usually ~400 days but this ensures maximum persistence)
 
 /**
  * Set theme cookie

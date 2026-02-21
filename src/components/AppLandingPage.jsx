@@ -69,7 +69,7 @@ const AppLandingPage = () => {
             <section className="content-section">
                 <div className="section-header">
                     <h2>Recent Tournaments</h2>
-                    <p>View results and standings from our latest competitions</p>
+                    <p>View results and standings from our latest competitions. We have the tournament results since September 2025</p>
                 </div>
                 <AnalyticsDashboard onEdit={handleEditTournament} />
             </section>

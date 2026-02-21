@@ -165,14 +165,18 @@ const GlobalRanking = ({ onClose }) => {
                                                     <TableCell>Player</TableCell>
                                                     <TableCell sx={{ width: '100px', textAlign: 'center' }}>Avg Rating</TableCell>
                                                     <TableCell sx={{ width: '80px', textAlign: 'center' }}>Games</TableCell>
-                                                    <TableCell sx={{ width: '60px', textAlign: 'center' }}>Info</TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
                                                 {categorizedRankings.established.map((player, index) => (
                                                     <TableRow
                                                         key={player.name}
-                                                        sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' } }}
+                                                        sx={{
+                                                            '&:last-child td, &:last-child th': { border: 0 },
+                                                            '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' },
+                                                            cursor: 'pointer'
+                                                        }}
+                                                        onClick={() => handleShowBreakdown(player)}
                                                     >
                                                         <TableCell sx={{ textAlign: 'center', fontWeight: 'bold', color: '#38bdf8' }}>
                                                             #{index + 1}
@@ -185,15 +189,6 @@ const GlobalRanking = ({ onClose }) => {
                                                         </TableCell>
                                                         <TableCell sx={{ textAlign: 'center', color: '#94a3b8' }}>
                                                             {player.playedCount}
-                                                        </TableCell>
-                                                        <TableCell sx={{ textAlign: 'center' }}>
-                                                            <button
-                                                                onClick={() => handleShowBreakdown(player)}
-                                                                className="info-action-btn"
-                                                                title="View Rank Breakdown"
-                                                            >
-                                                                <Info size={16} />
-                                                            </button>
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -217,7 +212,12 @@ const GlobalRanking = ({ onClose }) => {
                                                 {categorizedRankings.newPlayers.map((player) => (
                                                     <TableRow
                                                         key={player.name}
-                                                        sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: 'rgba(56, 189, 248, 0.05)' } }}
+                                                        sx={{
+                                                            '&:last-child td, &:last-child th': { border: 0 },
+                                                            '&:hover': { backgroundColor: 'rgba(56, 189, 248, 0.05)' },
+                                                            cursor: 'pointer'
+                                                        }}
+                                                        onClick={() => handleShowBreakdown(player)}
                                                     >
                                                         <TableCell sx={{ width: '60px', textAlign: 'center', color: '#94a3b8' }}>
                                                             -
@@ -230,15 +230,6 @@ const GlobalRanking = ({ onClose }) => {
                                                         </TableCell>
                                                         <TableCell sx={{ width: '80px', textAlign: 'center', color: '#94a3b8' }}>
                                                             1
-                                                        </TableCell>
-                                                        <TableCell sx={{ width: '60px', textAlign: 'center' }}>
-                                                            <button
-                                                                onClick={() => handleShowBreakdown(player)}
-                                                                className="info-action-btn"
-                                                                title="View Tournament"
-                                                            >
-                                                                <Info size={16} />
-                                                            </button>
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -261,7 +252,12 @@ const GlobalRanking = ({ onClose }) => {
                                                 {categorizedRankings.neverPlayed.sort((a, b) => a.name.localeCompare(b.name)).map((player) => (
                                                     <TableRow
                                                         key={player.name}
-                                                        sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: 'rgba(148, 163, 184, 0.05)' } }}
+                                                        sx={{
+                                                            '&:last-child td, &:last-child th': { border: 0 },
+                                                            '&:hover': { backgroundColor: 'rgba(148, 163, 184, 0.05)' },
+                                                            cursor: 'pointer'
+                                                        }}
+                                                        onClick={() => handleShowBreakdown(player)}
                                                     >
                                                         <TableCell sx={{ width: '60px', textAlign: 'center', color: '#64748b' }}>
                                                             -
@@ -274,9 +270,6 @@ const GlobalRanking = ({ onClose }) => {
                                                         </TableCell>
                                                         <TableCell sx={{ width: '80px', textAlign: 'center', color: '#64748b' }}>
                                                             0
-                                                        </TableCell>
-                                                        <TableCell sx={{ width: '60px', textAlign: 'center' }}>
-                                                            {/* No info button for never played */}
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -377,7 +370,7 @@ const GlobalRanking = ({ onClose }) => {
                             <div className="info-content">
                                 <div className="info-description">
                                     <strong>Ranking Methodology:</strong>
-                                    Rankings are based on the average rating from your last 5 tournaments (or fewer if you've played less). Lower averages rank higher. Ratings range from 1-8, where 1 is the best. Click the info icon next to any player to see their detailed breakdown.
+                                    Rankings are based on the average rating from your last 5 tournaments (or fewer if you've played less). Lower averages rank higher. Ratings range from 1-8, where 1 is the best. Click any player row to see their detailed breakdown.
                                 </div>
                             </div>
                         </div>

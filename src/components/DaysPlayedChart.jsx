@@ -53,7 +53,7 @@ const DaysPlayedChart = () => {
                 marginBottom: '1.5rem'
             }}>Days Played Comparison</h2>
             <div className="chart-container" style={{
-                background: 'var(--bg-secondary)',
+                // background: 'var(--bg-secondary)',
                 borderRadius: '12px',
                 padding: '1.5rem'
             }}>

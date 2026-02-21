@@ -349,8 +349,9 @@ const NationalRanking = () => {
                 PaperProps={{
                     sx: {
                         borderRadius: '20px',
-                        background: 'var(--bg-card, #1e293b)',
+                        background: 'var(--bg-card)',
                         color: 'var(--text-primary)',
+                        border: '1px solid var(--border-main)',
                         backgroundImage: 'none',
                         width: isMobile ? '97%' : '90%',
                         maxWidth: isMobile ? 'none' : '1050px',
@@ -358,7 +359,7 @@ const NationalRanking = () => {
                     }
                 }}
             >
-                <DialogTitle sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <DialogTitle sx={{ borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <TrendingUp size={24} color="var(--accent-primary)" />
                         Player Performance Comparison
@@ -385,16 +386,17 @@ const NationalRanking = () => {
                                     variant="outlined"
                                     sx={{
                                         '& .MuiOutlinedInput-root': {
-                                            color: '#fff',
-                                            '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                                            color: 'var(--text-primary)',
+                                            '& fieldset': { borderColor: 'var(--border-main)' },
                                             '&:hover fieldset': { borderColor: 'var(--accent-primary)' },
+                                            '&.Mui-focused fieldset': { borderColor: 'var(--accent-primary)' },
                                         },
-                                        '& .MuiInputLabel-root': { color: '#94a3b8' },
+                                        '& .MuiInputLabel-root': { color: 'var(--text-muted)' },
                                         '& .MuiChip-root': {
-                                            backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                                            backgroundColor: 'var(--border-subtle)',
                                             color: 'var(--accent-primary)',
                                             fontWeight: 600,
-                                            border: '1px solid rgba(56, 189, 248, 0.2)',
+                                            border: '1px solid var(--border-main)',
                                             '& .MuiChip-deleteIcon': {
                                                 color: 'var(--accent-primary)',
                                                 opacity: 0.8,
@@ -418,17 +420,18 @@ const NationalRanking = () => {
                             <div className="chart-container">
                                 <ResponsiveContainer width="100%" height={400}>
                                     <LineChart data={chartData}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8' }} />
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-subtle)" />
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} />
                                         <Tooltip
                                             contentStyle={{
-                                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                                backgroundColor: 'var(--bg-surface-elevated)',
                                                 borderRadius: '12px',
-                                                border: '1px solid rgba(255,255,255,0.1)',
-                                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
+                                                border: '1px solid var(--border-main)',
+                                                boxShadow: 'var(--shadow-lg)',
+                                                color: 'var(--text-primary)'
                                             }}
-                                            itemStyle={{ fontSize: '12px' }}
+                                            itemStyle={{ fontSize: '12px', color: 'var(--text-primary)' }}
                                         />
                                         <Legend />
                                         {comparePlayers.map((player, index) => {
@@ -451,7 +454,7 @@ const NationalRanking = () => {
                         </div>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ p: 3, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <DialogActions sx={{ p: 3, borderTop: '1px solid var(--border-subtle)' }}>
                     <Button onClick={() => setComparePlayers([])} color="error">Clear All</Button>
                     <Button onClick={() => setIsCompareDialogOpen(false)} variant="contained">Close</Button>
                 </DialogActions>
@@ -466,8 +469,9 @@ const NationalRanking = () => {
                 PaperProps={{
                     sx: {
                         borderRadius: '20px',
-                        background: 'var(--bg-card, #1e293b)',
+                        background: 'var(--bg-card)',
                         color: 'var(--text-primary)',
+                        border: '1px solid var(--border-main)',
                         backgroundImage: 'none',
                         width: isMobile ? '97%' : '100%',
                         maxWidth: isMobile ? 'none' : '600px',
@@ -475,7 +479,7 @@ const NationalRanking = () => {
                     }
                 }}
             >
-                <DialogTitle sx={{ borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <DialogTitle sx={{ borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <Info size={24} color="var(--accent-primary)" />
                         Player Details
@@ -541,7 +545,7 @@ const NationalRanking = () => {
                         </div>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <DialogActions sx={{ p: 2, borderTop: '1px solid var(--border-subtle)' }}>
                     <Button
                         onClick={() => {
                             handleCompareToggle(selectedPlayer);

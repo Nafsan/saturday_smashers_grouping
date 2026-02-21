@@ -1,34 +1,28 @@
 .theme-toggle {
-    position: fixed;
-    top: 1.5rem;
-    right: 1.5rem;
-    z-index: 1000;
+    position: relative;
+    z-index: 10;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    width: 3rem;
-    height: 3rem;
+    width: 2.5rem;
+    height: 2.5rem;
 
-    background: var(--bg-card);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
+    background: var(--bg-surface-soft);
+    border: 1px solid var(--border-main);
+    border-radius: 10px;
 
+    color: var(--text-primary);
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-        0 2px 4px -1px rgba(0, 0, 0, 0.06);
-
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    transition: all var(--transition-main);
 
     &:hover {
-        transform: scale(1.1);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2),
-            0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        transform: scale(1.05);
+        background: var(--bg-surface);
         border-color: var(--accent-primary);
+        box-shadow: var(--shadow-sm);
+        color: var(--accent-primary);
     }
 
     &:active {
@@ -36,12 +30,11 @@
     }
 
     .theme-icon {
-        color: var(--accent-primary);
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: transform var(--transition-main);
     }
 
     &:hover .theme-icon {
-        transform: rotate(20deg);
+        transform: rotate(15deg);
     }
 }
 

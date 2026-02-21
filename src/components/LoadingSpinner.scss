@@ -5,7 +5,9 @@
     justify-content: center;
     min-height: 60vh;
     padding: 2rem;
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-lg);
     border-radius: 20px;
     margin: 2rem auto;
     max-width: 800px;
@@ -249,8 +251,8 @@
     justify-content: center;
     margin-bottom: 2rem;
     padding: 1.5rem;
-    background: rgba(56, 189, 248, 0.1);
-    border-left: 4px solid #38bdf8;
+    background: var(--bg-surface-soft);
+    border-left: 4px solid var(--accent-primary);
     border-radius: 8px;
 }
 

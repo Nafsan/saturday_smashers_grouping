@@ -519,7 +519,7 @@ const GttEloCalculator = () => {
     };
 
     return (
-        <div className="container" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="container" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-primary)' }}>
             <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Button
                     startIcon={<ArrowLeft />}
@@ -529,7 +529,7 @@ const GttEloCalculator = () => {
                 >
                     Back
                 </Button>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', background: 'linear-gradient(to right, #38bdf8, #818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                <Typography variant="h4" sx={{ fontWeight: '800', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                     GTT ELO Calculator
                 </Typography>
             </Box>
@@ -537,7 +537,7 @@ const GttEloCalculator = () => {
             {!calculatedData ? (
                 <Stack spacing={4}>
                     <Box>
-                        <Paper elevation={3} sx={{ p: 3, height: '100%', borderRadius: 4, bgcolor: 'background.paper' }}>
+                        <Paper elevation={0} sx={{ p: 3, height: '100%', borderRadius: 4, bgcolor: 'var(--bg-card)', border: '1px solid var(--border-main)' }}>
                             <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Typography variant="h6" fontWeight="bold">Current Standings</Typography>
                             </Box>
@@ -564,7 +564,7 @@ const GttEloCalculator = () => {
                     </Box>
 
                     <Box>
-                        <Paper elevation={3} sx={{ p: 3, height: '100%', borderRadius: 4, bgcolor: 'background.paper' }}>
+                        <Paper elevation={0} sx={{ p: 3, height: '100%', borderRadius: 4, bgcolor: 'var(--bg-card)', border: '1px solid var(--border-main)' }}>
                             <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Typography variant="h6" fontWeight="bold">Match Results</Typography>
                             </Box>
@@ -597,13 +597,13 @@ const GttEloCalculator = () => {
                             onClick={handleCalculate}
                             startIcon={<Calculator />}
                             sx={{
-                                background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                                background: 'var(--gradient-primary)',
                                 px: 5,
                                 py: 1.5,
                                 fontSize: '1.1rem',
                                 borderRadius: 3,
                                 textTransform: 'none',
-                                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
+                                boxShadow: 'var(--shadow-md)'
                             }}
                         >
                             Calculate New Ratings
@@ -615,8 +615,8 @@ const GttEloCalculator = () => {
                     <Stack spacing={4}>
                         {/* Match Analysis */}
                         <Box>
-                            <Paper elevation={3} sx={{ p: 0, overflow: 'hidden', borderRadius: 4, bgcolor: 'background.paper' }}>
-                                <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderBottom: '1px solid divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+                            <Paper elevation={0} sx={{ p: 0, overflow: 'hidden', borderRadius: 4, bgcolor: 'var(--bg-card)', border: '1px solid var(--border-main)' }}>
+                                <Box sx={{ p: 2, bgcolor: 'var(--bg-surface-soft)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                                     <Typography variant="h6" fontWeight="bold">Match Analysis</Typography>
                                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexGrow: 1, justifyContent: 'flex-end' }}>
                                         <TextField
@@ -709,8 +709,8 @@ const GttEloCalculator = () => {
                         {/* Applied Bonuses Section */}
                         {calculatedData.bonuses && calculatedData.bonuses.length > 0 && (
                             <Box>
-                                <Paper elevation={3} sx={{ p: 0, overflow: 'hidden', borderRadius: 4, bgcolor: 'background.paper' }}>
-                                    <Box sx={{ p: 2, bgcolor: 'rgba(79, 70, 229, 0.05)', borderBottom: '1px solid divider', display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Paper elevation={0} sx={{ p: 0, overflow: 'hidden', borderRadius: 4, bgcolor: 'var(--bg-card)', border: '1px solid var(--border-main)' }}>
+                                    <Box sx={{ p: 2, bgcolor: 'var(--bg-surface-soft)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <Plus size={18} color="#4f46e5" />
                                         <Typography variant="h6" fontWeight="bold">Tournament Performance Bonus</Typography>
                                     </Box>
@@ -749,8 +749,8 @@ const GttEloCalculator = () => {
 
                         {/* Updated Standings */}
                         <Box>
-                            <Paper elevation={3} sx={{ p: 0, overflow: 'hidden', borderRadius: 4, bgcolor: 'background.paper', height: '100%' }}>
-                                <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderBottom: '1px solid divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+                            <Paper elevation={0} sx={{ p: 0, overflow: 'hidden', borderRadius: 4, bgcolor: 'var(--bg-card)', border: '1px solid var(--border-main)', height: '100%' }}>
+                                <Box sx={{ p: 2, bgcolor: 'var(--bg-surface-soft)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                                     <Typography variant="h6" fontWeight="bold">Updated Standings</Typography>
                                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexGrow: 1, justifyContent: 'flex-end' }}>
                                         <TextField
@@ -894,7 +894,7 @@ const GttEloCalculator = () => {
                         </Button>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)' }}>
+                <DialogActions sx={{ p: 2, bgcolor: 'var(--bg-surface-soft)' }}>
                     <Button onClick={() => setBonusDialogOpen(false)}>Cancel</Button>
                     <Button
                         onClick={handleBonusSubmit}

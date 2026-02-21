@@ -1,7 +1,8 @@
 .rank-submission-dialog {
     .MuiDialog-paper {
-        background-color: #1e293b;
-        color: white;
+        background-color: var(--bg-card);
+        color: var(--text-primary);
+        border: 1px solid var(--border-main);
     }
 }
 
@@ -22,23 +23,23 @@
         }
 
         .section {
-            background: #0f172a;
+            background: var(--bg-surface-soft);
             padding: 1.5rem;
             border-radius: 12px;
-            border: 1px solid #334155;
+            border: 1px solid var(--border-main);
             margin-bottom: 2rem;
 
             &.cup-section {
-                border-top: 4px solid #f59e0b; // Gold
+                border-top: 4px solid var(--accent-warning); // Gold
             }
 
             &.plate-section {
-                border-top: 4px solid #94a3b8; // Silver
+                border-top: 4px solid var(--text-muted); // Silver
             }
 
             .section-title {
                 margin-bottom: 1.5rem;
-                color: #e2e8f0;
+                color: var(--text-primary);
                 font-weight: 600;
                 display: flex;
                 align-items: center;
@@ -56,16 +57,18 @@
                     width: 100%;
 
                     .MuiFilledInput-root {
-                        background-color: #1e293b;
-                        color: white;
+                        background-color: var(--bg-surface-soft);
+                        color: var(--text-primary);
+                        border: 1px solid var(--border-subtle);
                         border-radius: 8px;
 
                         &:hover {
-                            background-color: #334155;
+                            background-color: var(--bg-surface-elevated);
                         }
 
                         &.Mui-focused {
-                            background-color: #334155;
+                            background-color: var(--bg-surface-elevated);
+                            border-color: var(--accent-primary);
                         }
 
                         &:before,
@@ -75,24 +78,24 @@
                     }
 
                     .MuiInputLabel-root {
-                        color: #94a3b8;
+                        color: var(--text-secondary);
 
                         &.Mui-focused {
-                            color: #38bdf8;
+                            color: var(--accent-primary);
                         }
                     }
                 }
 
                 .MuiAutocomplete-tag {
-                    background-color: #334155;
-                    color: white;
-                    border: 1px solid #475569;
+                    background-color: var(--bg-surface-elevated);
+                    color: var(--text-primary);
+                    border: 1px solid var(--border-subtle);
 
                     .MuiChip-deleteIcon {
-                        color: #94a3b8;
+                        color: var(--text-secondary);
 
                         &:hover {
-                            color: white;
+                            color: var(--text-primary);
                         }
                     }
                 }
@@ -106,21 +109,21 @@
     z-index: 1400 !important; // Ensure it sits above dialog
 
     .MuiPaper-root {
-        background-color: #1e293b;
-        color: white;
-        border: 1px solid #334155;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        background-color: var(--bg-card);
+        color: var(--text-primary);
+        border: 1px solid var(--border-main);
+        box-shadow: var(--shadow-lg);
 
         .MuiAutocomplete-option {
 
             &:hover,
             &.Mui-focused {
-                background-color: #334155;
+                background-color: var(--bg-surface-soft);
             }
 
             &[aria-selected="true"] {
-                background-color: rgba(56, 189, 248, 0.2);
-                color: #38bdf8;
+                background-color: var(--glass-bg);
+                color: var(--accent-primary);
 
                 &:hover {
                     background-color: rgba(56, 189, 248, 0.3);
@@ -129,8 +132,8 @@
         }
 
         .MuiAutocomplete-noOptions {
-            color: #94a3b8;
-            background-color: #1e293b;
+            color: var(--text-secondary);
+            background-color: var(--bg-card);
         }
     }
 }

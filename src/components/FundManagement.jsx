@@ -50,9 +50,9 @@ const FundManagement = () => {
     };
 
     const getBalanceColor = (balance) => {
-        if (balance > 0) return '#4ade80'; // green
-        if (balance < 0) return '#f87171'; // red
-        return '#94a3b8'; // gray
+        if (balance > 0) return 'var(--accent-success, #4ade80)';
+        if (balance < 0) return 'var(--accent-error, #f87171)';
+        return 'var(--text-muted, #94a3b8)';
     };
 
     if (loading) {
@@ -229,7 +229,7 @@ const FundManagement = () => {
                             <tbody>
                                 {filteredBalances.length === 0 ? (
                                     <tr>
-                                        <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
+                                        <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                                             No players found
                                         </td>
                                     </tr>

@@ -562,7 +562,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                             disabled={isSubmitting}
                             startIcon={isSubmitting ? <CircularProgress size={18} color="inherit" /> : <Upload size={18} />}
                             sx={{
-                                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                background: 'var(--gradient-primary)',
                                 fontWeight: 'bold'
                             }}
                         >

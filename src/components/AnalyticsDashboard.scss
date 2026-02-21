@@ -26,7 +26,7 @@
         padding: 1.5rem;
         border-radius: 16px;
         margin-bottom: 2rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        box-shadow: var(--shadow-md);
     }
 
     .empty-chart-state {
@@ -36,7 +36,7 @@
         text-align: center;
         color: var(--text-secondary);
         margin-bottom: 2rem;
-        border: 2px dashed rgba(255, 255, 255, 0.1);
+        border: 2px dashed var(--border-main);
     }
 
     .recent-history {
@@ -55,7 +55,7 @@
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
 
             .date {
                 font-size: 0.85rem;
@@ -69,7 +69,7 @@
                 gap: 0.5rem;
 
                 .rank-pill {
-                    background-color: rgba(255, 255, 255, 0.05);
+                    background-color: var(--bg-surface-soft);
                     padding: 0.25rem 0.75rem;
                     border-radius: 20px;
                     font-size: 0.85rem;
@@ -102,9 +102,9 @@
             gap: 1rem;
             margin-top: 2rem;
             padding: 1rem;
-            background-color: rgba(30, 41, 59, 0.5);
+            background-color: var(--bg-surface-soft);
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
 
             .pagination-info {
                 color: var(--text-secondary);
@@ -132,7 +132,7 @@
                     font-weight: 500;
 
                     &:hover:not(:disabled) {
-                        background-color: rgba(255, 255, 255, 0.05);
+                        background-color: var(--bg-surface-soft);
                         color: var(--text-primary);
                     }
 
@@ -148,7 +148,7 @@
                     }
 
                     &.nav-btn {
-                        border: 1px solid rgba(255, 255, 255, 0.1);
+                        border: 1px solid var(--border-main);
 
                         &:hover:not(:disabled) {
                             border-color: var(--text-secondary);
@@ -168,7 +168,7 @@
                 select {
                     background-color: var(--bg-card);
                     color: var(--text-secondary);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border: 1px solid var(--border-main);
                     border-radius: 6px;
                     padding: 0.4rem 0.8rem;
                     font-size: 0.85rem;
@@ -184,7 +184,7 @@
                     }
 
                     option {
-                        background-color: #1e293b;
+                        background-color: var(--bg-card);
                     }
                 }
             }

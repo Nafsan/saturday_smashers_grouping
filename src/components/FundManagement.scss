@@ -4,17 +4,27 @@
     padding-bottom: 3rem;
 
     .fund-header-section {
-        padding: 3rem 2rem;
+        padding: 4rem 2rem;
         margin-bottom: 3rem;
-        background: linear-gradient(135deg,
-                rgba(59, 130, 246, 0.05) 0%,
-                rgba(139, 92, 246, 0.05) 50%,
-                rgba(236, 72, 153, 0.05) 100%);
-        border-bottom: 1px solid var(--border-color);
+        background: radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.1) 0%, transparent 45%),
+            radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.1) 0%, transparent 45%),
+            var(--gradient-surface);
+        border-bottom: 1px solid var(--border-main);
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 2.5rem;
+        position: relative;
+        overflow: hidden;
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.025;
+            pointer-events: none;
+        }
 
         .header-top {
             width: 100%;
@@ -28,8 +38,8 @@
                 align-items: center;
                 gap: 0.5rem;
                 padding: 0.6rem 1.2rem;
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid var(--border-color);
+                background: var(--bg-surface-soft);
+                border: 1px solid var(--border-main);
                 border-radius: 50px;
                 color: var(--text-primary);
                 font-weight: 600;
@@ -38,9 +48,10 @@
                 backdrop-filter: blur(10px);
 
                 &:hover {
-                    background: rgba(255, 255, 255, 0.1);
+                    background: var(--bg-surface);
                     border-color: var(--accent-primary);
                     transform: translateX(-5px);
+                    box-shadow: var(--shadow-sm);
                 }
             }
         }
@@ -87,7 +98,7 @@
                 font-weight: 700;
                 cursor: pointer;
                 transition: all 0.3s ease;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                box-shadow: var(--shadow-sm);
 
                 &:hover {
                     transform: translateY(-3px);
@@ -169,8 +180,8 @@
     }
 
     .payment-info-card {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(251, 191, 36, 0.04) 100%);
-        border: 1px solid rgba(245, 158, 11, 0.3);
+        background: var(--bg-surface-soft);
+        border: 1px solid var(--accent-warning);
         border-radius: 20px;
         padding: 2rem;
         margin-bottom: 2.5rem;
@@ -214,9 +225,9 @@
                 align-items: center;
                 gap: 1.25rem;
                 padding: 1rem;
-                background: rgba(245, 158, 11, 0.05);
+                background: var(--bg-surface-soft);
                 border-radius: 16px;
-                border: 1px dashed rgba(245, 158, 11, 0.3);
+                border: 1px dashed var(--accent-warning);
 
                 .bkash-label {
                     font-weight: 700;
@@ -290,8 +301,8 @@
 
             &:hover {
                 transform: translateY(-5px);
-                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-                border-color: rgba(255, 255, 255, 0.1);
+                box-shadow: var(--shadow-md);
+                border-color: var(--accent-primary);
             }
 
             .stat-icon {
@@ -361,7 +372,7 @@
 
             &:focus-within {
                 border-color: var(--accent-primary);
-                box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+                box-shadow: 0 0 0 4px var(--border-subtle);
             }
 
             input {
@@ -396,7 +407,7 @@
 
                 &:hover {
                     color: var(--text-primary);
-                    background: rgba(255, 255, 255, 0.05);
+                    background: var(--bg-surface-soft);
                 }
 
                 &.active {
@@ -422,10 +433,10 @@
 
         .table-wrapper {
             background: var(--bg-card);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border-main);
             border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-md);
         }
 
         .balance-table {
@@ -433,7 +444,7 @@
             border-collapse: collapse;
 
             thead {
-                background: rgba(255, 255, 255, 0.02);
+                background: var(--bg-surface-soft);
 
                 tr th {
                     padding: 1.25rem 1.5rem;
@@ -456,7 +467,7 @@
                 }
 
                 &:hover {
-                    background: rgba(59, 130, 246, 0.03);
+                    background: var(--bg-surface-soft);
                 }
 
                 td {

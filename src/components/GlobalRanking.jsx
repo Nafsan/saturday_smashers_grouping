@@ -16,39 +16,24 @@ import {
 } from '@mui/material';
 import './GlobalRanking.scss';
 
-const darkTheme = createTheme({
-    palette: {
-        mode: 'dark',
-        background: {
-            paper: '#1e293b', // Matches var(--bg-card)
-        },
-        text: {
-            primary: '#f8fafc', // Matches var(--text-primary)
-            secondary: '#94a3b8', // Matches var(--text-secondary)
-        },
-    },
-    components: {
-        MuiTableCell: {
-            styleOverrides: {
-                root: {
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                    padding: '16px',
-                },
-                head: {
-                    backgroundColor: '#1e293b',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    color: '#94a3b8',
-                    letterSpacing: '1px',
-                    fontSize: '0.85rem',
-                },
-                body: {
-                    fontSize: '0.95rem',
-                }
-            }
-        }
-    }
-});
+// MUI Theme constants for consistency
+const tableCellHeadStyle = {
+    backgroundColor: 'var(--bg-surface-soft)',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    color: 'var(--text-secondary)',
+    letterSpacing: '1px',
+    fontSize: '0.75rem',
+    borderBottom: '2px solid var(--border-main)',
+    padding: '16px',
+};
+
+const tableCellBodyStyle = {
+    borderBottom: '1px solid var(--border-subtle)',
+    color: 'var(--text-primary)',
+    fontSize: '0.9rem',
+    padding: '16px',
+};
 
 const GlobalRanking = ({ onClose }) => {
     const { history } = useSelector(state => state.app);
@@ -62,17 +47,25 @@ const GlobalRanking = ({ onClose }) => {
         return calculateRankings(history, allPlayers);
     }, [history, allPlayers]);
 
+    const establishedPlayers = useMemo(() => {
+        return globalRankings
+            .filter(p => p.playedCount >= 2)
+            .map((p, i) => ({ ...p, rank: i + 1 }));
+    }, [globalRankings]);
+
     const categorizedRankings = useMemo(() => {
-        const filtered = globalRankings.filter(player =>
-            player.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        const query = searchTerm.toLowerCase();
 
         return {
-            established: filtered.filter(p => p.playedCount >= 2),
-            newPlayers: filtered.filter(p => p.playedCount === 1),
-            neverPlayed: filtered.filter(p => p.playedCount === 0)
+            established: establishedPlayers.filter(p => p.name.toLowerCase().includes(query)),
+            newPlayers: globalRankings
+                .filter(p => p.playedCount === 1)
+                .filter(p => p.name.toLowerCase().includes(query)),
+            neverPlayed: globalRankings
+                .filter(p => p.playedCount === 0)
+                .filter(p => p.name.toLowerCase().includes(query))
         };
-    }, [globalRankings, searchTerm]);
+    }, [globalRankings, establishedPlayers, searchTerm]);
 
     // Get detailed tournament breakdown for a player
     const getPlayerBreakdown = (playerName) => {
@@ -148,144 +141,142 @@ const GlobalRanking = ({ onClose }) => {
                 </div>
 
                 <div className="modal-content">
-                    <ThemeProvider theme={darkTheme}>
-                        <div className="ranking-sections-container">
-                            {/* Section 1: Established Players (2+ Tournaments) */}
-                            {categorizedRankings.established.length > 0 && (
-                                <div className="ranking-section">
-                                    <div className="section-header">
-                                        <Trophy size={18} color="#fbbf24" />
-                                        <h3>Global Leaderboard ({categorizedRankings.established.length})</h3>
-                                    </div>
-                                    <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'transparent' }}>
-                                        <Table size="small" aria-label="established players table">
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell sx={{ width: '60px', textAlign: 'center' }}>Rank</TableCell>
-                                                    <TableCell>Player</TableCell>
-                                                    <TableCell sx={{ width: '100px', textAlign: 'center' }}>Avg Rating</TableCell>
-                                                    <TableCell sx={{ width: '80px', textAlign: 'center' }}>Games</TableCell>
+                    <div className="ranking-sections-container">
+                        {/* Section 1: Established Players (2+ Tournaments) */}
+                        {categorizedRankings.established.length > 0 && (
+                            <div className="ranking-section">
+                                <div className="section-header">
+                                    <Trophy size={18} color="#fbbf24" />
+                                    <h3>Global Leaderboard ({categorizedRankings.established.length})</h3>
+                                </div>
+                                <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'transparent' }}>
+                                    <Table aria-label="established players table">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell sx={{ ...tableCellHeadStyle, width: '60px', textAlign: 'center' }}>Rank</TableCell>
+                                                <TableCell sx={tableCellHeadStyle}>Player</TableCell>
+                                                <TableCell sx={{ ...tableCellHeadStyle, width: '100px', textAlign: 'center' }}>Avg Rating</TableCell>
+                                                <TableCell sx={{ ...tableCellHeadStyle, width: '80px', textAlign: 'center' }}>Games</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {categorizedRankings.established.map((player, index) => (
+                                                <TableRow
+                                                    key={player.name}
+                                                    sx={{
+                                                        '&:last-child td, &:last-child th': { border: 0 },
+                                                        '&:hover': { backgroundColor: 'var(--bg-surface-soft)' },
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    onClick={() => handleShowBreakdown(player)}
+                                                >
+                                                    <TableCell sx={{ ...tableCellBodyStyle, textAlign: 'center', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
+                                                        #{player.rank}
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, fontWeight: 500 }}>
+                                                        {player.name}
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, textAlign: 'center', fontFamily: 'monospace', color: 'var(--accent-success)' }}>
+                                                        {player.average.toFixed(2)}
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, textAlign: 'center', color: 'var(--text-secondary)' }}>
+                                                        {player.playedCount}
+                                                    </TableCell>
                                                 </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {categorizedRankings.established.map((player, index) => (
-                                                    <TableRow
-                                                        key={player.name}
-                                                        sx={{
-                                                            '&:last-child td, &:last-child th': { border: 0 },
-                                                            '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.05)' },
-                                                            cursor: 'pointer'
-                                                        }}
-                                                        onClick={() => handleShowBreakdown(player)}
-                                                    >
-                                                        <TableCell sx={{ textAlign: 'center', fontWeight: 'bold', color: '#38bdf8' }}>
-                                                            #{index + 1}
-                                                        </TableCell>
-                                                        <TableCell sx={{ fontWeight: 500 }}>
-                                                            {player.name}
-                                                        </TableCell>
-                                                        <TableCell sx={{ textAlign: 'center', fontFamily: 'monospace', color: '#4ade80' }}>
-                                                            {player.average.toFixed(2)}
-                                                        </TableCell>
-                                                        <TableCell sx={{ textAlign: 'center', color: '#94a3b8' }}>
-                                                            {player.playedCount}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                </div>
-                            )}
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </div>
+                        )}
 
-                            {/* Section 2: New Players (1 Tournament) */}
-                            {categorizedRankings.newPlayers.length > 0 && (
-                                <div className="ranking-section new-players">
-                                    <div className="section-header">
-                                        <div className="badge new">New</div>
-                                        <h3>Single Tournament Players ({categorizedRankings.newPlayers.length})</h3>
-                                    </div>
-                                    <p className="section-desc">Players consolidating their initial rating (need 2+ games for rank)</p>
-                                    <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'transparent' }}>
-                                        <Table size="small" aria-label="new players table">
-                                            <TableBody>
-                                                {categorizedRankings.newPlayers.map((player) => (
-                                                    <TableRow
-                                                        key={player.name}
-                                                        sx={{
-                                                            '&:last-child td, &:last-child th': { border: 0 },
-                                                            '&:hover': { backgroundColor: 'rgba(56, 189, 248, 0.05)' },
-                                                            cursor: 'pointer'
-                                                        }}
-                                                        onClick={() => handleShowBreakdown(player)}
-                                                    >
-                                                        <TableCell sx={{ width: '60px', textAlign: 'center', color: '#94a3b8' }}>
-                                                            -
-                                                        </TableCell>
-                                                        <TableCell sx={{ fontWeight: 500 }}>
-                                                            {player.name}
-                                                        </TableCell>
-                                                        <TableCell sx={{ width: '100px', textAlign: 'center', fontFamily: 'monospace', color: '#818cf8' }}>
-                                                            {player.average.toFixed(2)}
-                                                        </TableCell>
-                                                        <TableCell sx={{ width: '80px', textAlign: 'center', color: '#94a3b8' }}>
-                                                            1
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
+                        {/* Section 2: New Players (1 Tournament) */}
+                        {categorizedRankings.newPlayers.length > 0 && (
+                            <div className="ranking-section new-players">
+                                <div className="section-header">
+                                    <div className="badge new">New</div>
+                                    <h3>Single Tournament Players ({categorizedRankings.newPlayers.length})</h3>
                                 </div>
-                            )}
+                                <p className="section-desc">Players consolidating their initial rating (need 2+ games for rank)</p>
+                                <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'transparent' }}>
+                                    <Table aria-label="new players table">
+                                        <TableBody>
+                                            {categorizedRankings.newPlayers.map((player) => (
+                                                <TableRow
+                                                    key={player.name}
+                                                    sx={{
+                                                        '&:last-child td, &:last-child th': { border: 0 },
+                                                        '&:hover': { backgroundColor: 'var(--bg-surface-soft)' },
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    onClick={() => handleShowBreakdown(player)}
+                                                >
+                                                    <TableCell sx={{ ...tableCellBodyStyle, width: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                        -
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, fontWeight: 500 }}>
+                                                        {player.name}
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, width: '100px', textAlign: 'center', fontFamily: 'monospace', color: 'var(--accent-secondary)' }}>
+                                                        {player.average.toFixed(2)}
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, width: '80px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                        1
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </div>
+                        )}
 
-                            {/* Section 3: Never Played (0 Tournaments) */}
-                            {categorizedRankings.neverPlayed.length > 0 && (
-                                <div className="ranking-section never-played">
-                                    <div className="section-header">
-                                        <div className="badge inactive">Inactive</div>
-                                        <h3>No Tournament History ({categorizedRankings.neverPlayed.length})</h3>
-                                    </div>
-                                    <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'transparent' }}>
-                                        <Table size="small" aria-label="inactive players table">
-                                            <TableBody>
-                                                {categorizedRankings.neverPlayed.sort((a, b) => a.name.localeCompare(b.name)).map((player) => (
-                                                    <TableRow
-                                                        key={player.name}
-                                                        sx={{
-                                                            '&:last-child td, &:last-child th': { border: 0 },
-                                                            '&:hover': { backgroundColor: 'rgba(148, 163, 184, 0.05)' },
-                                                            cursor: 'pointer'
-                                                        }}
-                                                        onClick={() => handleShowBreakdown(player)}
-                                                    >
-                                                        <TableCell sx={{ width: '60px', textAlign: 'center', color: '#64748b' }}>
-                                                            -
-                                                        </TableCell>
-                                                        <TableCell sx={{ color: '#94a3b8' }}>
-                                                            {player.name}
-                                                        </TableCell>
-                                                        <TableCell sx={{ width: '100px', textAlign: 'center', color: '#64748b' }}>
-                                                            -
-                                                        </TableCell>
-                                                        <TableCell sx={{ width: '80px', textAlign: 'center', color: '#64748b' }}>
-                                                            0
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
+                        {/* Section 3: Never Played (0 Tournaments) */}
+                        {categorizedRankings.neverPlayed.length > 0 && (
+                            <div className="ranking-section never-played">
+                                <div className="section-header">
+                                    <div className="badge inactive">Inactive</div>
+                                    <h3>No Tournament History ({categorizedRankings.neverPlayed.length})</h3>
                                 </div>
-                            )}
+                                <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'transparent' }}>
+                                    <Table aria-label="inactive players table">
+                                        <TableBody>
+                                            {categorizedRankings.neverPlayed.sort((a, b) => a.name.localeCompare(b.name)).map((player) => (
+                                                <TableRow
+                                                    key={player.name}
+                                                    sx={{
+                                                        '&:last-child td, &:last-child th': { border: 0 },
+                                                        '&:hover': { backgroundColor: 'var(--bg-surface-soft)' },
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    onClick={() => handleShowBreakdown(player)}
+                                                >
+                                                    <TableCell sx={{ ...tableCellBodyStyle, width: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                        -
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, color: 'var(--text-secondary)' }}>
+                                                        {player.name}
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, width: '100px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                        -
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, width: '80px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                        0
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </div>
+                        )}
 
-                            {Object.values(categorizedRankings).every(arr => arr.length === 0) && (
-                                <div className="no-results">
-                                    No players found matching "{searchTerm}"
-                                </div>
-                            )}
-                        </div>
-                    </ThemeProvider>
+                        {Object.values(categorizedRankings).every(arr => arr.length === 0) && (
+                            <div className="no-results">
+                                No players found matching "{searchTerm}"
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Rank Breakdown Modal */}

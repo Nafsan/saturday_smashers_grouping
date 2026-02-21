@@ -50,40 +50,40 @@ const PlayerStatsModal = ({ open, onClose }) => {
     const customSelectStyles = {
         control: (provided, state) => ({
             ...provided,
-            backgroundColor: '#1e293b',
-            borderColor: state.isFocused ? '#38bdf8' : 'rgba(255, 255, 255, 0.1)',
-            boxShadow: state.isFocused ? '0 0 0 1px #38bdf8' : 'none',
+            backgroundColor: 'var(--bg-card)',
+            borderColor: state.isFocused ? 'var(--accent-primary)' : 'var(--border-main)',
+            boxShadow: state.isFocused ? '0 0 0 1px var(--accent-primary)' : 'none',
             '&:hover': {
-                borderColor: '#38bdf8'
+                borderColor: 'var(--accent-primary)'
             },
             padding: '4px'
         }),
         menu: (provided) => ({
             ...provided,
-            backgroundColor: '#1e293b',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-main)',
             zIndex: 50
         }),
         option: (provided, state) => ({
             ...provided,
-            backgroundColor: state.isSelected ? '#38bdf8' : state.isFocused ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
-            color: state.isSelected ? '#fff' : '#f8fafc',
+            backgroundColor: state.isSelected ? 'var(--accent-primary)' : state.isFocused ? 'var(--border-subtle)' : 'transparent',
+            color: state.isSelected ? '#fff' : 'var(--text-primary)',
             cursor: 'pointer',
             ':active': {
-                backgroundColor: '#38bdf8'
+                backgroundColor: 'var(--accent-primary)'
             }
         }),
         singleValue: (provided) => ({
             ...provided,
-            color: '#f8fafc'
+            color: 'var(--text-primary)'
         }),
         placeholder: (provided) => ({
             ...provided,
-            color: '#94a3b8'
+            color: 'var(--text-muted)'
         }),
         input: (provided) => ({
             ...provided,
-            color: '#f8fafc'
+            color: 'var(--text-primary)'
         })
     };
 
@@ -436,12 +436,12 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                         <h3><TrendingUp size={20} /> Achievement Distribution</h3>
                                         <ResponsiveContainer width="100%" height={300}>
                                             <BarChart data={achievementChartData}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} angle={-45} textAnchor="end" height={100} />
-                                                <YAxis stroke="#94a3b8" />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-main)" />
+                                                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={11} angle={-45} textAnchor="end" height={100} />
+                                                <YAxis stroke="var(--text-muted)" />
                                                 <Tooltip
-                                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
-                                                    itemStyle={{ color: '#f8fafc' }}
+                                                    contentStyle={{ backgroundColor: 'var(--bg-surface-elevated)', border: '1px solid var(--border-main)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                                                    itemStyle={{ color: 'var(--text-primary)' }}
                                                 />
                                                 <Bar dataKey="count" />
                                             </BarChart>
@@ -469,8 +469,8 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                                     ))}
                                                 </Pie>
                                                 <Tooltip
-                                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
-                                                    itemStyle={{ color: '#f8fafc' }}
+                                                    contentStyle={{ backgroundColor: 'var(--bg-surface-elevated)', border: '1px solid var(--border-main)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                                                    itemStyle={{ color: 'var(--text-primary)' }}
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
@@ -486,13 +486,13 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                                 value={timeRange}
                                                 onChange={(e) => setTimeRange(e.target.value)}
                                                 style={{
-                                                    backgroundColor: '#1e293b',
-                                                    color: '#f8fafc',
-                                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                    backgroundColor: 'var(--bg-card)',
+                                                    color: 'var(--text-primary)',
+                                                    border: '1px solid var(--border-main)',
                                                     borderRadius: '6px',
-                                                    padding: '0.5rem 1rem',
+                                                    padding: '0.4rem 0.8rem',
                                                     cursor: 'pointer',
-                                                    fontSize: '0.875rem'
+                                                    fontSize: '0.85rem'
                                                 }}
                                             >
                                                 <option value="10">Last 10</option>
@@ -502,15 +502,15 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                         </div>
                                         <ResponsiveContainer width="100%" height={300}>
                                             <LineChart data={performanceTrendData}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                                <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} />
-                                                <YAxis stroke="#94a3b8" reversed domain={[1, 8]} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-main)" />
+                                                <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} />
+                                                <YAxis stroke="var(--text-muted)" reversed domain={[1, 8]} />
                                                 <Tooltip
-                                                    contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
-                                                    itemStyle={{ color: '#f8fafc' }}
+                                                    contentStyle={{ backgroundColor: 'var(--bg-surface-elevated)', border: '1px solid var(--border-main)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                                                    itemStyle={{ color: 'var(--text-primary)' }}
                                                 />
                                                 <Legend />
-                                                <Line type="monotone" dataKey="rating" stroke="#38bdf8" strokeWidth={2} dot={{ r: 4 }} name="Rating" />
+                                                <Line type="monotone" dataKey="rating" stroke="var(--accent-primary)" strokeWidth={2} dot={{ r: 4 }} name="Rating" />
                                             </LineChart>
                                         </ResponsiveContainer>
                                     </div>

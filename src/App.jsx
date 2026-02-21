@@ -22,7 +22,7 @@ const lightTheme = createTheme({
             main: '#0284c7', // --accent-primary (light)
         },
         secondary: {
-            main: '#6366f1', // --accent-secondary (light)
+            main: '#4f46e5', // --accent-secondary (light)
         },
         background: {
             default: '#f8fafc', // --bg-primary (light)
@@ -40,11 +40,30 @@ const lightTheme = createTheme({
         fontFamily: "'Inter', system-ui, sans-serif",
     },
     components: {
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    backgroundImage: 'none',
+                    borderRadius: '12px',
+                }
+            }
+        },
         MuiDialog: {
             styleOverrides: {
                 paper: {
                     backgroundColor: '#ffffff',
                     backgroundImage: 'none',
+                    borderRadius: '16px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                }
+            }
+        },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 600,
                 }
             }
         }
@@ -76,11 +95,31 @@ const darkTheme = createTheme({
         fontFamily: "'Inter', system-ui, sans-serif",
     },
     components: {
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    backgroundImage: 'none',
+                    borderRadius: '12px',
+                }
+            }
+        },
         MuiDialog: {
             styleOverrides: {
                 paper: {
-                    backgroundColor: '#334155', // --bg-card for dialogs to stand out
+                    backgroundColor: '#1e293b',
                     backgroundImage: 'none',
+                    borderRadius: '16px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                }
+            }
+        },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 600,
                 }
             }
         }
@@ -89,7 +128,7 @@ const darkTheme = createTheme({
 
 const MainContent = () => {
     const dispatch = useDispatch();
-    const { isGroupsGenerated, status, theme } = useSelector(state => state.app);
+    const { isGroupsGenerated, status } = useSelector(state => state.app);
     const hasFetched = useRef(false);
 
     useEffect(() => {
@@ -101,11 +140,6 @@ const MainContent = () => {
             });
         }
     }, [status, dispatch]);
-
-    // Apply theme to document
-    useEffect(() => {
-        document.documentElement.setAttribute('data-theme', theme);
-    }, [theme]);
 
     return (
         <div className="container">
@@ -134,6 +168,11 @@ function App() {
 function AppWithTheme({ basename }) {
     const theme = useSelector(state => state.app.theme);
     const currentTheme = theme === 'light' ? lightTheme : darkTheme;
+
+    // Apply theme to document
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+    }, [theme]);
 
     return (
         <ThemeProvider theme={currentTheme}>

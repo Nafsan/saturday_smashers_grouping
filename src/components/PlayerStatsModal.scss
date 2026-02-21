@@ -4,7 +4,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
+    background: var(--overlay-dark, rgba(0, 0, 0, 0.8));
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
@@ -14,7 +14,7 @@
 }
 
 .player-stats-modal {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background: var(--bg-card);
     border-radius: 16px;
     width: 90%;
     max-width: 1200px;
@@ -23,7 +23,7 @@
     display: flex;
     flex-direction: column;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-main);
 
     @media (max-width: 768px) {
         width: 95%;
@@ -35,13 +35,13 @@
         justify-content: space-between;
         align-items: center;
         padding: 1.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(56, 189, 248, 0.05);
+        border-bottom: 1px solid var(--border-subtle);
+        background: var(--bg-surface-soft);
 
         h2 {
             margin: 0;
             font-size: 1.5rem;
-            color: #f8fafc;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: 0.75rem;
@@ -50,15 +50,15 @@
         .close-btn {
             background: none;
             border: none;
-            color: #94a3b8;
+            color: var(--text-secondary);
             cursor: pointer;
             padding: 0.5rem;
             border-radius: 8px;
             transition: all 0.2s ease;
 
             &:hover {
-                background: rgba(255, 255, 255, 0.1);
-                color: #f8fafc;
+                background: var(--bg-surface-elevated);
+                color: var(--text-primary);
             }
         }
     }
@@ -70,7 +70,7 @@
         label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #94a3b8;
+            color: var(--text-secondary);
             font-weight: 500;
             font-size: 0.875rem;
             text-transform: uppercase;
@@ -88,7 +88,7 @@
         }
 
         &::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--bg-surface-soft);
             border-radius: 4px;
         }
 
@@ -109,14 +109,14 @@
             align-items: center;
             justify-content: center;
             padding: 4rem 2rem;
-            color: #94a3b8;
+            color: var(--text-secondary);
             text-align: center;
 
             .spinner {
                 width: 40px;
                 height: 40px;
-                border: 3px solid rgba(56, 189, 248, 0.1);
-                border-top-color: #38bdf8;
+                border: 3px solid var(--border-subtle);
+                border-top-color: var(--accent-primary);
                 border-radius: 50%;
                 animation: spin 1s linear infinite;
                 margin-bottom: 1rem;
@@ -139,8 +139,8 @@
         }
 
         .player-category-card {
-            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
-            border: 1px solid rgba(251, 191, 36, 0.3);
+            background: var(--bg-surface-soft);
+            border: 1px solid var(--accent-warning);
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
@@ -153,14 +153,14 @@
 
                 h3 {
                     margin: 0;
-                    color: #fbbf24;
+                    color: var(--accent-warning);
                     font-size: 1.25rem;
                 }
             }
 
             .motivational-statement {
                 margin: 0;
-                color: #f8fafc;
+                color: var(--text-primary);
                 font-size: 1.125rem;
                 line-height: 1.6;
                 font-style: italic;
@@ -174,8 +174,8 @@
             margin-bottom: 1.5rem;
 
             .stat-card {
-                background: rgba(56, 189, 248, 0.05);
-                border: 1px solid rgba(56, 189, 248, 0.2);
+                background: var(--bg-surface-soft);
+                border: 1px solid var(--border-main);
                 border-radius: 12px;
                 padding: 1.25rem;
                 display: flex;
@@ -184,8 +184,8 @@
                 transition: all 0.2s ease;
 
                 &:hover {
-                    background: rgba(56, 189, 248, 0.1);
-                    border-color: rgba(56, 189, 248, 0.4);
+                    background: var(--bg-surface-elevated);
+                    border-color: var(--accent-primary);
                     transform: translateY(-2px);
                 }
 
@@ -202,7 +202,7 @@
 
                 .stat-label {
                     font-size: 0.875rem;
-                    color: #94a3b8;
+                    color: var(--text-secondary);
                     margin-top: 0.25rem;
                 }
             }
@@ -212,7 +212,7 @@
             margin-bottom: 2rem;
 
             h3 {
-                color: #f8fafc;
+                color: var(--text-primary);
                 margin-bottom: 1rem;
                 display: flex;
                 align-items: center;
@@ -222,17 +222,17 @@
             .achievements-table {
                 width: 100%;
                 border-collapse: collapse;
-                background: rgba(255, 255, 255, 0.02);
+                background: var(--bg-surface-soft);
                 border-radius: 8px;
                 overflow: hidden;
 
                 thead {
-                    background: rgba(56, 189, 248, 0.1);
+                    background: var(--bg-surface-elevated);
 
                     th {
                         padding: 1rem;
                         text-align: left;
-                        color: #94a3b8;
+                        color: var(--text-secondary);
                         font-weight: 600;
                         text-transform: uppercase;
                         font-size: 0.75rem;
@@ -242,11 +242,11 @@
 
                 tbody {
                     tr {
-                        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                        border-bottom: 1px solid var(--border-subtle);
                         transition: background 0.2s ease;
 
                         &:hover {
-                            background: rgba(56, 189, 248, 0.05);
+                            background: var(--bg-surface-elevated);
                         }
 
                         &.plate-section {
@@ -255,7 +255,7 @@
 
                         td {
                             padding: 0.875rem 1rem;
-                            color: #f8fafc;
+                            color: var(--text-primary);
 
                             &:first-child {
                                 font-weight: 500;
@@ -264,7 +264,7 @@
                             &:last-child {
                                 text-align: left;
                                 font-weight: bold;
-                                color: #38bdf8;
+                                color: var(--accent-primary);
                                 font-size: 1.125rem;
                             }
                         }
@@ -283,8 +283,8 @@
             }
 
             .chart-container {
-                background: rgba(255, 255, 255, 0.02);
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                background: var(--bg-surface-soft);
+                border: 1px solid var(--border-main);
                 border-radius: 12px;
                 padding: 1.5rem;
 
@@ -293,7 +293,7 @@
                 }
 
                 h3 {
-                    color: #f8fafc;
+                    color: var(--text-primary);
                     margin: 0 0 1rem 0;
                     font-size: 1rem;
                     display: flex;

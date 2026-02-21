@@ -58,61 +58,61 @@ const AnalyticsDashboard = ({ onEdit }) => {
         }
     };
 
-    // Custom styles for react-select to match dark theme
+    // Custom styles for react-select to match theme
     const customSelectStyles = {
         control: (provided, state) => ({
             ...provided,
-            backgroundColor: '#1e293b', // var(--bg-card)
-            borderColor: state.isFocused ? '#38bdf8' : 'rgba(255, 255, 255, 0.1)',
-            boxShadow: state.isFocused ? '0 0 0 1px #38bdf8' : 'none',
+            backgroundColor: 'var(--bg-card)',
+            borderColor: state.isFocused ? 'var(--accent-primary)' : 'var(--border-main)',
+            boxShadow: state.isFocused ? '0 0 0 1px var(--accent-primary)' : 'none',
             '&:hover': {
-                borderColor: '#38bdf8'
+                borderColor: 'var(--accent-primary)'
             },
             padding: '2px'
         }),
         menu: (provided) => ({
             ...provided,
-            backgroundColor: '#1e293b',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-main)',
             zIndex: 50
         }),
         option: (provided, state) => ({
             ...provided,
-            backgroundColor: state.isSelected ? '#38bdf8' : state.isFocused ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
-            color: state.isSelected ? '#fff' : '#f8fafc',
+            backgroundColor: state.isSelected ? 'var(--accent-primary)' : state.isFocused ? 'var(--border-subtle)' : 'transparent',
+            color: state.isSelected ? '#fff' : 'var(--text-primary)',
             cursor: 'pointer',
             ':active': {
-                backgroundColor: '#38bdf8'
+                backgroundColor: 'var(--accent-primary)'
             }
         }),
         multiValue: (provided) => ({
             ...provided,
-            backgroundColor: 'rgba(56, 189, 248, 0.15)',
+            backgroundColor: 'var(--border-subtle)',
             borderRadius: '4px'
         }),
         multiValueLabel: (provided) => ({
             ...provided,
-            color: '#38bdf8',
+            color: 'var(--accent-primary)',
         }),
         multiValueRemove: (provided) => ({
             ...provided,
-            color: '#38bdf8',
+            color: 'var(--accent-primary)',
             ':hover': {
-                backgroundColor: '#38bdf8',
+                backgroundColor: 'var(--accent-primary)',
                 color: 'white',
             },
         }),
         input: (provided) => ({
             ...provided,
-            color: '#f8fafc'
+            color: 'var(--text-primary)'
         }),
         singleValue: (provided) => ({
             ...provided,
-            color: '#f8fafc'
+            color: 'var(--text-primary)'
         }),
         placeholder: (provided) => ({
             ...provided,
-            color: '#94a3b8'
+            color: 'var(--text-muted)'
         })
     };
 
@@ -205,14 +205,15 @@ const AnalyticsDashboard = ({ onEdit }) => {
                 <select
                     value={timeRange}
                     onChange={(e) => setTimeRange(e.target.value)}
+                    className="time-range-select"
                     style={{
-                        backgroundColor: '#1e293b',
-                        color: '#f8fafc',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        backgroundColor: 'var(--bg-card)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-main)',
                         borderRadius: '6px',
-                        padding: '0.5rem 1rem',
+                        padding: '0.4rem 0.8rem',
                         cursor: 'pointer',
-                        fontSize: '0.875rem'
+                        fontSize: '0.85rem'
                     }}
                 >
                     <option value="10">Last 10</option>
@@ -240,12 +241,12 @@ const AnalyticsDashboard = ({ onEdit }) => {
                 <div className="chart-container">
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={graphData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                            <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickFormatter={(d) => d.substring(5)} />
-                            <YAxis stroke="#94a3b8" reversed={true} domain={[1, 'auto']} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-main)" />
+                            <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} tickFormatter={(d) => d.substring(5)} />
+                            <YAxis stroke="var(--text-muted)" reversed={true} domain={[1, 'auto']} />
                             <Tooltip
-                                contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
-                                itemStyle={{ color: '#f8fafc' }}
+                                contentStyle={{ backgroundColor: 'var(--bg-surface-elevated)', border: '1px solid var(--border-main)', borderRadius: '8px', color: 'var(--text-primary)' }}
+                                itemStyle={{ color: 'var(--text-primary)' }}
                             />
                             <Legend />
                             {selectedGraphPlayers.map((player, index) => (
@@ -284,7 +285,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                         {onEdit && (
                                             <button
                                                 onClick={() => onEdit(t)}
-                                                style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', padding: '4px' }}
+                                                style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '4px' }}
                                                 title="View Tournament Details"
                                             >
                                                 <FileText size={20} />
@@ -304,7 +305,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                 <div className="ranks-preview">
                                     {t.is_official === false ? (
                                         <span style={{
-                                            color: '#38bdf8',
+                                            color: 'var(--accent-primary)',
                                             fontStyle: 'italic',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -410,7 +411,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
                     }
                 }}
             >
-                <DialogTitle sx={{ background: 'linear-gradient(135deg, #FF0000 0%, #CC0000 100%)', color: 'white' }}>
+                <DialogTitle sx={{ background: 'var(--gradient-primary, linear-gradient(135deg, #FF0000 0%, #CC0000 100%))', color: 'white' }}>
                     📺 Tournament Video
                 </DialogTitle>
                 <DialogContent sx={{ mt: 2, minHeight: '400px' }}>

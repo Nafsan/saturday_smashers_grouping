@@ -1,7 +1,8 @@
 .tournament-fixture-modal {
     .MuiDialog-paper {
-        background-color: #1e293b;
-        color: white;
+        background-color: var(--bg-card);
+        color: var(--text-primary);
+        border: 1px solid var(--border-main);
     }
 
     .player-list {
@@ -15,22 +16,22 @@
         }
 
         &::-webkit-scrollbar-track {
-            background: #0f172a;
+            background: var(--bg-primary);
             border-radius: 4px;
         }
 
         &::-webkit-scrollbar-thumb {
-            background: #334155;
+            background: var(--border-main);
             border-radius: 4px;
 
             &:hover {
-                background: #475569;
+                background: var(--border-subtle);
             }
         }
 
         .player-item {
-            background: #0f172a;
-            border: 1px solid #334155;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-main);
             border-radius: 8px;
             padding: 0.75rem 1rem;
             margin-bottom: 0.5rem;
@@ -38,25 +39,25 @@
             transition: all 0.2s ease;
 
             &:hover {
-                background: #1e293b;
-                border-color: #475569;
+                background: var(--bg-surface-soft);
+                border-color: var(--border-subtle);
             }
 
             &.selected {
-                background: rgba(56, 189, 248, 0.1);
-                border-color: #38bdf8;
+                background: rgba(56, 189, 248, 0.1); // Keep accent for selection
+                border-color: var(--accent-primary);
             }
 
             &.temporary {
-                border-left: 3px solid #818cf8;
+                border-left: 3px solid var(--accent-secondary);
             }
 
             &.no-history {
-                border-left: 3px solid #f59e0b;
+                border-left: 3px solid var(--accent-warning);
             }
 
             .player-rank {
-                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                background: var(--gradient-primary);
                 color: white;
                 padding: 0.25rem 0.75rem;
                 border-radius: 12px;
@@ -69,27 +70,26 @@
             .player-stats {
                 display: flex;
                 align-items: center;
+                gap: 0.5rem;
             }
 
             .temp-badge {
                 display: inline-block;
-                background: #818cf8;
+                background: var(--accent-secondary);
                 color: white;
                 font-size: 0.625rem;
                 padding: 0.125rem 0.5rem;
                 border-radius: 4px;
-                margin-left: 0.5rem;
                 font-weight: 600;
             }
 
             .no-history-badge {
                 display: inline-block;
-                background: #f59e0b;
+                background: var(--accent-warning);
                 color: white;
                 font-size: 0.625rem;
                 padding: 0.125rem 0.5rem;
                 border-radius: 4px;
-                margin-left: 0.5rem;
                 font-weight: 600;
             }
 
@@ -98,10 +98,10 @@
             }
 
             .MuiCheckbox-root {
-                color: #64748b;
+                color: var(--text-muted);
 
                 &.Mui-checked {
-                    color: #38bdf8;
+                    color: var(--accent-primary);
                 }
             }
         }
@@ -109,38 +109,39 @@
 
     .MuiTextField-root {
         .MuiOutlinedInput-root {
-            color: white;
+            color: var(--text-primary);
+            background: var(--bg-surface-soft);
 
             fieldset {
-                border-color: #334155;
+                border-color: var(--border-main);
             }
 
             &:hover fieldset {
-                border-color: #475569;
+                border-color: var(--border-subtle);
             }
 
             &.Mui-focused fieldset {
-                border-color: #38bdf8;
+                border-color: var(--accent-primary);
             }
         }
 
         .MuiInputLabel-root {
-            color: #94a3b8;
+            color: var(--text-muted);
 
             &.Mui-focused {
-                color: #38bdf8;
+                color: var(--accent-primary);
             }
         }
 
         .MuiInputAdornment-root {
-            color: #94a3b8;
+            color: var(--text-muted);
         }
     }
 
     .batch-paste-section {
         .MuiTextField-root {
             textarea {
-                color: white;
+                color: var(--text-primary);
             }
         }
     }

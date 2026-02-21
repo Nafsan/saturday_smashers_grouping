@@ -42,6 +42,8 @@
   --glass-border: rgba(255, 255, 255, 0.1);
 
   --gradient-primary: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  --gradient-warning: linear-gradient(135deg, #f59e0b, #d97706);
+  --gradient-success: linear-gradient(135deg, #22c55e, #16a34a);
   --gradient-surface: linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, transparent 100%);
 
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;

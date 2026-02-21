@@ -105,12 +105,12 @@ const GroupDisplay = () => {
 
     return (
         <div className="group-display">
-            <ThemeToggle />
             <div className="actions-bar">
                 <button className="icon-btn" onClick={handleBackClick}>
                     <ArrowLeft size={20} /> Back
                 </button>
                 <div className="right-actions">
+                    <ThemeToggle />
                     <button className="icon-btn" onClick={() => dispatch(generateGroupsAction())}>
                         <RefreshCw size={20} /> Shuffle
                     </button>
@@ -134,32 +134,39 @@ const GroupDisplay = () => {
                             'aria-labelledby': 'export-button',
                         }}
                         PaperProps={{
-                            style: {
-                                backgroundColor: '#1e293b',
-                                color: '#f8fafc',
-                                border: '1px solid #334155',
-                            },
+                            sx: {
+                                backgroundColor: 'var(--bg-card)',
+                                color: 'var(--text-primary)',
+                                border: '1px solid var(--border-main)',
+                                boxShadow: 'var(--shadow-lg)',
+                                '& .MuiMenuItem-root': {
+                                    gap: 1,
+                                    '&:hover': {
+                                        backgroundColor: 'var(--bg-surface-soft)',
+                                    }
+                                }
+                            }
                         }}
                     >
                         <MenuItem onClick={() => handleExport('groups')}>
-                            <ListItemIcon>
-                                <FileImage size={18} color="#f8fafc" />
+                            <ListItemIcon sx={{ minWidth: 'auto', color: 'inherit' }}>
+                                <FileImage size={18} />
                             </ListItemIcon>
                             <ListItemText>Export Groups Only</ListItemText>
                         </MenuItem>
 
                         {(fixtures.cup.length > 0 || fixtures.plate.length > 0) && (
                             <MenuItem onClick={() => handleExport('bracket')}>
-                                <ListItemIcon>
-                                    <Trophy size={18} color="#f8fafc" />
+                                <ListItemIcon sx={{ minWidth: 'auto', color: 'inherit' }}>
+                                    <Trophy size={18} />
                                 </ListItemIcon>
                                 <ListItemText>Export Bracket Only</ListItemText>
                             </MenuItem>
                         )}
 
                         <MenuItem onClick={() => handleExport('all')}>
-                            <ListItemIcon>
-                                <Layers size={18} color="#f8fafc" />
+                            <ListItemIcon sx={{ minWidth: 'auto', color: 'inherit' }}>
+                                <Layers size={18} />
                             </ListItemIcon>
                             <ListItemText>Export Full</ListItemText>
                         </MenuItem>

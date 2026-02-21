@@ -257,7 +257,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                             position: 'absolute',
                             right: 8,
                             top: 8,
-                            color: (theme) => theme.palette.grey[500],
+                            color: 'var(--text-secondary)',
                         }}
                     >
                         <X />
@@ -294,14 +294,14 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                             variant="outlined"
                             sx={{
                                 justifyContent: 'space-between',
-                                borderColor: 'rgba(56, 189, 248, 0.5)',
-                                color: '#38bdf8',
-                                background: 'rgba(56, 189, 248, 0.08)',
+                                borderColor: 'var(--border-subtle)',
+                                color: 'var(--accent-primary)',
+                                background: 'var(--bg-surface-soft)',
                                 fontWeight: 600,
                                 '&:hover': {
-                                    borderColor: '#38bdf8',
-                                    background: 'rgba(56, 189, 248, 0.15)',
-                                    color: '#7dd3fc'
+                                    borderColor: 'var(--accent-primary)',
+                                    background: 'var(--bg-card)',
+                                    color: 'var(--accent-primary)'
                                 }
                             }}
                         >
@@ -350,9 +350,9 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                                                 severity="success"
                                                 sx={{
                                                     mb: 1,
-                                                    bgcolor: 'rgba(74, 222, 128, 0.1)',
-                                                    color: '#4ade80',
-                                                    '& .MuiAlert-icon': { color: '#4ade80' }
+                                                    bgcolor: 'var(--bg-surface-soft)',
+                                                    color: 'var(--accent-success)',
+                                                    '& .MuiAlert-icon': { color: 'var(--accent-success)' }
                                                 }}
                                             >
                                                 Successfully selected {matchedCount} new players.
@@ -364,9 +364,9 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                                                 icon={<AlertCircle fontSize="inherit" />}
                                                 severity="error"
                                                 sx={{
-                                                    bgcolor: 'rgba(248, 113, 113, 0.1)',
-                                                    color: '#f87171',
-                                                    '& .MuiAlert-icon': { color: '#f87171' }
+                                                    bgcolor: 'var(--bg-surface-soft)',
+                                                    color: 'var(--accent-error)',
+                                                    '& .MuiAlert-icon': { color: 'var(--accent-error)' }
                                                 }}
                                             >
                                                 <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
@@ -379,9 +379,10 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                                                             label={name}
                                                             size="small"
                                                             sx={{
-                                                                bgcolor: 'rgba(248, 113, 113, 0.2)',
-                                                                color: '#fca5a5',
-                                                                height: '24px'
+                                                                bgcolor: 'var(--bg-card)',
+                                                                color: 'var(--accent-error)',
+                                                                height: '24px',
+                                                                border: '1px solid var(--border-main)'
                                                             }}
                                                         />
                                                     ))}
@@ -413,7 +414,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
 
                     {/* Player List */}
                     <Box sx={{ mb: 2 }}>
-                        <Typography variant="subtitle2" sx={{ mb: 1, color: '#94a3b8' }}>
+                        <Typography variant="subtitle2" sx={{ mb: 1, color: 'var(--text-secondary)' }}>
                             Selected: {selectedPlayers.length} / {filteredPlayers.length} players
                         </Typography>
                     </Box>
@@ -455,10 +456,10 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                                                     </Typography>
                                                 </Box>
                                                 <Box className="player-stats">
-                                                    <Typography variant="caption" sx={{ color: ranking?.hasNoHistory ? '#f59e0b' : '#94a3b8' }}>
+                                                    <Typography variant="caption" sx={{ color: ranking?.hasNoHistory ? 'var(--accent-warning)' : 'var(--text-secondary)' }}>
                                                         Avg: {ranking?.average || '-'}
                                                     </Typography>
-                                                    <Typography variant="caption" sx={{ color: '#64748b', ml: 1 }}>
+                                                    <Typography variant="caption" sx={{ color: 'var(--text-muted)', ml: 1 }}>
                                                         ({ranking?.playedCount || 0} games)
                                                     </Typography>
                                                 </Box>
@@ -481,9 +482,20 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                         variant="contained"
                         disabled={selectedPlayers.length < 2}
                         sx={{
-                            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                            padding: '0.5rem 1.5rem',
-                            fontWeight: 'bold'
+                            background: 'var(--gradient-primary)',
+                            color: '#fff',
+                            padding: '0.6rem 2rem',
+                            fontWeight: 'bold',
+                            boxShadow: 'var(--shadow-md)',
+                            '&:hover': {
+                                background: 'var(--gradient-primary)',
+                                filter: 'brightness(1.1)'
+                            },
+                            '&.Mui-disabled': {
+                                opacity: 0.5,
+                                background: 'var(--bg-surface-soft)',
+                                color: 'var(--text-muted)'
+                            }
                         }}
                     >
                         Generate Groups ({selectedPlayers.length} players)
@@ -508,7 +520,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
             >
                 <DialogTitle>Assign / Update Initial Ratings</DialogTitle>
                 <DialogContent dividers>
-                    <Typography variant="body2" sx={{ mb: 3, color: '#94a3b8' }}>
+                    <Typography variant="body2" sx={{ mb: 3, color: 'var(--text-secondary)' }}>
                         Please assign ranks (1-20) where needed to help with balanced group generation.
                     </Typography>
 
@@ -516,7 +528,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                         {/* Section 1: New Players (Mandatory) */}
                         {pendingUnratedPlayers.length > 0 && (
                             <Box>
-                                <Typography variant="subtitle2" sx={{ mb: 1, color: '#f59e0b', fontWeight: 'bold' }}>
+                                <Typography variant="subtitle2" sx={{ mb: 1, color: 'var(--accent-warning)', fontWeight: 'bold' }}>
                                     New Players (Rating Required)
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -542,10 +554,10 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                         {/* Section 2: Single Tournament Players (Optional) */}
                         {pendingSingleTournamentPlayers.length > 0 && (
                             <Box>
-                                <Typography variant="subtitle2" sx={{ mb: 1, color: '#818cf8', fontWeight: 'bold' }}>
+                                <Typography variant="subtitle2" sx={{ mb: 1, color: 'var(--accent-secondary)', fontWeight: 'bold' }}>
                                     Single Tournament Players (Optional Update)
                                 </Typography>
-                                <Typography variant="caption" sx={{ display: 'block', mb: 2, color: '#64748b' }}>
+                                <Typography variant="caption" sx={{ display: 'block', mb: 2, color: 'var(--text-muted)' }}>
                                     These players have a tentative rating. Enter a value to override it for this tournament.
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -555,7 +567,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                                             <Box key={player} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                                 <Typography sx={{ flex: 1, fontWeight: 500 }}>
                                                     {player}
-                                                    <Typography component="span" variant="caption" sx={{ ml: 1, color: '#94a3b8' }}>
+                                                    <Typography component="span" variant="caption" sx={{ ml: 1, color: 'var(--text-secondary)' }}>
                                                         (Current: {currentAvg})
                                                     </Typography>
                                                 </Typography>
@@ -585,8 +597,14 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                         onClick={handleConfirmRatings}
                         variant="contained"
                         sx={{
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                            fontWeight: 'bold'
+                            background: 'var(--gradient-warning)',
+                            color: '#fff',
+                            fontWeight: 'bold',
+                            boxShadow: 'var(--shadow-md)',
+                            '&:hover': {
+                                background: 'var(--gradient-warning)',
+                                filter: 'brightness(1.1)'
+                            }
                         }}
                     >
                         Confirm & Generate

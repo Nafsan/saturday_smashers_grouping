@@ -97,7 +97,7 @@ const Footer = () => {
                                     <Box className="legal-links-v2">
                                         <Box className="legal-btn" onClick={() => setOpenPrivacy(true)}><Shield size={14} /> Privacy Policy</Box>
                                         <Box className="legal-btn" onClick={() => setOpenTerms(true)}><FileText size={14} /> Terms of Service</Box>
-                                        <Link href="https://github.com/Nafsan" target="_blank" className="gh-link">
+                                        <Link href="https://github.com/Nafsan/saturday_smashers_grouping" target="_blank" className="gh-link">
                                             <Github size={14} /> Source Code <ExternalLink size={10} />
                                         </Link>
                                     </Box>

@@ -13,6 +13,7 @@ import NationalRanking from './components/NationalRanking';
 import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { ToastProvider } from './context/ToastContext';
 import './styles/global.scss';
+import Footer from './components/Footer';
 
 // Create custom themes matching the global SCSS variables
 const lightTheme = createTheme({
@@ -186,6 +187,7 @@ function AppWithTheme({ basename }) {
                         <Route path="/gtt-elo-calculator" element={<GttEloCalculator />} />
                         <Route path="/national-ranking" element={<NationalRanking />} />
                     </Routes>
+                    <Footer />
                 </HashRouter>
             </ToastProvider>
         </ThemeProvider>

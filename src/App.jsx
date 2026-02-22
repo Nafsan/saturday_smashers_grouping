@@ -180,14 +180,18 @@ function AppWithTheme({ basename }) {
             <CssBaseline />
             <ToastProvider>
                 <HashRouter>
-                    <Routes>
-                        <Route path="/" element={<MainContent />} />
-                        <Route path="/fund" element={<FundManagement />} />
-                        <Route path="/fund/admin" element={<AdminConsole />} />
-                        <Route path="/gtt-elo-calculator" element={<GttEloCalculator />} />
-                        <Route path="/national-ranking" element={<NationalRanking />} />
-                    </Routes>
-                    <Footer />
+                    <div className="page-wrapper">
+                        <div className="main-content">
+                            <Routes>
+                                <Route path="/" element={<MainContent />} />
+                                <Route path="/fund" element={<FundManagement />} />
+                                <Route path="/fund/admin" element={<AdminConsole />} />
+                                <Route path="/gtt-elo-calculator" element={<GttEloCalculator />} />
+                                <Route path="/national-ranking" element={<NationalRanking />} />
+                            </Routes>
+                        </div>
+                        <Footer />
+                    </div>
                 </HashRouter>
             </ToastProvider>
         </ThemeProvider>

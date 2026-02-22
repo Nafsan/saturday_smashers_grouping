@@ -103,6 +103,12 @@
   padding: 0;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   font-family: var(--font-family);
   background-color: var(--bg-primary);
@@ -115,6 +121,16 @@ button {
   cursor: pointer;
   border: none;
   font-family: inherit;
+}
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  
+  .main-content {
+    flex: 1;
+  }
 }
 
 .container {

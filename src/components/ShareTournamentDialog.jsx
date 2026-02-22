@@ -130,14 +130,24 @@ const ShareTournamentDialog = ({ open, onClose, tournament }) => {
     };
 
     const generateImage = async () => {
-        if (!imagePreviewRef.current) return;
+        const node = document.getElementById('sharing-image-content');
+        if (!node) return;
+
         setIsGenerating(true);
         try {
             // Give time for any re-renders
-            await new Promise(r => setTimeout(r, 100));
-            const dataUrl = await toPng(document.getElementById('sharing-image-content'), {
+            await new Promise(r => setTimeout(r, 200));
+
+            // Generate image with controlled options
+            const dataUrl = await toPng(node, {
                 quality: 1,
-                pixelRatio: 2, // Higher resolution
+                pixelRatio: 3, // Even higher resolution for ultra-sharp text
+                width: 600, // Force base width
+                style: {
+                    transform: 'scale(1)',
+                    transformOrigin: 'top left'
+                },
+                cacheBust: true,
             });
             return dataUrl;
         } catch (err) {

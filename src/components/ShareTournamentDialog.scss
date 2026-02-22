@@ -1,0 +1,114 @@
+.share-dialog {
+    .MuiDialog-paper {
+        background-color: var(--bg-card);
+        color: var(--text-primary);
+        border: 1px solid var(--border-main);
+    }
+
+    .share-layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+
+        @media (max-width: 900px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .share-controls {
+        display: flex;
+        flex-direction: column;
+
+        .avatar-upload-container {
+            position: relative;
+
+            .avatar-preview-mini {
+                margin-top: 1rem;
+                position: relative;
+                width: 80px;
+                height: 80px;
+                margin-left: auto;
+                margin-right: auto;
+
+                img {
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    border: 2px solid var(--accent-primary);
+                }
+
+                .remove-btn {
+                    position: absolute;
+                    top: -8px;
+                    right: -8px;
+                    background: var(--bg-card);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+                    &:hover {
+                        background: var(--bg-surface-elevated);
+                    }
+                }
+            }
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: auto;
+            padding-top: 2rem;
+        }
+    }
+
+    .share-preview-area {
+        background: var(--bg-surface-soft);
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start; // Align to top
+        min-height: 550px; // Adjusted for the scaled image
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        .preview-scale-wrapper {
+            transform: scale(0.6);
+            transform-origin: top center; // Scale from top
+            height: 520px; // Fixed height after scaling ( approx 850 * 0.6 )
+            margin-bottom: -300px; // Pull up following elements if any, or just to clip the unused space
+
+            @media (max-width: 600px) {
+                transform: scale(0.45);
+                height: 380px;
+                margin-bottom: -450px;
+            }
+        }
+
+        .preview-container {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            overflow: hidden;
+            width: 600px; // Keep fixed width for template
+        }
+    }
+}
+
+/* MUI ToggleButton custom styles */
+.MuiToggleButtonGroup-root {
+    .MuiToggleButton-root {
+        color: var(--text-secondary);
+        border-color: var(--border-main);
+
+        &.Mui-selected {
+            background-color: var(--accent-primary) !important;
+            color: white !important;
+        }
+    }
+}
+
+/* Slider styling */
+.MuiSlider-root {
+    color: var(--accent-primary);
+}

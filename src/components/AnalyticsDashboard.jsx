@@ -1,11 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, MoreHorizontal, FileText, Youtube } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, MoreHorizontal, FileText, Youtube, Share2 } from 'lucide-react';
 import Select from 'react-select';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, useMediaQuery } from '@mui/material';
 import { selectAllPlayerNames } from '../store/appSlice';
 import { useToast } from '../context/ToastContext';
+import { isAdminAuthenticated } from '../utils/cookieUtils';
+import ShareTournamentDialog from './ShareTournamentDialog';
 import './AnalyticsDashboard.scss';
 
 const AnalyticsDashboard = ({ onEdit }) => {
@@ -19,6 +21,22 @@ const AnalyticsDashboard = ({ onEdit }) => {
     const [selectedGraphPlayers, setSelectedGraphPlayers] = useState([]);
     const [expandedTournaments, setExpandedTournaments] = useState([]);
     const [timeRange, setTimeRange] = useState('all'); // '10', '20', 'all'
+    const [isLoggedIn, setIsLoggedIn] = useState(isAdminAuthenticated());
+
+    useEffect(() => {
+        // Listen for authentication changes
+        const checkAuthStatus = () => {
+            setIsLoggedIn(isAdminAuthenticated());
+        };
+
+        window.addEventListener('authStatusChanged', checkAuthStatus);
+        const interval = setInterval(checkAuthStatus, 5000);
+
+        return () => {
+            window.removeEventListener('authStatusChanged', checkAuthStatus);
+            clearInterval(interval);
+        };
+    }, []);
 
 
 
@@ -27,6 +45,10 @@ const AnalyticsDashboard = ({ onEdit }) => {
     const [showYouTubeModal, setShowYouTubeModal] = useState(false);
     const [currentEmbedUrl, setCurrentEmbedUrl] = useState('');
     const [currentPlaylistUrl, setCurrentPlaylistUrl] = useState('');
+
+    // Share Dialog State
+    const [showShareDialog, setShowShareDialog] = useState(false);
+    const [selectedTournament, setSelectedTournament] = useState(null);
 
     // Prepare options for react-select
     const playerOptions = useMemo(() => {
@@ -282,7 +304,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                 <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                                     <div className="date">{t.date}</div>
                                     <div className="actions" style={{ display: 'flex', gap: '8px' }}>
-                                        {onEdit && (
+                                        {onEdit && isLoggedIn && (
                                             <button
                                                 onClick={() => onEdit(t)}
                                                 style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '4px' }}
@@ -298,6 +320,18 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                                 title="Watch on YouTube"
                                             >
                                                 <Youtube size={20} />
+                                            </button>
+                                        )}
+                                        {t.is_official !== false && (
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedTournament(t);
+                                                    setShowShareDialog(true);
+                                                }}
+                                                style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', padding: '4px' }}
+                                                title="Share Results"
+                                            >
+                                                <Share2 size={20} />
                                             </button>
                                         )}
                                     </div>
@@ -457,6 +491,12 @@ const AnalyticsDashboard = ({ onEdit }) => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <ShareTournamentDialog
+                open={showShareDialog}
+                onClose={() => setShowShareDialog(false)}
+                tournament={selectedTournament}
+            />
         </div >
     );
 };

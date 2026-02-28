@@ -158,7 +158,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
         pendingUnratedPlayers.forEach(player => {
             dispatch(addTemporaryPlayer({
                 name: player,
-                initialRank: parseInt(initialRatings[player])
+                initialRank: parseFloat(initialRatings[player])
             }));
         });
 
@@ -167,16 +167,13 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
             if (initialRatings[player]) {
                 dispatch(addTemporaryPlayer({
                     name: player,
-                    initialRank: parseInt(initialRatings[player])
+                    initialRank: parseFloat(initialRatings[player])
                 }));
             }
         });
 
         setRatingPromptOpen(false);
         setPendingUnratedPlayers([]);
-        setPendingSingleTournamentPlayers([]);
-        setInitialRatings({});
-
         setPendingSingleTournamentPlayers([]);
         setInitialRatings({});
 

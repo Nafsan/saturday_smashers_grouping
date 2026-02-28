@@ -204,9 +204,14 @@ export const { togglePlayerSelection, calculateRanks, generateGroupsAction, rese
 // Selectors
 export const selectAllPlayerNames = (state) => {
     const players = state.app.allPlayers;
-    if (players.length === 0) return [];
-    // Handle both formats: array of strings or array of objects
-    return typeof players[0] === 'string' ? players : players.map(p => p.name);
+    if (!players || players.length === 0) return [];
+    
+    // Convert all entries to names (strings) safely
+    return players.map(p => {
+        if (typeof p === 'string') return p;
+        if (p && typeof p === 'object' && p.name) return p.name;
+        return String(p);
+    }).sort((a, b) => a.localeCompare(b));
 };
 
 export const selectAllPlayers = (state) => state.app.allPlayers;

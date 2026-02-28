@@ -20,7 +20,11 @@ const GroupDisplay = () => {
     const openExportMenu = Boolean(anchorEl);
 
     const fixtures = useMemo(() => {
-        const totalPlayers = groups.groupA.length + groups.groupB.length;
+        // Only generate knockout for 2 groups
+        const groupCount = Object.keys(groups).length;
+        if (groupCount !== 2) return { cup: [], plate: [] };
+        
+        const totalPlayers = (groups.groupA?.length || 0) + (groups.groupB?.length || 0);
         return generateKnockoutFixtures(totalPlayers);
     }, [groups]);
 
@@ -34,14 +38,6 @@ const GroupDisplay = () => {
         const dateStr = new Date().toISOString().slice(0, 10);
 
         if (type === 'groups') {
-            // Target the groups container (plus header if possible, but let's stick to the container for specific export)
-            // For better context, we might want to capture the header + groups. 
-            // We can clone the node or just target the main exportRef but hide other elements temporarily.
-            // A simpler approach for now: Target the specific container if refs are separated, 
-            // or use specific logic. Here we will try to capture the specific sections.
-
-            // To capture specific parts beautifully, we can target the 'content-to-export' 
-            // but use the 'filter' option of html-to-image to exclude what we don't want.
             node = exportRef.current;
             filename = `saturday-smashers-groups-${dateStr}.png`;
         } else if (type === 'bracket') {
@@ -111,7 +107,7 @@ const GroupDisplay = () => {
                 </button>
                 <div className="right-actions">
                     <ThemeToggle />
-                    <button className="icon-btn" onClick={() => dispatch(generateGroupsAction())}>
+                    <button className="icon-btn" onClick={() => dispatch(generateGroupsAction(Object.keys(groups).length))}>
                         <RefreshCw size={20} /> Shuffle
                     </button>
 
@@ -181,30 +177,20 @@ const GroupDisplay = () => {
                 </div>
 
                 <div className="groups-container" ref={groupsRef}>
-                    <div className="group-card group-a">
-                        <h3>Group A</h3>
-                        <ul>
-                            {groups.groupA.map((player, idx) => (
-                                <li key={player.name}>
-                                    <span className="rank">#{idx + 1}</span>
-                                    <span className="name">{player.name}</span>
-                                    <span className="avg">({player.average.toFixed(1)})</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                    <div className="group-card group-b">
-                        <h3>Group B</h3>
-                        <ul>
-                            {groups.groupB.map((player, idx) => (
-                                <li key={player.name}>
-                                    <span className="rank">#{idx + 1}</span>
-                                    <span className="name">{player.name}</span>
-                                    <span className="avg">({player.average.toFixed(1)})</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+                    {Object.entries(groups).map(([groupKey, groupPlayers]) => (
+                        <div key={groupKey} className={`group-card ${groupKey === 'groupA' || groupKey === 'groupB' ? groupKey.replace('group', 'group-').toLowerCase() : 'group-others'}`}>
+                            <h3>{groupKey.replace('group', 'Group ')}</h3>
+                            <ul>
+                                {groupPlayers.map((player, idx) => (
+                                    <li key={player.name}>
+                                        <span className="rank">#{idx + 1}</span>
+                                        <span className="name">{player.name}</span>
+                                        <span className="avg">({player.average.toFixed(1)})</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
                 </div>
 
                 {/* Knockout Fixtures */}

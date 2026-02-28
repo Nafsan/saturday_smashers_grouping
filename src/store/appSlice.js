@@ -86,12 +86,13 @@ export const appSlice = createSlice({
         calculateRanks: (state) => {
             state.rankedPlayers = calculateRankings(state.history, state.selectedPlayers, state.temporaryPlayers);
         },
-        generateGroupsAction: (state) => {
+        generateGroupsAction: (state, action) => {
+            const numGroups = action.payload || 2;
             if (state.rankedPlayers.length === 0) {
                 state.rankedPlayers = calculateRankings(state.history, state.selectedPlayers, state.temporaryPlayers);
             }
-            const { groupA, groupB } = generateGroups(state.rankedPlayers);
-            state.groups = { groupA, groupB };
+            const groups = generateGroups(state.rankedPlayers, numGroups);
+            state.groups = groups;
             state.isGroupsGenerated = true;
         },
         resetGroups: (state) => {

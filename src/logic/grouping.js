@@ -1,36 +1,40 @@
 /**
- * Generates two balanced groups from a sorted list of players.
+ * Generates a specified number of balanced groups from a sorted list of players.
  * 
  * @param {Array} sortedPlayers - Players sorted by rank (best to worst).
- * @returns {Object} { groupA: [], groupB: [] }
+ * @param {number} numGroups - Number of groups to generate (default: 2).
+ * @returns {Object} { groupA: [], groupB: [], ... }
  */
-export const generateGroups = (sortedPlayers) => {
-    const groupA = [];
-    const groupB = [];
+export const generateGroups = (sortedPlayers, numGroups = 2) => {
+    // Initialize groups
+    // If numGroups is 2, use legacy keys for compatibility
+    const groups = {};
+    const groupNames = [];
 
-    // Process in pairs (1st & 2nd, 3rd & 4th, etc.)
-    for (let i = 0; i < sortedPlayers.length; i += 2) {
-        const player1 = sortedPlayers[i];
-        const player2 = sortedPlayers[i + 1];
-
-        // If we have an odd number of players, the last one goes to a random group
-        // or we can handle it specifically. User said 12 or 14 players, so usually even.
-        if (!player2) {
-            // Randomly assign the last person
-            if (Math.random() > 0.5) groupA.push(player1);
-            else groupB.push(player1);
-            break;
-        }
-
-        // Randomly assign pair members
-        if (Math.random() > 0.5) {
-            groupA.push(player1);
-            groupB.push(player2);
-        } else {
-            groupA.push(player2);
-            groupB.push(player1);
-        }
+    for (let i = 0; i < numGroups; i++) {
+        const name = numGroups === 2 ? (i === 0 ? 'groupA' : 'groupB') : `group${String.fromCharCode(65 + i)}`;
+        groups[name] = [];
+        groupNames.push(name);
     }
 
-    return { groupA, groupB };
+    // Process in batches of numGroups
+    for (let i = 0; i < sortedPlayers.length; i += numGroups) {
+        // Create a pool for this "level" (e.g., players ranked 1, 2, 3, 4)
+        const pool = [];
+        for (let j = 0; j < numGroups; j++) {
+            if (sortedPlayers[i + j]) {
+                pool.push(sortedPlayers[i + j]);
+            }
+        }
+
+        // Shuffle the pool for this level to distribute randomly within the level
+        const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
+
+        // Assign to groups
+        shuffledPool.forEach((player, idx) => {
+            groups[groupNames[idx]].push(player);
+        });
+    }
+
+    return groups;
 };

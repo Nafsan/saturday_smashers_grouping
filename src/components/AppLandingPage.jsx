@@ -42,8 +42,8 @@ const AppLandingPage = () => {
         setIsRankModalOpen(true);
     };
 
-    const handleGenerateGroups = () => {
-        dispatch(generateGroupsAction());
+    const handleGenerateGroups = (numGroups) => {
+        dispatch(generateGroupsAction(numGroups));
     };
 
     return (

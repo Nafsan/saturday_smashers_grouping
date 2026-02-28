@@ -15,7 +15,7 @@ import {
     InputAdornment,
     useMediaQuery
 } from '@mui/material';
-import { X, Search, UserPlus, Calendar, ClipboardPaste, ChevronDown, ChevronUp, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { X, Search, UserPlus, Calendar, ClipboardPaste, ChevronDown, ChevronUp, AlertCircle, CheckCircle2, Layers } from 'lucide-react';
 import { togglePlayerSelection, setTournamentDate, addTemporaryPlayer, selectAllPlayerNames } from '../store/appSlice';
 import { calculateRankings } from '../logic/ranking';
 import { useToast } from '../context/ToastContext';
@@ -40,6 +40,10 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
     const [pastedText, setPastedText] = useState('');
     const [unmatchedNames, setUnmatchedNames] = useState([]);
     const [matchedCount, setMatchedCount] = useState(0);
+
+    // Grouping state
+    const [numGroups, setNumGroups] = useState(2);
+    const [isGroupsManuallySet, setIsGroupsManuallySet] = useState(false);
 
     // Calculate rankings for all players
     const playerRankings = useMemo(() => {
@@ -95,6 +99,20 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
         });
     }, [allPlayers, searchQuery, playerRankings]);
 
+    // Handle auto-population of numGroups
+    React.useEffect(() => {
+        if (isGroupsManuallySet) return;
+
+        const count = selectedPlayers.length;
+        if (count <= 14) {
+            setNumGroups(2);
+        } else if (count === 15) {
+            setNumGroups(3);
+        } else {
+            setNumGroups(4);
+        }
+    }, [selectedPlayers.length, isGroupsManuallySet]);
+
     const handleGenerate = () => {
         if (selectedPlayers.length < 2) {
             warningNotification("Please select at least 2 players.");
@@ -124,7 +142,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
             return;
         }
 
-        onGenerate();
+        onGenerate(numGroups);
         onClose();
     };
 
@@ -159,7 +177,10 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
         setPendingSingleTournamentPlayers([]);
         setInitialRatings({});
 
-        onGenerate();
+        setPendingSingleTournamentPlayers([]);
+        setInitialRatings({});
+
+        onGenerate(numGroups);
         onClose();
     };
 
@@ -180,6 +201,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
         setPastedText('');
         setUnmatchedNames([]);
         setMatchedCount(0);
+        setIsGroupsManuallySet(false);
         onClose();
     };
 
@@ -282,6 +304,31 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                                 ),
                             }}
                         />
+                    </Box>
+
+                    {/* Number of Groups */}
+                    <Box sx={{ mb: 3 }}>
+                        <TextField
+                            label="Number of Groups"
+                            type="number"
+                            value={numGroups}
+                            onChange={(e) => {
+                                setNumGroups(parseInt(e.target.value) || 2);
+                                setIsGroupsManuallySet(true);
+                            }}
+                            fullWidth
+                            inputProps={{ min: 2, max: 8 }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Layers size={18} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                            Auto-calculates based on players, or set manually.
+                        </Typography>
                     </Box>
 
                     {/* Batch Paste Section */}

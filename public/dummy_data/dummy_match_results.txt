@@ -1,0 +1,67 @@
+Kawsar	Abdullah	3-1
+Shammam	Ayan	2-3
+Dipro Rahman (MTTA)	Shaheb Ali	3-0
+Kawsar	Shammam	3-1
+Dipro Rahman (MTTA)	Abdullah	3-1
+Ayan	Shaheb Ali	3-0
+Kawsar	Shaheb Ali	3-0
+Dipro Rahman (MTTA)	Ayan	3-1
+Shammam	Abdullah	3-2
+Ayan	Abdullah	2-3
+Kawsar	Dipro Rahman (MTTA)	1-3
+Shammam	Shaheb Ali	3-0
+Kawsar	Ayan	3-0
+Abdullah	Shaheb Ali	3-0
+Dipro Rahman (MTTA)	Shammam	3-0
+Babul	Showmik Aziz (GTT-S)	3-1
+Shatil	Samir	3-1
+Muktadir Aziz	Helal Ahmed	0-0
+Babul	Shatil	3-1
+Muktadir Aziz	Showmik Aziz (GTT-S)	0-3
+Samir	Helal Ahmed	2-3
+Babul	Helal Ahmed	3-0
+Muktadir Aziz	Samir	3-0
+Shatil	Showmik Aziz (GTT-S)	1-3
+Showmik Aziz (GTT-S)	Samir	3-1
+Babul	Muktadir Aziz	3-0
+Shatil	Helal Ahmed	3-0
+Babul	Samir	2-3
+Showmik Aziz (GTT-S)	Helal Ahmed	3-0
+Muktadir Aziz	Shatil	2-3
+Tanvir	Ahsan Rahman (FSC)	3-0
+Shahriar (BB)	Shakil (Inventive)	3-1
+Tauhid	Khondoker Rumman	3-0
+Tanvir	Shahriar (BB)	3-0
+Tauhid	Ahsan Rahman (FSC)	3-1
+Shakil (Inventive)	Khondoker Rumman	3-0
+Tanvir	Khondoker Rumman	3-0
+Tauhid	Shakil (Inventive)	3-2
+Shahriar (BB)	Ahsan Rahman (FSC)	3-0
+Ahsan Rahman (FSC)	Shakil (Inventive)	3-1
+Tanvir	Tauhid	0-3
+Shahriar (BB)	Khondoker Rumman	3-0
+Tanvir	Shakil (Inventive)	3-1
+Ahsan Rahman (FSC)	Khondoker Rumman	3-0
+Tauhid	Shahriar (BB)	3-2
+Terry	Fahim Bakhtiar	3-0
+Abdullah Fahim	Rabbani	3-1
+Asif Shahadat	Hasnu	3-0
+Terry	Abdullah Fahim	1-3
+Asif Shahadat	Fahim Bakhtiar	3-0
+Rabbani	Hasnu	2-3
+Terry	Hasnu	3-0
+Asif Shahadat	Rabbani	3-0
+Abdullah Fahim	Fahim Bakhtiar	3-1
+Fahim Bakhtiar	Rabbani	2-3
+Asif Shahadat	Terry	0-3
+Abdullah Fahim	Hasnu	3-1
+Terry	Rabbani	3-1
+Fahim Bakhtiar	Hasnu	3-1
+Asif Shahadat	Abdullah Fahim	3-0
+Dipro Rahman (MTTA)	Showmik Aziz (GTT-S)	3-0
+Tanvir	Terry	3-0
+Tauhid	Asif Shahadat	0-3
+Kawsar	Babul	3-0
+Tanvir	Dipro Rahman (MTTA)	3-1
+Kawsar	Asif Shahadat	3-0
+Kawsar	Tanvir	3-1

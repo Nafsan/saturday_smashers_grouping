@@ -22,7 +22,7 @@ import {
     Autocomplete,
     useMediaQuery
 } from '@mui/material';
-import { Calculator, Copy, ArrowLeft, RefreshCw, Plus, Search, Trash2 } from 'lucide-react';
+import { Calculator, Copy, ArrowLeft, RefreshCw, Plus, Search, Trash2, FileSpreadsheet, PlayCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 
@@ -33,6 +33,27 @@ const GttEloCalculator = () => {
     const [standingsInput, setStandingsInput] = useState('');
     const [matchesInput, setMatchesInput] = useState('');
     const [calculatedData, setCalculatedData] = useState(null);
+
+    const populateDummyData = async () => {
+        try {
+            const [rankingRes, matchesRes] = await Promise.all([
+                fetch(`${import.meta.env.BASE_URL}dummy_data/dummy_ranking.txt`),
+                fetch(`${import.meta.env.BASE_URL}dummy_data/dummy_match_results.txt`)
+            ]);
+            
+            if (!rankingRes.ok || !matchesRes.ok) throw new Error('Failed to fetch');
+            
+            const rankingText = await rankingRes.text();
+            const matchesText = await matchesRes.text();
+            
+            setStandingsInput(rankingText);
+            setMatchesInput(matchesText);
+            successNotification("Dummy data populated!");
+        } catch (error) {
+            console.error("Error populating dummy data:", error);
+            errorNotification("Failed to load dummy data");
+        }
+    };
 
     // Bonus Dialog States
     const [bonusDialogOpen, setBonusDialogOpen] = useState(false);
@@ -520,26 +541,58 @@ const GttEloCalculator = () => {
 
     return (
         <div className="container" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-primary)' }}>
-            <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Button
-                    startIcon={<ArrowLeft />}
-                    onClick={() => navigate('/')}
-                    variant="outlined"
-                    sx={{ color: 'text.primary', borderColor: 'divider' }}
-                >
-                    Back
-                </Button>
-                <Typography variant="h4" sx={{ fontWeight: '800', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    GTT ELO Calculator
-                </Typography>
+            <Box sx={{ mb: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                    <Button
+                        startIcon={<ArrowLeft />}
+                        onClick={() => navigate('/')}
+                        variant="outlined"
+                        sx={{ color: 'text.primary', borderColor: 'divider' }}
+                    >
+                        Back
+                    </Button>
+                    <Typography variant="h4" sx={{ fontWeight: '800', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                        GTT ELO Calculator
+                    </Typography>
+                </Box>
+                <Box sx={{ ml: isMobile ? 0 : 12, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Tooltip title="View Official Club Ranking Sheet">
+                        <IconButton 
+                            component="a" 
+                            href="https://docs.google.com/spreadsheets/d/1kdecQYLjcTTEJdCbp8_kFrtD0LHug8PfmydW0kHNtkY/edit?gid=0#gid=0" 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ color: '#1d6f42', p: 0.5, border: '1px solid #1d6f42', borderRadius: 1.5 }}
+                        >
+                            <FileSpreadsheet size={20} />
+                        </IconButton>
+                    </Tooltip>
+                    <Typography variant="caption" color="text.secondary" fontWeight="medium">
+                        Official Ranking Sheet
+                    </Typography>
+                </Box>
             </Box>
 
             {!calculatedData ? (
                 <Stack spacing={4}>
                     <Box>
                         <Paper elevation={0} sx={{ p: 3, height: '100%', borderRadius: 4, bgcolor: 'var(--bg-card)', border: '1px solid var(--border-main)' }}>
-                            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <Typography variant="h6" fontWeight="bold">Current Standings</Typography>
+                                <Button 
+                                    size="small" 
+                                    variant="outlined"
+                                    startIcon={<PlayCircle size={14} />}
+                                    onClick={populateDummyData}
+                                    sx={{ 
+                                        textTransform: 'none', 
+                                        borderRadius: 2,
+                                        fontSize: '0.75rem',
+                                        py: 0.5
+                                    }}
+                                >
+                                    Try Dummy Data
+                                </Button>
                             </Box>
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                                 Paste the table from Excel/Sheets (No., Name, Elo Rating)

@@ -1,0 +1,253 @@
+No. 	     Name	Elo Rating
+1	Kawsar	2340
+2	Shommo	2331
+3	Sakib (BKSP)	2222
+4	Joy (BKSP)	2218
+5	Babul	1928
+6	Tanvir	1816
+7	Khaled	1778
+8	Asif Shahadat	1772
+9	Minhaj (BKSP)	1758
+10	Talha	1757
+11	Tauhid	1749
+12	Sagor	1708
+13	Terry	1694
+14	Niloy (GTT)	1678
+15	Rahat	1650
+16	Rifat Chowdhury	1600
+17	Dipro Rahman (MTTA)	1596
+18	Tonya (DU)	1588
+19	Tipu (GTT)	1552
+20	Shakil	1544
+21	Zishan Khair	1533
+22	Rakib Hridoy	1533
+23	Ashik	1491
+24	Enam	1464
+25	Frank	1463
+26	Nirjhor	1460
+27	Rubel	1459
+28	Muktadir Aziz	1453
+29	Nasir Babu	1431
+30	Nafsan (GTT-S)	1404
+31	Rubiyan (BUET)	1404
+32	Abdullah Fahim	1401
+33	Shatil	1395
+34	Hasib Chowdhury	1350
+35	Myko	1350
+36	AR Fahim	1348
+37	Shahriar (BB)	1345
+38	Showmik Aziz (GTT-S)	1345
+39	Shammam	1340
+40	Euro Mehedi (MTTA)	1321
+41	Ahsan Rahman (FSC)	1303
+42	Shujan Mahmud	1298
+43	Mustafa Jain (CCCL)	1296
+44	Mohsinul Alam (BCBL)	1296
+45	Sifat	1290
+46	Samir	1290
+47	Fahim Bakhtiar	1286
+48	Sharif Jubaer (bKash)	1286
+49	Monirul Haque Moni	1285
+50	Abdullah	1281
+51	Md Tareq Rahman	1279
+52	Dibya Joti	1277
+53	Arsil Ajim (BC)	1274
+54	Ayan	1266
+55	Saleh Junior (MTTA)	1260
+56	Dr Tanvir	1260
+57	Jubayer	1257
+58	Adnan	1257
+59	Musabbir	1253
+60	Fahad Zaman (BCBL)	1253
+61	Qazi Asif (CCCL)	1242
+62	Mushfiq (bKash)	1228
+63	Niloy	1228
+64	Imam Hasan (SU)	1226
+65	Nahidul Hasan (FSC-T)	1226
+66	Md. Asaduzzaman	1225
+67	Sameen Wasif (GTT-S)	1222
+68	Mashuq	1222
+69	Adittya	1222
+70	Snigdho	1216
+71	Fahim Sadik	1215
+72	Sharif	1215
+73	Rabbani	1214
+74	Jamal Abrar (RTTC)	1209
+75	Rafan (MTTA)	1209
+76	Shakil (Inventive)	1206
+77	Chinmoy (GTT-S)	1203
+78	Piash (BC)	1202
+79	Tanzil (ULAB)	1200
+80	Palash Ghosh (bKash)	1197
+81	S M Imam Hasan	1192
+82	Fayez (ULAB)	1190
+83	Arib Akash (AIUB)	1189
+84	Jahangir Riyad (RTTC)	1187
+85	Asif Rayhan SS	1193
+86	Riaz (GTT-S)	1173
+87	Mehedi Tonu (RTTC)	1177
+88	Kazi Mamun	1172
+89	Waqqas	1171
+90	Hussain (BU)	1170
+91	Sumon Hoq (GTT-G)	1169
+92	Adv Sadat	1167
+93	Saif Khan	1159
+94	Robin	1156
+95	Dollar Mehedi (MTTA)	1155
+96	Tipu (SRBD)	1155
+97	Abid Araf	1151
+98	Hasnu	1146
+99	Asad Zaman (bKash)	1145
+100	Arifur Rahman	1144
+101	Sayed Hasan	1143
+102	Fahim Foysal	1143
+103	Abir (ULAB)	1141
+104	Abdullah Sayeed	1141
+105	Tanvir Zaman (GTT-G)	1140
+106	Yeasin	1140
+107	Abed	1140
+108	Jafar	1138
+109	Shihab (RTTC)	1138
+110	Rumen	1137
+111	Abdullah Al Maruf	1137
+112	Mubin (FSC-T)	1135
+113	Ridwanul Islam	1135
+114	Rayan CTS (GTT-G)	1131
+115	Jahin Tahmid (BU)	1130
+116	Rajib (BCBL)	1129
+117	Zenhar	1125
+118	Mubin	1120
+119	Tarequl Islam	1120
+120	Omaer (GTT-S)	1119
+121	Mohiuddin Rahat (GTT-G)	1119
+122	Rabbi	1118
+123	Rubayat	1117
+124	Imtiaz (NCCB)	1116
+125	Rafan (FSC-T)	1115
+126	Shadab (BU)	1115
+127	Raishul Islam (BTTC)	1115
+128	Jamshed Mithun	1109
+129	Hameem (BU)	1108
+130	Raiyad	1108
+131	Irtiza Anam (BU)	1103
+132	Faisal Ahmed	1100
+133	Azam (BB)	1099
+134	Hasibur Rahman (BC)	1098
+135	Borhan (BC)	1098
+136	Shahriar	1098
+137	Nipon	1097
+138	Rakib Remon	1096
+139	Arefin Pial (GTT-S)	1094
+140	Projonmo	1092
+141	Dr. Rashed	1090
+142	Fayad Tanzin	1087
+143	Tahmid Patwary	1086
+144	Faisal Nazmul	1086
+145	Anim (FSC-T)	1086
+146	Wasee	1086
+147	Zisan (BU)	1083
+148	Salim	1082
+149	Shoaib (Dufa club)	1082
+150	Adib (BU)	1075
+151	Rifat	1073
+152	Sk. Anand	1072
+153	Saleh Senior (MTTA)	1071
+154	Nuaim	1070
+155	Anowarul	1066
+156	Mahjoob (Batman)	1063
+157	Noor (BC)	1059
+158	Abu Talha (RTTC)	1058
+159	⁠Adri (BU)	1058
+160	Shafayet	1055
+161	Mohammad Hanif	1054
+162	Utpol Chowdhury (BPBL)	1049
+163	Sazzad Saadi	1048
+164	Tanvir Rahman (MTTA)	1048
+165	Al Amin Ronie	1044
+166	Asad Hossain	1040
+167	Elvice	1039
+168	Towfiq (BUET)	1038
+169	Nabhan (GTT-G)	1036
+170	Tipu (BTTC)	1027
+171	Naresh	1024
+172	Abdullah Noman	1001
+173	Rumman (GTT-G)	999
+174	Rafayat	983
+175	Eftekhar Alom	947
+176	Aparesh Saha	926
+177	Munaf	T 1284  **
+178	Md. Bayezid	T 1225  **
+179	Tushar (SRBD)	T 1179  **
+180	Raquibul Bari	T 1179  *
+181	Tasin	T 1165  *
+182	Shaju	T 1145  **
+183	Tonmoy Dey	T 1236  **
+184	Asifur Rahman (MTTA)	T 1220  *
+185	Safwan	T 1134  *
+186	Bhramar	T 1124  **
+187	Md. Akhtaruzzaman (AIS)	T 1089  *
+188	Shaklayen Shaheed (Joy)	T 1087  *
+189	Mehedi (KIB)	T 1083  *
+190	Md. Imran Sheikh	T 1076  **
+191	Mustafizur Rahman	T 1071  **
+192	Abed Khan	T 1062  *
+193	Mehedi_Galib	T 1047  **
+194	Md. Rafiul Islam	T 1022  *
+195	Sourav Majumder	T  1089  *
+196	Abdullah Al Amin	T 1089  *
+197	Nibir	T 1089  *
+198	Halal Uddin	T 1089  **
+199	Arshad Hossain (Inovi Solutions)	T 1071  *
+200	Imran Murshed	T 960  *
+201	Mazedul Islam (Tushar)	T  944 *
+202	Imtiyaz (MTTA)	New
+203	Ishrak	New
+204	Rasel	New
+205	 Shafiul	New
+206	Arafat Rahman Alif (AIS)	New
+207	Taimur (BTTC)	New
+208	Pranjal	New
+209	Sakib (MBSTU)	New
+210	Mofakkharul	New
+211	Zahid	New
+212	Belal (MTTA)	New
+213	Nihan	New
+214	Rahat (MTTA)	New
+215	Ishaan	New
+216	Mithu	New
+217	Aurio (BU)	New
+218	Rezaul	New
+219	Ruffee	New
+220	Md Ibrahim (AIS)	New
+221	Abu Nasar	New
+222	Anis Babu	New
+223	Faiaz Khan Soumik	New
+224	Mehedi Hasan (bKash)	New
+225	Mehedi Manon	New
+226	Ruffee Md. Khan	New
+227	Noman (ULAB)	New
+228	Kaiful Islam Safin	New
+229	Shimul	New
+230	Shahriar (DU)	New
+231	Farhan Irtaz Zarif	New
+232	Hasib Raihan	New
+233	Ushan Ghosh	New
+234	Ashiq Ibn Aziz	New
+235	Adiyat (BU)	New
+236	Sartaj Hassan	New
+237	Nazmus Sakib	New
+238	Rafi	New
+239	Md. Arif Haider	New
+240	Moshiur Rahman Amit	New
+241	Shaheb Ali	New
+242	Nazmus Sayed	New
+243	Muntasir (DU)	New
+244	Arafat Ahsan	New
+245	Dil (BTTC)	New
+246	Raihan Mastafa Khiljee	New
+247	Tanvir Ahmed Rifat	New
+248	Sagar (Inovi Solutions)	New
+249	Nazmul Islam	New
+250	Zia	New
+251	Helal Ahmed	New
+252	Khondoker Rumman	New

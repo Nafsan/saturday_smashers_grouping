@@ -377,7 +377,10 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                             {hasMore && !isExpanded && (
                                                 <span
                                                     className="more clickable"
-                                                    onClick={() => toggleTournamentExpansion(t.id)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleTournamentExpansion(t.id);
+                                                    }}
                                                 >
                                                     +{t.ranks.length - 3} more
                                                 </span>
@@ -386,7 +389,10 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                             {hasMore && isExpanded && (
                                                 <span
                                                     className="more clickable"
-                                                    onClick={() => toggleTournamentExpansion(t.id)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleTournamentExpansion(t.id);
+                                                    }}
                                                 >
                                                     Show Less
                                                 </span>

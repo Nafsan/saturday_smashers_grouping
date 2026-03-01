@@ -65,6 +65,7 @@ const initialState = {
     tournamentDate: new Date().toISOString().split('T')[0],
     customPlayers: [],
     temporaryPlayers: [], // { name, initialRank }
+    groupGenerationMethod: 'snake', // 'snake' | 'random'
     status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
     theme: typeof window !== 'undefined' ? (getThemeCookie() || 'dark') : 'dark'
@@ -91,9 +92,12 @@ export const appSlice = createSlice({
             if (state.rankedPlayers.length === 0) {
                 state.rankedPlayers = calculateRankings(state.history, state.selectedPlayers, state.temporaryPlayers);
             }
-            const groups = generateGroups(state.rankedPlayers, numGroups);
+            const groups = generateGroups(state.rankedPlayers, numGroups, state.groupGenerationMethod);
             state.groups = groups;
             state.isGroupsGenerated = true;
+        },
+        setGroupGenerationMethod: (state, action) => {
+            state.groupGenerationMethod = action.payload;
         },
         resetGroups: (state) => {
             state.isGroupsGenerated = false;
@@ -199,7 +203,7 @@ export const appSlice = createSlice({
     },
 });
 
-export const { togglePlayerSelection, calculateRanks, generateGroupsAction, resetGroups, setTournamentDate, addNewPlayer, addTemporaryPlayer, clearDraftState, toggleTheme } = appSlice.actions;
+export const { togglePlayerSelection, calculateRanks, generateGroupsAction, resetGroups, setTournamentDate, addNewPlayer, addTemporaryPlayer, clearDraftState, toggleTheme, setGroupGenerationMethod } = appSlice.actions;
 
 // Selectors
 export const selectAllPlayerNames = (state) => {

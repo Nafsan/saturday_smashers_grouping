@@ -1,6 +1,6 @@
 import React, { useRef, useCallback, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { generateGroupsAction, resetGroups, clearDraftState } from '../store/appSlice';
+import { generateGroupsAction, resetGroups, clearDraftState, setGroupGenerationMethod } from '../store/appSlice';
 import { generateKnockoutFixtures } from '../logic/knockout';
 import { toPng } from 'html-to-image';
 import { Download, RefreshCw, ArrowLeft, Trophy, Medal, FileImage, Layers } from 'lucide-react';
@@ -9,12 +9,14 @@ import ThemeToggle from './ThemeToggle';
 import './GroupDisplay.scss';
 
 const GroupDisplay = () => {
-    const { groups, rankedPlayers, tournamentDate } = useSelector(state => state.app);
+    const { groups, rankedPlayers, tournamentDate, groupGenerationMethod } = useSelector(state => state.app);
     const dispatch = useDispatch();
     const isMobile = useMediaQuery('(max-width:600px)');
-    const exportRef = useRef(null); // Main container (for full export)
+    const exportRef = useRef(null); // Main container (for fallback)
+    const groupsOnlyRef = useRef(null); // Header + Groups only
     const groupsRef = useRef(null); // Specific groups container
     const knockoutRef = useRef(null); // Specific bracket container
+    const rankingsRef = useRef(null); // Specific rankings container
     const [showBackConfirmation, setShowBackConfirmation] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const openExportMenu = Boolean(anchorEl);
@@ -38,14 +40,14 @@ const GroupDisplay = () => {
         const dateStr = new Date().toISOString().slice(0, 10);
 
         if (type === 'groups') {
-            node = exportRef.current;
+            node = groupsOnlyRef.current;
             filename = `saturday-smashers-groups-${dateStr}.png`;
         } else if (type === 'bracket') {
             node = knockoutRef.current;
             filename = `saturday-smashers-bracket-${dateStr}.png`;
-        } else if (type === 'all') {
-            node = exportRef.current;
-            filename = `saturday-smashers-full-export-${dateStr}.png`;
+        } else if (type === 'rankings') {
+            node = rankingsRef.current;
+            filename = `saturday-smashers-rankings-${dateStr}.png`;
         }
 
         if (!node) return;
@@ -57,14 +59,8 @@ const GroupDisplay = () => {
             width: node.scrollWidth + 40,
             height: node.scrollHeight + 40,
             filter: (domNode) => {
-                // For 'groups' export, exclude the knockout section
-                if (type === 'groups' && domNode.classList?.contains('knockout-section')) {
-                    return false;
-                }
-                // For 'groups' export, exclude rankings summary if desired (optional)
-                if (type === 'groups' && domNode.classList?.contains('rankings-summary')) {
-                    return false;
-                }
+                // Remove some elements that might still be captured if using a larger node
+                if (domNode.classList?.contains('actions-bar')) return false;
                 return true;
             }
         };
@@ -79,7 +75,7 @@ const GroupDisplay = () => {
             .catch((err) => {
                 console.error('oops, something went wrong!', err);
             });
-    }, [exportRef, knockoutRef]);
+    }, [groupsOnlyRef, knockoutRef, rankingsRef]);
 
     const handleMenuClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -99,6 +95,12 @@ const GroupDisplay = () => {
         setShowBackConfirmation(false);
     };
 
+    const handleMethodChange = (e) => {
+        const method = e.target.value;
+        dispatch(setGroupGenerationMethod(method));
+        dispatch(generateGroupsAction(Object.keys(groups).length));
+    };
+
     return (
         <div className="group-display">
             <div className="actions-bar">
@@ -106,10 +108,19 @@ const GroupDisplay = () => {
                     <ArrowLeft size={20} /> Back
                 </button>
                 <div className="right-actions">
+                    <div className="method-selector">
+                        {!isMobile && <label>Method:</label>}
+                        <select value={groupGenerationMethod} onChange={handleMethodChange}>
+                            <option value="snake">Snake Method</option>
+                            <option value="random">Random Generation</option>
+                        </select>
+                    </div>
                     <ThemeToggle />
-                    <button className="icon-btn" onClick={() => dispatch(generateGroupsAction(Object.keys(groups).length))}>
-                        <RefreshCw size={20} /> Shuffle
-                    </button>
+                    {groupGenerationMethod === 'random' && (
+                        <button className="icon-btn" onClick={() => dispatch(generateGroupsAction(Object.keys(groups).length))}>
+                            <RefreshCw size={20} /> Shuffle
+                        </button>
+                    )}
 
                     <button
                         className="icon-btn primary"
@@ -160,37 +171,39 @@ const GroupDisplay = () => {
                             </MenuItem>
                         )}
 
-                        <MenuItem onClick={() => handleExport('all')}>
+                        <MenuItem onClick={() => handleExport('rankings')}>
                             <ListItemIcon sx={{ minWidth: 'auto', color: 'inherit' }}>
                                 <Layers size={18} />
                             </ListItemIcon>
-                            <ListItemText>Export Full</ListItemText>
+                            <ListItemText>Export Ranking Breakdown</ListItemText>
                         </MenuItem>
                     </Menu>
                 </div>
             </div>
 
             <div className="content-to-export" ref={exportRef}>
-                <div className="header">
-                    <h2>This Week's Groups</h2>
-                    <p>{new Date(tournamentDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                </div>
+                <div className="groups-export-wrapper" ref={groupsOnlyRef}>
+                    <div className="header">
+                        <h2>This Week's Groups</h2>
+                        <p>{new Date(tournamentDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
 
-                <div className="groups-container" ref={groupsRef}>
-                    {Object.entries(groups).map(([groupKey, groupPlayers]) => (
-                        <div key={groupKey} className={`group-card ${groupKey === 'groupA' || groupKey === 'groupB' ? groupKey.replace('group', 'group-').toLowerCase() : 'group-others'}`}>
-                            <h3>{groupKey.replace('group', 'Group ')}</h3>
-                            <ul>
-                                {groupPlayers.map((player, idx) => (
-                                    <li key={player.name}>
-                                        <span className="rank">#{idx + 1}</span>
-                                        <span className="name">{player.name}</span>
-                                        <span className="avg">({player.average.toFixed(1)})</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
+                    <div className="groups-container" ref={groupsRef}>
+                        {Object.entries(groups).map(([groupKey, groupPlayers]) => (
+                            <div key={groupKey} className={`group-card ${groupKey === 'groupA' || groupKey === 'groupB' ? groupKey.replace('group', 'group-').toLowerCase() : 'group-others'}`}>
+                                <h3>{groupKey.replace('group', 'Group ')}</h3>
+                                <ul>
+                                    {groupPlayers.map((player, idx) => (
+                                        <li key={player.name}>
+                                            <span className="rank">#{idx + 1}</span>
+                                            <span className="name">{player.name}</span>
+                                            <span className="avg">({player.average.toFixed(1)})</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Knockout Fixtures */}
@@ -242,7 +255,7 @@ const GroupDisplay = () => {
                     </div>
                 )}
 
-                <div className="rankings-summary">
+                <div className="rankings-summary" ref={rankingsRef}>
                     <h4>Ranking Breakdown</h4>
                     <div className="rank-list">
                         {rankedPlayers.map((p, i) => (

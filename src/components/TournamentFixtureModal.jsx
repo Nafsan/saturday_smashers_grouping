@@ -16,7 +16,7 @@ import {
     useMediaQuery
 } from '@mui/material';
 import { X, Search, UserPlus, Calendar, ClipboardPaste, ChevronDown, ChevronUp, AlertCircle, CheckCircle2, Layers } from 'lucide-react';
-import { togglePlayerSelection, setTournamentDate, addTemporaryPlayer, selectAllPlayerNames } from '../store/appSlice';
+import { togglePlayerSelection, setTournamentDate, addTemporaryPlayer, selectAllPlayerNames, setGroupGenerationMethod } from '../store/appSlice';
 import { calculateRankings } from '../logic/ranking';
 import { useToast } from '../context/ToastContext';
 import { Collapse, Alert, Chip, Stack } from '@mui/material';
@@ -26,7 +26,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
     const isMobile = useMediaQuery('(max-width:600px)');
     const dispatch = useDispatch();
     const allPlayers = useSelector(selectAllPlayerNames);
-    const { selectedPlayers, history, tournamentDate, temporaryPlayers } = useSelector(state => state.app);
+    const { selectedPlayers, history, tournamentDate, temporaryPlayers, groupGenerationMethod } = useSelector(state => state.app);
     const { warningNotification } = useToast();
 
     const [ratingPromptOpen, setRatingPromptOpen] = useState(false);
@@ -326,6 +326,23 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                         <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                             Auto-calculates based on players, or set manually.
                         </Typography>
+                    </Box>
+
+                    {/* Group Generation Method */}
+                    <Box sx={{ mb: 3 }}>
+                        <TextField
+                            select
+                            label="Generation Method"
+                            value={groupGenerationMethod}
+                            onChange={(e) => dispatch(setGroupGenerationMethod(e.target.value))}
+                            fullWidth
+                            SelectProps={{
+                                native: true,
+                            }}
+                        >
+                            <option value="snake">Snake Method (Balanced)</option>
+                            <option value="random">Random Generation</option>
+                        </TextField>
                     </Box>
 
                     {/* Batch Paste Section */}

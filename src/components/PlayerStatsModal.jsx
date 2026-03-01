@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { X, Trophy, TrendingUp, Award, Target } from 'lucide-react';
+import { X, Trophy, TrendingUp, Award, Target, Youtube, FileText } from 'lucide-react';
 import Select from 'react-select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { fetchPlayerStatistics } from '../api/client';
+import { fetchPlayerStatistics, fetchYouTubeSearch } from '../api/client';
+import { extractVideoId, getYouTubeThumbnail, getVideoUrl, getYouTubeMetadata } from '../utils/youtubeUtils';
 import './PlayerStatsModal.scss';
 
 // Player categories data
@@ -34,6 +35,11 @@ const PlayerStatsModal = ({ open, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [timeRange, setTimeRange] = useState('10'); // '10', '20', 'all'
+    const [activeTab, setActiveTab] = useState('stats'); // 'stats' | 'matches'
+    const [matchMetadata, setMatchMetadata] = useState({}); // id -> {title}
+    const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+    const [youtubeVideos, setYoutubeVideos] = useState([]);
+    const [searchingVideos, setSearchingVideos] = useState(false);
 
 
     // Reset state when modal closes
@@ -43,6 +49,10 @@ const PlayerStatsModal = ({ open, onClose }) => {
             setPlayerData(null);
             setError(null);
             setTimeRange('10'); // Reset time range too
+            setActiveTab('stats');
+            setMatchMetadata({});
+            setYoutubeVideos([]);
+            setViewMode('grid');
         }
     }, [open]);
 
@@ -172,6 +182,57 @@ const PlayerStatsModal = ({ open, onClose }) => {
 
         return stats;
     }, [playerData]);
+
+    const playerMatches = useMemo(() => {
+        if (!playerData || !playerData.tournaments) return [];
+
+        return playerData.tournaments
+            .filter(t => t.embed_url || t.playlist_url)
+            .map(t => {
+                let videoId = null;
+                if (t.embed_url) {
+                    const srcMatch = t.embed_url.match(/src="([^"]+)"/);
+                    if (srcMatch) videoId = extractVideoId(srcMatch[1]);
+                }
+                if (!videoId && t.playlist_url) {
+                    videoId = extractVideoId(t.playlist_url);
+                }
+
+                return {
+                    id: t.id,
+                    date: t.date,
+                    videoId,
+                    thumbnail: videoId ? getYouTubeThumbnail(videoId, 'mqdefault') : '/assets/logo.png',
+                    embedUrl: t.embed_url,
+                    playlistUrl: t.playlist_url,
+                    videoUrl: videoId ? getVideoUrl(videoId) : t.playlist_url
+                };
+            })
+            .filter(m => m.videoId || m.playlistUrl);
+    }, [playerData]);
+
+    // Search YouTube matches on demand
+    useEffect(() => {
+        if (activeTab === 'matches' && playerData) {
+            const searchVideos = async () => {
+                setSearchingVideos(true);
+                // Clear existing videos when searching for a new player
+                setYoutubeVideos([]);
+                try {
+                    const query = `${playerData.player_name}`;
+                    const response = await fetchYouTubeSearch(query);
+                    if (response && response.videos) {
+                        setYoutubeVideos(response.videos);
+                    }
+                } catch (err) {
+                    console.error("YouTube search failed:", err);
+                } finally {
+                    setSearchingVideos(false);
+                }
+            };
+            searchVideos();
+        }
+    }, [activeTab, playerData?.player_name]);
 
     // Categorize player and get motivational statement
     const playerCategory = useMemo(() => {
@@ -344,6 +405,24 @@ const PlayerStatsModal = ({ open, onClose }) => {
 
                     {!loading && !error && playerData && statistics && (
                         <>
+                            {/* Tab Switcher */}
+                            <div className="modal-tabs">
+                                <button
+                                    className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('stats')}
+                                >
+                                    Statistics
+                                </button>
+                                <button
+                                    className={`tab-btn ${activeTab === 'matches' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('matches')}
+                                >
+                                    Matches
+                                </button>
+                            </div>
+
+                            {activeTab === 'stats' ? (
+                                <>
                             {/* TODO: Implement this later. */}
                             {/* Player Category & Motivational Statement */}
                             {/* {playerCategory && (
@@ -509,13 +588,97 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                                     contentStyle={{ backgroundColor: 'var(--bg-surface-elevated)', border: '1px solid var(--border-main)', borderRadius: '8px', color: 'var(--text-primary)' }}
                                                     itemStyle={{ color: 'var(--text-primary)' }}
                                                 />
-                                                <Legend />
-                                                <Line type="monotone" dataKey="rating" stroke="var(--accent-primary)" strokeWidth={2} dot={{ r: 4 }} name="Rating" />
                                             </LineChart>
                                         </ResponsiveContainer>
                                     </div>
                                 )}
                             </div>
+                                </>
+                            ) : (
+                                <div className="matches-grid-wrapper">
+                                    <div className="matches-controls">
+                                        <div className="view-toggle">
+                                            <button 
+                                                className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                                                onClick={() => setViewMode('grid')}
+                                            >
+                                                <Target size={18} />
+                                                <span>Grid</span>
+                                            </button>
+                                            <button 
+                                                className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+                                                onClick={() => setViewMode('list')}
+                                            >
+                                                <FileText size={18} />
+                                                <span>List</span>
+                                            </button>
+                                        </div>
+                                        <div className="matches-count">
+                                            {youtubeVideos.length} Matches found on YouTube
+                                        </div>
+                                    </div>
+
+                                    {searchingVideos ? (
+                                        <div className="loading-state">
+                                            <div className="spinner"></div>
+                                            <p>Searching YouTube channel for {playerData?.player_name}'s matches...</p>
+                                        </div>
+                                    ) : youtubeVideos.length > 0 ? (
+                                        <div className={`matches-container ${viewMode}`}>
+                                            {[...youtubeVideos].sort((a, b) => {
+                                                const parseAge = (timeStr) => {
+                                                    if (!timeStr) return Infinity;
+                                                    const parts = timeStr.toLowerCase().split(' ');
+                                                    const value = parseInt(parts[0]);
+                                                    const unit = parts[1];
+                                                    
+                                                    if (unit.includes('second')) return value / 3600;
+                                                    if (unit.includes('minute')) return value / 60;
+                                                    if (unit.includes('hour')) return value;
+                                                    if (unit.includes('day')) return value * 24;
+                                                    if (unit.includes('week')) return value * 168;
+                                                    if (unit.includes('month')) return value * 720;
+                                                    if (unit.includes('year')) return value * 8760;
+                                                    return Infinity;
+                                                };
+                                                return parseAge(a.publishedTime) - parseAge(b.publishedTime);
+                                            }).map(video => (
+                                                <div key={video.videoId} className={`match-item ${viewMode === 'list' ? 'list-item' : 'card-item'}`}>
+                                                    <div className="match-thumbnail" onClick={() => window.open(`https://www.youtube.com/watch?v=${video.videoId}`, '_blank')}>
+                                                        <img 
+                                                            src={video.thumbnail} 
+                                                            alt={video.title}
+                                                            onError={(e) => {
+                                                                e.target.src = '/assets/logo.png';
+                                                                e.target.onerror = null;
+                                                            }}
+                                                        />
+                                                        {video.length && <span className="video-length">{video.length}</span>}
+                                                        <div className="play-overlay">
+                                                            <Youtube size={viewMode === 'list' ? 24 : 32} color="#FF0000" fill="#FF0000" />
+                                                        </div>
+                                                    </div>
+                                                    <div className="match-info">
+                                                        <div className="match-title" title={video.title}>{video.title}</div>
+                                                        <div className="match-meta">
+                                                            <span className="match-views">{video.viewCount}</span>
+                                                            <span className="dot">•</span>
+                                                            <span className="match-date">{video.publishedTime}</span>
+                                                        </div>
+                                                        <button className="watch-btn" onClick={() => window.open(`https://www.youtube.com/watch?v=${video.videoId}`, '_blank')}>
+                                                            Watch Match
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="no-matches">
+                                            <p>No recorded matches found for "{playerData?.player_name}" on the Sunday Smashers channel.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </>
                     )}
                 </div>

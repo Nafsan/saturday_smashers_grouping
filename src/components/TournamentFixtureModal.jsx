@@ -188,7 +188,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
         setPendingSingleTournamentPlayers([]);
         setInitialRatings({});
 
-        const finalNumGroups = parseInt(numGroups) || 2;
+        const finalNumGroups = parseInt(numGroups);
         onGenerate(finalNumGroups);
         onClose();
     };

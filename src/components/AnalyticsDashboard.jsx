@@ -8,6 +8,7 @@ import { selectAllPlayerNames } from '../store/appSlice';
 import { useToast } from '../context/ToastContext';
 import { isAdminAuthenticated } from '../utils/cookieUtils';
 import ShareTournamentDialog from './ShareTournamentDialog';
+import { extractVideoId, getYouTubeThumbnail } from '../utils/youtubeUtils';
 import './AnalyticsDashboard.scss';
 
 const AnalyticsDashboard = ({ onEdit }) => {
@@ -78,6 +79,16 @@ const AnalyticsDashboard = ({ onEdit }) => {
             // Fallback to opening playlist in new tab if no embed URL
             window.open(tournament.playlist_url, '_blank');
         }
+    };
+
+    const getTournamentVideoId = (tournament) => {
+        if (tournament.embed_url) {
+            // Extract from iframe src if it's an iframe
+            const srcMatch = tournament.embed_url.match(/src="([^"]+)"/);
+            if (srcMatch) return extractVideoId(srcMatch[1]);
+        }
+        if (tournament.playlist_url) return extractVideoId(tournament.playlist_url);
+        return null;
     };
 
     // Custom styles for react-select to match theme
@@ -298,33 +309,41 @@ const AnalyticsDashboard = ({ onEdit }) => {
                         const isExpanded = expandedTournaments.includes(t.id);
                         const ranksToShow = isExpanded ? t.ranks : t.ranks.slice(0, 3);
                         const hasMore = t.ranks.length > 3;
+                        const videoId = getTournamentVideoId(t);
+                        const thumbnailUrl = videoId ? getYouTubeThumbnail(videoId, 'mqdefault') : null;
 
                         return (
-                            <div key={t.id} className="history-item">
-                                <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                            <div 
+                                key={t.id} 
+                                className={`history-item ${t.playlist_url || t.embed_url ? 'has-video' : ''}`}
+                                onClick={() => (t.playlist_url || t.embed_url) ? handleYouTubeClick(t) : null}
+                                style={{ cursor: (t.playlist_url || t.embed_url) ? 'pointer' : 'default' }}
+                            >
+                                {t.playlist_url && (
+                                    <div className="history-thumbnail-minimal">
+                                        <Youtube size={24} color="#FF0000" />
+                                    </div>
+                                )}
+                                <div className="history-content">
+                                    <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                                     <div className="date">{t.date}</div>
                                     <div className="actions" style={{ display: 'flex', gap: '8px' }}>
                                         {onEdit && isLoggedIn && (
                                             <button
-                                                onClick={() => onEdit(t)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onEdit(t);
+                                                }}
                                                 style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', padding: '4px' }}
                                                 title="View Tournament Details"
                                             >
                                                 <FileText size={20} />
                                             </button>
                                         )}
-                                        {(t.playlist_url || t.embed_url) && (
-                                            <button
-                                                onClick={() => handleYouTubeClick(t)}
-                                                style={{ background: 'none', border: 'none', color: '#FF0000', cursor: 'pointer', padding: '4px' }}
-                                                title="Watch on YouTube"
-                                            >
-                                                <Youtube size={20} />
-                                            </button>
-                                        )}
                                         {t.is_official !== false && (
                                             <button
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
                                                     setSelectedTournament(t);
                                                     setShowShareDialog(true);
                                                 }}
@@ -376,8 +395,9 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                     )}
                                 </div>
                             </div>
-                        );
-                    })}
+                        </div>
+                    );
+                })}
                 </div>
                 <div className="pagination-container">
                     <div className="pagination-info">

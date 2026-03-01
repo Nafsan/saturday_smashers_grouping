@@ -187,6 +187,13 @@ export const fetchRankingProxy = async (url, forceRefresh = false) => {
     return response.data;
 };
 
+export const fetchYouTubeSearch = async (query) => {
+    const response = await client.get('/ranking/youtube-search', {
+        params: { q: query }
+    });
+    return response.data;
+};
+
 export default client;
 
 

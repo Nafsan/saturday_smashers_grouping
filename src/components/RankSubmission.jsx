@@ -19,6 +19,7 @@ import {
 import { Upload, X, Lock, Trash2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { setAdminAuthCookie, getAdminAuthCookie, isAdminAuthenticated } from '../utils/cookieUtils';
+import { extractVideoId, extractPlaylistId, fetchYouTubeOEmbed } from '../utils/youtubeUtils';
 import PasswordDialog from './PasswordDialog';
 import './RankSubmission.scss';
 
@@ -48,6 +49,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
 
     // Populate form if editing
     useEffect(() => {
@@ -213,6 +215,34 @@ const RankSubmission = ({ open, onClose, initialData }) => {
             embed_url: embedUrl || null,
             ranks: ranks
         };
+    };
+
+    const handleYouTubeUrlProcess = async (url) => {
+        if (!url || !isAdmin) return;
+
+        const videoId = extractVideoId(url);
+        const playlistId = extractPlaylistId(url);
+
+        if (videoId && !embedUrl) {
+            setIsLoadingMetadata(true);
+            try {
+                const data = await fetchYouTubeOEmbed(url);
+                if (data && data.html) {
+                    setEmbedUrl(data.html);
+                    if (!playlistUrl && playlistId) {
+                        setPlaylistUrl(`https://www.youtube.com/playlist?list=${playlistId}`);
+                    } else if (!playlistUrl && !playlistId) {
+                        // If no playlist but it's a video, maybe we don't set playlistUrl or set it to video URL
+                        // setPlaylistUrl(url); 
+                    }
+                    successNotification(`Fetched video: ${data.title}`);
+                }
+            } catch (err) {
+                console.error("Failed to fetch YouTube metadata", err);
+            } finally {
+                setIsLoadingMetadata(false);
+            }
+        }
     };
 
     const confirmUpload = async (password) => {
@@ -512,9 +542,11 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                     type="url"
                                     value={playlistUrl}
                                     onChange={(e) => setPlaylistUrl(e.target.value)}
+                                    onBlur={(e) => handleYouTubeUrlProcess(e.target.value)}
                                     fullWidth
                                     placeholder="https://www.youtube.com/playlist?list=..."
                                     helperText="Link to tournament video playlist"
+                                    disabled={isLoadingMetadata}
                                 />
                             </Box>
 
@@ -525,9 +557,18 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                     rows={3}
                                     value={embedUrl}
                                     onChange={(e) => setEmbedUrl(e.target.value)}
+                                    onBlur={(e) => {
+                                        if (e.target.value.includes('youtube.com') || e.target.value.includes('youtu.be')) {
+                                            handleYouTubeUrlProcess(e.target.value);
+                                        }
+                                    }}
                                     fullWidth
                                     placeholder='<iframe width="560" height="315" src="https://www.youtube.com/embed/..." ...></iframe>'
-                                    helperText="Paste the full iframe embed code from YouTube"
+                                    helperText={isLoadingMetadata ? "Fetching metadata..." : "Paste the full iframe embed code OR a YouTube video URL"}
+                                    disabled={isLoadingMetadata}
+                                    InputProps={{
+                                        endAdornment: isLoadingMetadata && <CircularProgress size={20} sx={{ mr: 1 }} />
+                                    }}
                                 />
                             </Box>
                         </Box>

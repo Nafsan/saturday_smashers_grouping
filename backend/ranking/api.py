@@ -34,12 +34,16 @@ async def youtube_search(q: str):
     Handles multi-word names by searching for each component.
     """
     channel_handle = "@saturday_smashers"
-    words = [w.strip() for w in q.split() if len(w.strip()) > 1]
-    # Always include the full query as the primary search
-    search_queries = [q]
-    for word in words:
-        if word.lower() != q.lower() and word not in search_queries:
-            search_queries.append(word)
+    # Hardcoded exception for specific names that shouldn't be split
+    if q.lower() == "abdullah fahim":
+        search_queries = ["Abdullah Fahim"]
+    else:
+        words = [w.strip() for w in q.split() if len(w.strip()) > 1]
+        # Always include the full query as the primary search
+        search_queries = [q]
+        for word in words:
+            if word.lower() != q.lower() and word not in search_queries:
+                search_queries.append(word)
 
     # Limit to avoid over-searching and potential blocking
     search_queries = search_queries[:4]

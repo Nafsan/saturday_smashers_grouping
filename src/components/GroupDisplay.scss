@@ -96,6 +96,17 @@
                     filter: brightness(1.1);
                 }
             }
+
+            &.share-btn {
+                background-color: var(--bg-surface-soft);
+                color: var(--accent-primary);
+                border-color: var(--border-subtle);
+
+                &:hover {
+                    background-color: var(--bg-card);
+                    border-color: var(--accent-primary);
+                }
+            }
         }
     }
 

@@ -3,8 +3,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { generateGroupsAction, resetGroups, clearDraftState, setGroupGenerationMethod } from '../store/appSlice';
 import { generateKnockoutFixtures } from '../logic/knockout';
 import { toPng } from 'html-to-image';
-import { Download, RefreshCw, ArrowLeft, Trophy, Medal, FileImage, Layers } from 'lucide-react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Menu, MenuItem, ListItemIcon, ListItemText, useMediaQuery } from '@mui/material';
+import { Download, RefreshCw, ArrowLeft, Trophy, Medal, FileImage, Layers, Share2 } from 'lucide-react';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Menu, MenuItem, ListItemIcon, ListItemText, useMediaQuery, Checkbox, FormControlLabel, FormGroup, Box, CircularProgress } from '@mui/material';
 import ThemeToggle from './ThemeToggle';
 import './GroupDisplay.scss';
 
@@ -20,6 +20,13 @@ const GroupDisplay = () => {
     const [showBackConfirmation, setShowBackConfirmation] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const openExportMenu = Boolean(anchorEl);
+    const [showShareDialog, setShowShareDialog] = useState(false);
+    const [sharing, setSharing] = useState(false);
+    const [selectedShareOptions, setSelectedShareOptions] = useState({
+        groups: true,
+        bracket: false,
+        rankings: false
+    });
 
     const fixtures = useMemo(() => {
         // Only generate knockout for 2 groups
@@ -101,6 +108,65 @@ const GroupDisplay = () => {
         dispatch(generateGroupsAction(Object.keys(groups).length));
     };
 
+    const handleShare = async () => {
+        setSharing(true);
+        try {
+            const files = [];
+            const dateStr = new Date().toISOString().slice(0, 10);
+
+            const options = [
+                { id: 'groups', node: groupsOnlyRef.current, filename: `groups-${dateStr}.png` },
+                { id: 'bracket', node: knockoutRef.current, filename: `bracket-${dateStr}.png` },
+                { id: 'rankings', node: rankingsRef.current, filename: `rankings-${dateStr}.png` }
+            ];
+
+            for (const opt of options) {
+                if (selectedShareOptions[opt.id] && opt.node) {
+                    const dataUrl = await toPng(opt.node, {
+                        cacheBust: true,
+                        backgroundColor: '#0f172a',
+                        style: { padding: '20px' },
+                        width: opt.node.scrollWidth + 40,
+                        height: opt.node.scrollHeight + 40,
+                    });
+
+                    // Convert dataUrl to File object
+                    const res = await fetch(dataUrl);
+                    const blob = await res.blob();
+                    files.push(new File([blob], opt.filename, { type: 'image/png' }));
+                }
+            }
+
+            if (files.length === 0) {
+                alert("Please select at least one item to share.");
+                return;
+            }
+
+            if (navigator.canShare && navigator.canShare({ files })) {
+                await navigator.share({
+                    files,
+                    title: 'Saturday Smashers Tournament Groups',
+                    text: `Check out the groups for our tournament on ${new Date(tournamentDate).toLocaleDateString()}!`
+                });
+            } else {
+                // Fallback: Download them one by one if sharing is not possible
+                alert("Sharing files is not supported on this browser. Downloading images instead.");
+                files.forEach(file => {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(file);
+                    link.download = file.name;
+                    link.click();
+                });
+            }
+            setShowShareDialog(false);
+        } catch (error) {
+            console.error('Error sharing:', error);
+            alert("Something went wrong while sharing.");
+        } finally {
+            setSharing(false);
+        }
+    };
+
     return (
         <div className="group-display">
             <div className="actions-bar">
@@ -130,6 +196,10 @@ const GroupDisplay = () => {
                         aria-expanded={openExportMenu ? 'true' : undefined}
                     >
                         <Download size={20} /> Export...
+                    </button>
+
+                    <button className="icon-btn share-btn" onClick={() => setShowShareDialog(true)}>
+                        <Share2 size={20} /> Share
                     </button>
 
                     <Menu
@@ -293,6 +363,81 @@ const GroupDisplay = () => {
                     </Button>
                     <Button onClick={handleConfirmBack} variant="contained" color="error">
                         Discard & Go Back
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Share Selection Dialog */}
+            <Dialog 
+                open={showShareDialog} 
+                onClose={() => !sharing && setShowShareDialog(false)}
+                PaperProps={{
+                    sx: {
+                        backgroundColor: 'var(--bg-card)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-main)',
+                        borderRadius: '16px',
+                        width: isMobile ? '95%' : '400px'
+                    }
+                }}
+            >
+                <DialogTitle sx={{ borderBottom: '1px solid var(--border-subtle)', mb: 1 }}>
+                    Share Tournament Info
+                </DialogTitle>
+                <DialogContent sx={{ py: 2 }}>
+                    <Typography variant="body2" sx={{ color: 'var(--text-secondary)', mb: 2 }}>
+                        Select which parts of the tournament you'd like to share:
+                    </Typography>
+                    <FormGroup>
+                        <FormControlLabel
+                            control={
+                                <Checkbox 
+                                    checked={selectedShareOptions.groups} 
+                                    onChange={(e) => setSelectedShareOptions(prev => ({ ...prev, groups: e.target.checked }))}
+                                    sx={{ color: 'var(--accent-primary)', '&.Mui-checked': { color: 'var(--accent-primary)' } }}
+                                />
+                            }
+                            label="Groups Display"
+                        />
+                        {(fixtures.cup.length > 0 || fixtures.plate.length > 0) && (
+                            <FormControlLabel
+                                control={
+                                    <Checkbox 
+                                        checked={selectedShareOptions.bracket} 
+                                        onChange={(e) => setSelectedShareOptions(prev => ({ ...prev, bracket: e.target.checked }))}
+                                        sx={{ color: 'var(--accent-primary)', '&.Mui-checked': { color: 'var(--accent-primary)' } }}
+                                    />
+                                }
+                                label="Knockout Bracket"
+                            />
+                        )}
+                        <FormControlLabel
+                            control={
+                                <Checkbox 
+                                    checked={selectedShareOptions.rankings} 
+                                    onChange={(e) => setSelectedShareOptions(prev => ({ ...prev, rankings: e.target.checked }))}
+                                    sx={{ color: 'var(--accent-primary)', '&.Mui-checked': { color: 'var(--accent-primary)' } }}
+                                />
+                            }
+                            label="Ranking Breakdown"
+                        />
+                    </FormGroup>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, borderTop: '1px solid var(--border-subtle)' }}>
+                    <Button onClick={() => setShowShareDialog(false)} color="inherit" disabled={sharing}>
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleShare} 
+                        variant="contained" 
+                        disabled={sharing || (!selectedShareOptions.groups && !selectedShareOptions.bracket && !selectedShareOptions.rankings)}
+                        startIcon={sharing ? <CircularProgress size={20} color="inherit" /> : <Share2 size={20} />}
+                        sx={{ 
+                            background: 'var(--gradient-primary)',
+                            '&:hover': { background: 'var(--gradient-primary)', filter: 'brightness(1.1)' }
+                        }}
+                    >
+                        {sharing ? 'Preparing...' : 'Share Now'}
                     </Button>
                 </DialogActions>
             </Dialog>

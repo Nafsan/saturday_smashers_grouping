@@ -135,6 +135,11 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
             }
         });
 
+        if (!numGroups || isNaN(parseInt(numGroups)) || parseInt(numGroups) <= 0) {
+            warningNotification("Please set a valid number of groups (minimum 2).");
+            return;
+        }
+
         if (unrated.length > 0 || singleTournament.length > 0) {
             setPendingUnratedPlayers(unrated);
             setPendingSingleTournamentPlayers(singleTournament);
@@ -142,7 +147,8 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
             return;
         }
 
-        onGenerate(numGroups);
+        const finalNumGroups = parseInt(numGroups);
+        onGenerate(finalNumGroups);
         onClose();
     };
 
@@ -172,12 +178,18 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
             }
         });
 
+        if (!numGroups || isNaN(parseInt(numGroups)) || parseInt(numGroups) <= 0) {
+            warningNotification("Please set a valid number of groups (minimum 2).");
+            return;
+        }
+
         setRatingPromptOpen(false);
         setPendingUnratedPlayers([]);
         setPendingSingleTournamentPlayers([]);
         setInitialRatings({});
 
-        onGenerate(numGroups);
+        const finalNumGroups = parseInt(numGroups) || 2;
+        onGenerate(finalNumGroups);
         onClose();
     };
 
@@ -310,7 +322,7 @@ const TournamentFixtureModal = ({ open, onClose, onGenerate }) => {
                             type="number"
                             value={numGroups}
                             onChange={(e) => {
-                                setNumGroups(parseInt(e.target.value) || 2);
+                                setNumGroups(e.target.value);
                                 setIsGroupsManuallySet(true);
                             }}
                             fullWidth

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { X, Trophy, Info } from 'lucide-react';
 import { calculateRankings } from '../logic/ranking';
@@ -96,6 +96,14 @@ const GlobalRanking = ({ onClose }) => {
         setShowBreakdown(false);
         setSelectedPlayer(null);
     };
+
+    // Prevent background scrolling when modal is open
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, []);
 
     return (
         <div className="global-ranking-overlay" onClick={onClose}>

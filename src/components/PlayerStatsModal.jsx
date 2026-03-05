@@ -42,9 +42,12 @@ const PlayerStatsModal = ({ open, onClose }) => {
     const [searchingVideos, setSearchingVideos] = useState(false);
 
 
-    // Reset state when modal closes
+    // Reset state and manage scroll lock when modal closes/opens
     useEffect(() => {
-        if (!open) {
+        if (open) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
             setSelectedPlayer(null);
             setPlayerData(null);
             setError(null);
@@ -54,6 +57,9 @@ const PlayerStatsModal = ({ open, onClose }) => {
             setYoutubeVideos([]);
             setViewMode('grid');
         }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
     }, [open]);
 
     // Custom styles for react-select
@@ -655,7 +661,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                                         />
                                                         {video.length && <span className="video-length">{video.length}</span>}
                                                         <div className="play-overlay">
-                                                            <Youtube size={viewMode === 'list' ? 24 : 32} color="#FF0000" fill="#FF0000" />
+                                                            <Youtube size={viewMode === 'list' ? 24 : 32} color="#FF0000" />
                                                         </div>
                                                     </div>
                                                     <div className="match-info">

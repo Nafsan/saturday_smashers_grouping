@@ -140,6 +140,66 @@ async def youtube_search(q: str):
             logger.error(f"YouTube search error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Failed to search YouTube: {str(e)}")
 
+@router.get("/youtube-playlist")
+async def youtube_playlist(list_id: str):
+    """
+    Scrapes the YouTube playlist page and extracts video metadata.
+    """
+    playlist_url = f"https://www.youtube.com/playlist?list={list_id}"
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Accept-Language": "en-US,en;q=0.9"
+            }
+            
+            response = await client.get(playlist_url, headers=headers, timeout=15.0)
+            response.raise_for_status()
+            html = response.text
+            
+            # Find the ytInitialData JSON
+            start_marker = 'var ytInitialData = '
+            end_marker = ';</script>'
+            start_idx = html.find(start_marker)
+            if start_idx == -1:
+                return {"videos": []}
+            
+            start_idx += len(start_marker)
+            end_idx = html.find(end_marker, start_idx)
+            if end_idx == -1:
+                return {"videos": []}
+            
+            data = json.loads(html[start_idx:end_idx])
+            
+            videos = []
+            try:
+                # Path for playlist videos in ytInitialData
+                sidebar = data.get('contents', {}).get('twoColumnBrowseResultsRenderer', {}).get('tabs', [{}])[0].get('tabRenderer', {}).get('content', {}).get('sectionListRenderer', {}).get('contents', [{}])[0].get('itemSectionRenderer', {}).get('contents', [{}])[0].get('playlistVideoListRenderer', {}).get('contents', [])
+                
+                if not sidebar:
+                    # Alternative path for some playlist layouts
+                    sidebar = data.get('contents', {}).get('twoColumnBrowseResultsRenderer', {}).get('tabs', [{}])[0].get('tabRenderer', {}).get('content', {}).get('sectionListRenderer', {}).get('contents', [{}])[0].get('itemSectionRenderer', {}).get('contents', [{}])[0].get('playlistVideoListRenderer', {}).get('contents', [])
+
+                for item in sidebar:
+                    if 'playlistVideoRenderer' in item:
+                        v = item['playlistVideoRenderer']
+                        videos.append({
+                            'videoId': v.get('videoId'),
+                            'title': v.get('title', {}).get('runs', [{}])[0].get('text'),
+                            'thumbnail': v.get('thumbnail', {}).get('thumbnails', [{}])[0].get('url'),
+                            'viewCount': v.get('videoInfo', {}).get('runs', [{}])[0].get('text') if v.get('videoInfo') else None,
+                            'publishedTime': None, # Playlists don't always show relative time in this view
+                            'length': v.get('lengthText', {}).get('simpleText')
+                        })
+            except Exception as e:
+                logger.error(f"Error parsing playlist results for {list_id}: {e}")
+                
+            return {"videos": videos}
+        except Exception as e:
+            logger.error(f"YouTube playlist error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Failed to fetch YouTube playlist: {str(e)}")
+
 @router.get("/proxy")
 async def proxy_ranking(url: str, force_refresh: bool = False):
     """

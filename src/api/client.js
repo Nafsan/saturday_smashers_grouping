@@ -194,6 +194,13 @@ export const fetchYouTubeSearch = async (query) => {
     return response.data;
 };
 
+export const fetchYouTubePlaylist = async (playlistId) => {
+    const response = await client.get('/ranking/youtube-playlist', {
+        params: { list_id: playlistId }
+    });
+    return response.data;
+};
+
 export default client;
 
 

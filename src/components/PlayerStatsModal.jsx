@@ -5,7 +5,10 @@ import Select from 'react-select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { fetchPlayerStatistics, fetchYouTubeSearch } from '../api/client';
 import { extractVideoId, getYouTubeThumbnail, getVideoUrl, getYouTubeMetadata } from '../utils/youtubeUtils';
+import VideoGrid from './VideoGrid';
+import VideoPlayer from './VideoPlayer';
 import './PlayerStatsModal.scss';
+import './VideoPlayer.scss';
 
 // Player categories data
 const playerCategoriesData = {
@@ -37,9 +40,10 @@ const PlayerStatsModal = ({ open, onClose }) => {
     const [timeRange, setTimeRange] = useState('10'); // '10', '20', 'all'
     const [activeTab, setActiveTab] = useState('stats'); // 'stats' | 'matches'
     const [matchMetadata, setMatchMetadata] = useState({}); // id -> {title}
-    const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+    const [viewMode, setViewMode] = useState('grid');
     const [youtubeVideos, setYoutubeVideos] = useState([]);
     const [searchingVideos, setSearchingVideos] = useState(false);
+    const [currentEmbedUrl, setCurrentEmbedUrl] = useState('');
 
 
     // Reset state and manage scroll lock when modal closes/opens
@@ -56,6 +60,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
             setMatchMetadata({});
             setYoutubeVideos([]);
             setViewMode('grid');
+            setCurrentEmbedUrl('');
         }
         return () => {
             document.body.style.overflow = 'unset';
@@ -224,21 +229,57 @@ const PlayerStatsModal = ({ open, onClose }) => {
                 setSearchingVideos(true);
                 // Clear existing videos when searching for a new player
                 setYoutubeVideos([]);
+                setCurrentEmbedUrl('');
                 try {
                     const query = `${playerData.player_name}`;
                     const response = await fetchYouTubeSearch(query);
                     if (response && response.videos) {
-                        setYoutubeVideos(response.videos);
+                        const sorted = response.videos.sort((a, b) => {
+                        const parseAge = (timeStr) => {
+                            if (!timeStr) return Infinity;
+                            const parts = timeStr.toLowerCase().split(' ');
+                            const value = parseInt(parts[0]);
+                            const unit = parts[1];
+                            if (unit.includes('second')) return value / 3600;
+                            if (unit.includes('minute')) return value / 60;
+                            if (unit.includes('hour')) return value;
+                            if (unit.includes('day')) return value * 24;
+                            if (unit.includes('week')) return value * 168;
+                            if (unit.includes('month')) return value * 720;
+                            if (unit.includes('year')) return value * 8760;
+                            return Infinity;
+                        };
+                        return parseAge(a.publishedTime) - parseAge(b.publishedTime);
+                    });
+                    setYoutubeVideos(sorted);
+                    
+                    // Auto-select latest video from the NEW results
+                    if (sorted.length > 0) {
+                        const latestVideo = sorted[0];
+                        setCurrentEmbedUrl(`<iframe width="100%" height="450" src="https://www.youtube.com/embed/${latestVideo.videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`);
                     }
-                } catch (err) {
-                    console.error("YouTube search failed:", err);
-                } finally {
-                    setSearchingVideos(false);
                 }
-            };
-            searchVideos();
+            } catch (err) {
+                console.error("Failed to fetch YouTube videos:", err);
+            } finally {
+                setSearchingVideos(false);
+            }
+        };
+        searchVideos();
+    }
+}, [activeTab, playerData?.player_name]);
+
+    const handleVideoSelect = (video) => {
+        const videoId = video.videoId;
+        const newEmbed = `<iframe width="100%" height="450" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+        setCurrentEmbedUrl(newEmbed);
+        
+        // Scroll to top of matches wrapper
+        const matchesWrapper = document.querySelector('.matches-grid-wrapper');
+        if (matchesWrapper) {
+            matchesWrapper.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    }, [activeTab, playerData?.player_name]);
+    };
 
     // Categorize player and get motivational statement
     const playerCategory = useMemo(() => {
@@ -602,87 +643,38 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                 </>
                             ) : (
                                 <div className="matches-grid-wrapper">
-                                    <div className="matches-controls">
-                                        <div className="view-toggle">
-                                            <button 
-                                                className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                                                onClick={() => setViewMode('grid')}
-                                            >
-                                                <Target size={18} />
-                                                <span>Grid</span>
-                                            </button>
-                                            <button 
-                                                className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-                                                onClick={() => setViewMode('list')}
-                                            >
-                                                <FileText size={18} />
-                                                <span>List</span>
-                                            </button>
-                                        </div>
-                                        <div className="matches-count">
-                                            {youtubeVideos.length} Matches found on YouTube
-                                        </div>
-                                    </div>
-
-                                    {searchingVideos ? (
-                                        <div className="loading-state">
-                                            <div className="spinner"></div>
-                                            <p>Searching YouTube channel for {playerData?.player_name}'s matches...</p>
-                                        </div>
-                                    ) : youtubeVideos.length > 0 ? (
-                                        <div className={`matches-container ${viewMode}`}>
-                                            {[...youtubeVideos].sort((a, b) => {
-                                                const parseAge = (timeStr) => {
-                                                    if (!timeStr) return Infinity;
-                                                    const parts = timeStr.toLowerCase().split(' ');
-                                                    const value = parseInt(parts[0]);
-                                                    const unit = parts[1];
-                                                    
-                                                    if (unit.includes('second')) return value / 3600;
-                                                    if (unit.includes('minute')) return value / 60;
-                                                    if (unit.includes('hour')) return value;
-                                                    if (unit.includes('day')) return value * 24;
-                                                    if (unit.includes('week')) return value * 168;
-                                                    if (unit.includes('month')) return value * 720;
-                                                    if (unit.includes('year')) return value * 8760;
-                                                    return Infinity;
-                                                };
-                                                return parseAge(a.publishedTime) - parseAge(b.publishedTime);
-                                            }).map(video => (
-                                                <div key={video.videoId} className={`match-item ${viewMode === 'list' ? 'list-item' : 'card-item'}`}>
-                                                    <div className="match-thumbnail" onClick={() => window.open(`https://www.youtube.com/watch?v=${video.videoId}`, '_blank')}>
-                                                        <img 
-                                                            src={video.thumbnail} 
-                                                            alt={video.title}
-                                                            onError={(e) => {
-                                                                e.target.src = '/assets/logo.png';
-                                                                e.target.onerror = null;
-                                                            }}
-                                                        />
-                                                        {video.length && <span className="video-length">{video.length}</span>}
-                                                        <div className="play-overlay">
-                                                            <Youtube size={viewMode === 'list' ? 24 : 32} color="#FF0000" />
-                                                        </div>
-                                                    </div>
-                                                    <div className="match-info">
-                                                        <div className="match-title" title={video.title}>{video.title}</div>
-                                                        <div className="match-meta">
-                                                            <span className="match-views">{video.viewCount}</span>
-                                                            <span className="dot">•</span>
-                                                            <span className="match-date">{video.publishedTime}</span>
-                                                        </div>
-                                                        <button className="watch-btn" onClick={() => window.open(`https://www.youtube.com/watch?v=${video.videoId}`, '_blank')}>
-                                                            Watch Match
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="no-matches">
-                                            <p>No recorded matches found for "{playerData?.player_name}" on the Sunday Smashers channel.</p>
-                                        </div>
-                                    )}
+                                    <VideoPlayer 
+                                        embedUrl={currentEmbedUrl}
+                                        loading={searchingVideos}
+                                        playlistUrl={null}
+                                    />
+                                    <VideoGrid 
+                                        videos={youtubeVideos.sort((a, b) => {
+                                            const parseAge = (timeStr) => {
+                                                if (!timeStr) return Infinity;
+                                                const parts = timeStr.toLowerCase().split(' ');
+                                                const value = parseInt(parts[0]);
+                                                const unit = parts[1];
+                                                
+                                                if (unit.includes('second')) return value / 3600;
+                                                if (unit.includes('minute')) return value / 60;
+                                                if (unit.includes('hour')) return value;
+                                                if (unit.includes('day')) return value * 24;
+                                                if (unit.includes('week')) return value * 168;
+                                                if (unit.includes('month')) return value * 720;
+                                                if (unit.includes('year')) return value * 8760;
+                                                return Infinity;
+                                            };
+                                            return parseAge(a.publishedTime) - parseAge(b.publishedTime);
+                                        })}
+                                        viewMode={viewMode}
+                                        onViewModeChange={setViewMode}
+                                        searching={searchingVideos}
+                                        onVideoClick={handleVideoSelect}
+                                        activeVideoId={extractVideoId(currentEmbedUrl)}
+                                        loadingMessage={`Searching YouTube channel for ${playerData?.player_name}'s matches...`}
+                                        emptyMessage={`No recorded matches found for "${playerData?.player_name}" on the Sunday Smashers channel.`}
+                                    />
                                 </div>
                             )}
                         </>

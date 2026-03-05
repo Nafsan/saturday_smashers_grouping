@@ -8,8 +8,12 @@ import { selectAllPlayerNames } from '../store/appSlice';
 import { useToast } from '../context/ToastContext';
 import { isAdminAuthenticated } from '../utils/cookieUtils';
 import ShareTournamentDialog from './ShareTournamentDialog';
-import { extractVideoId, getYouTubeThumbnail } from '../utils/youtubeUtils';
+import { extractVideoId, getYouTubeThumbnail, extractPlaylistId } from '../utils/youtubeUtils';
+import { fetchYouTubePlaylist } from '../api/client';
+import VideoGrid from './VideoGrid';
+import VideoPlayer from './VideoPlayer';
 import './AnalyticsDashboard.scss';
+import './VideoPlayer.scss';
 
 const AnalyticsDashboard = ({ onEdit }) => {
     const { history } = useSelector(state => state.app);
@@ -42,10 +46,73 @@ const AnalyticsDashboard = ({ onEdit }) => {
 
 
 
+
     // YouTube Modal State
     const [showYouTubeModal, setShowYouTubeModal] = useState(false);
     const [currentEmbedUrl, setCurrentEmbedUrl] = useState('');
     const [currentPlaylistUrl, setCurrentPlaylistUrl] = useState('');
+    const [playlistVideos, setPlaylistVideos] = useState([]);
+    const [loadingPlaylist, setLoadingPlaylist] = useState(false);
+    const [playlistViewMode, setPlaylistViewMode] = useState('grid');
+    const [currentTournament, setCurrentTournament] = useState(null);
+
+    // Fetch playlist videos when modal opens
+    useEffect(() => {
+        const loadPlaylist = async () => {
+            if (showYouTubeModal) {
+                if (currentPlaylistUrl) {
+                    const playlistId = extractPlaylistId(currentPlaylistUrl);
+                    if (playlistId) {
+                        setLoadingPlaylist(true);
+                        try {
+                            const response = await fetchYouTubePlaylist(playlistId);
+                            if (response && response.videos && response.videos.length > 0) {
+                                setPlaylistVideos(response.videos);
+                                // Auto-select latest video if none selected
+                                if (!currentEmbedUrl) {
+                                    const latestVideo = response.videos[0];
+                                    const videoId = latestVideo.videoId;
+                                    setCurrentEmbedUrl(`<iframe width="100%" height="450" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`);
+                                }
+                                setLoadingPlaylist(false);
+                                return;
+                            }
+                        } catch (err) {
+                            console.error("Failed to fetch playlist videos:", err);
+                        } finally {
+                            setLoadingPlaylist(false);
+                        }
+                    }
+                }
+                
+                // Fallback: Show the tournament's single video if no playlist or fetch failed
+                if (currentTournament && currentTournament.embed_url) {
+                    const videoId = extractVideoId(currentTournament.embed_url);
+                    if (videoId) {
+                        const tournamentVideo = {
+                            videoId,
+                            title: `${currentTournament.tournament_name || 'Tournament'} Video`,
+                            thumbnail: getYouTubeThumbnail(videoId),
+                            viewCount: null,
+                            publishedTime: null,
+                            length: null
+                        };
+                        setPlaylistVideos([tournamentVideo]);
+                        
+                        // Auto-select if none selected
+                        if (!currentEmbedUrl) {
+                            setCurrentEmbedUrl(`<iframe width="100%" height="450" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`);
+                        }
+                    }
+                }
+            } else if (!showYouTubeModal) {
+                setPlaylistVideos([]);
+                setCurrentTournament(null);
+            }
+        };
+
+        loadPlaylist();
+    }, [showYouTubeModal, currentPlaylistUrl, currentTournament]);
 
     // Share Dialog State
     const [showShareDialog, setShowShareDialog] = useState(false);
@@ -71,13 +138,21 @@ const AnalyticsDashboard = ({ onEdit }) => {
     };
 
     const handleYouTubeClick = (tournament) => {
-        if (tournament.embed_url) {
-            setCurrentEmbedUrl(tournament.embed_url);
-            setCurrentPlaylistUrl(tournament.playlist_url || '');
-            setShowYouTubeModal(true);
-        } else if (tournament.playlist_url) {
-            // Fallback to opening playlist in new tab if no embed URL
-            window.open(tournament.playlist_url, '_blank');
+        // Reset embed URL to show playlist first as requested
+        setCurrentEmbedUrl('');
+        setCurrentPlaylistUrl(tournament.playlist_url || '');
+        setCurrentTournament(tournament);
+        setShowYouTubeModal(true);
+    };
+
+    const handleVideoSelect = (video) => {
+        const videoId = video.videoId;
+        const newEmbed = `<iframe width="100%" height="450" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+        setCurrentEmbedUrl(newEmbed);
+        
+        const modalContent = document.querySelector('.MuiDialogContent-root');
+        if (modalContent) {
+            modalContent.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
@@ -475,32 +550,29 @@ const AnalyticsDashboard = ({ onEdit }) => {
                     📺 Tournament Video
                 </DialogTitle>
                 <DialogContent sx={{ mt: 2, minHeight: '400px' }}>
-                    {currentEmbedUrl ? (
-                        <div
-                            dangerouslySetInnerHTML={{ __html: currentEmbedUrl }}
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'center',
-                                '& iframe': {
-                                    maxWidth: '100%',
-                                    height: 'auto'
-                                }
-                            }}
-                        />
-                    ) : (
-                        <p style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem' }}>
-                            No embed URL available.
-                            {currentPlaylistUrl && (
-                                <a
-                                    href={currentPlaylistUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ color: '#FF0000', marginLeft: '0.5rem' }}
-                                >
-                                    Open playlist in YouTube
-                                </a>
-                            )}
-                        </p>
+                    <VideoPlayer 
+                        embedUrl={currentEmbedUrl} 
+                        playlistUrl={currentPlaylistUrl}
+                        loading={loadingPlaylist}
+                        onOpenPlaylist={(url) => window.open(url, '_blank')}
+                    />
+
+                    {(currentPlaylistUrl || playlistVideos.length > 0) && (
+                        <div className="video-modal-playlist">
+                            <h4>
+                                <Youtube size={20} color="#FF0000" /> {currentPlaylistUrl ? 'Playlist Videos' : 'Tournament Video'}
+                            </h4>
+                            <VideoGrid 
+                                videos={playlistVideos}
+                                viewMode={playlistViewMode}
+                                onViewModeChange={setPlaylistViewMode}
+                                searching={loadingPlaylist}
+                                onVideoClick={handleVideoSelect}
+                                loadingMessage="Fetching videos from playlist..."
+                                emptyMessage="No other videos found in this playlist."
+                                activeVideoId={extractVideoId(currentEmbedUrl)}
+                            />
+                        </div>
                     )}
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>

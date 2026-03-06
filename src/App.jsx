@@ -10,6 +10,7 @@ import FundManagement from './components/FundManagement';
 import AdminConsole from './components/AdminConsole';
 import GttEloCalculator from './components/GttEloCalculator';
 import NationalRanking from './components/NationalRanking';
+import ClubTournaments from './components/ClubTournaments';
 import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { ToastProvider } from './context/ToastContext';
 import './styles/global.scss';
@@ -188,6 +189,7 @@ function AppWithTheme({ basename }) {
                                 <Route path="/fund/admin" element={<AdminConsole />} />
                                 <Route path="/gtt-elo-calculator" element={<GttEloCalculator />} />
                                 <Route path="/national-ranking" element={<NationalRanking />} />
+                                <Route path="/club-tournaments" element={<ClubTournaments />} />
                             </Routes>
                         </div>
                         <Footer />

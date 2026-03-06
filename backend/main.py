@@ -5,6 +5,7 @@ from tournament.api import router as tournament_router
 from player.api import router as player_router
 from fund.api import router as fund_router
 from ranking.api import router as ranking_router
+from club_tournament.api import router as club_tournament_router
 from datetime import datetime
 from sqlalchemy import text
 import time
@@ -87,3 +88,7 @@ app.include_router(tournament_router)
 app.include_router(player_router)
 app.include_router(fund_router)
 app.include_router(ranking_router)
+app.include_router(club_tournament_router)
+
+# Import club_tournament models to ensure they're registered with Base.metadata
+import club_tournament  # noqa: F401

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X, Calculator, DollarSign, UserPlus, BarChart3, ChevronDown, Trophy, LogIn, LogOut } from 'lucide-react';
+import { Menu, X, Calculator, DollarSign, UserPlus, BarChart3, ChevronDown, Trophy, LogIn, LogOut, Swords } from 'lucide-react';
 import { isAdminAuthenticated, clearAdminAuthCookie } from '../utils/cookieUtils';
 import ThemeToggle from './ThemeToggle';
 import LoginDialog from './LoginDialog';
@@ -80,6 +80,10 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
                         <Trophy size={18} />
                         <span>National Ranking</span>
                     </a>
+                    <a onClick={() => navigate('/club-tournaments')} className="nav-link">
+                        <Swords size={18} />
+                        <span>Tournaments</span>
+                    </a>
 
                 </div>
 
@@ -145,6 +149,10 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
                     <a onClick={() => { navigate('/national-ranking'); setMobileMenuOpen(false); }} className="mobile-link">
                         <Trophy size={18} />
                         <span>National Ranking</span>
+                    </a>
+                    <a onClick={() => { navigate('/club-tournaments'); setMobileMenuOpen(false); }} className="mobile-link">
+                        <Swords size={18} />
+                        <span>Tournaments</span>
                     </a>
 
                     <div className="mobile-divider"></div>

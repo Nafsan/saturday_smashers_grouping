@@ -201,6 +201,81 @@ export const fetchYouTubePlaylist = async (playlistId) => {
     return response.data;
 };
 
+
+// ============ Club Tournament APIs ============
+export const fetchClubTournaments = async (statusFilter = 'all', venueId = null) => {
+    const params = { status_filter: statusFilter };
+    if (venueId) params.venue_id = venueId;
+    const response = await client.get('/club-tournaments', { params });
+    return response.data;
+};
+
+export const createClubTournament = async (data, password) => {
+    const response = await client.post('/club-tournaments', data, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const updateClubTournament = async (id, data, password) => {
+    const response = await client.put(`/club-tournaments/${id}`, data, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const deleteClubTournament = async (id, password) => {
+    const response = await client.delete(`/club-tournaments/${id}`, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const submitClubTournamentResults = async (tournamentId, data, password) => {
+    const response = await client.post(`/club-tournaments/${tournamentId}/results`, data, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const updateClubTournamentResults = async (tournamentId, data, password) => {
+    const response = await client.put(`/club-tournaments/${tournamentId}/results`, data, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const fetchClubVenues = async () => {
+    const response = await client.get('/club-venues');
+    return response.data;
+};
+
+export const createClubVenue = async (data, password) => {
+    const response = await client.post('/club-venues', data, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const updateClubVenue = async (id, data, password) => {
+    const response = await client.put(`/club-venues/${id}`, data, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const deleteClubVenue = async (id, password) => {
+    const response = await client.delete(`/club-venues/${id}`, {
+        params: { password }
+    });
+    return response.data;
+};
+
+export const bulkImportClubTournaments = async (data, password) => {
+    const response = await client.post('/club-tournaments/bulk-import', data, {
+        params: { password }
+    });
+    return response.data;
+};
+
 export default client;
-
-

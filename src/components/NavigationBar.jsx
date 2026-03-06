@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X, Calculator, DollarSign, Youtube, UserPlus, BarChart3, ChevronDown, Trophy, LogIn, LogOut } from 'lucide-react';
+import { Menu, X, Calculator, DollarSign, UserPlus, BarChart3, ChevronDown, Trophy, LogIn, LogOut } from 'lucide-react';
 import { isAdminAuthenticated, clearAdminAuthCookie } from '../utils/cookieUtils';
 import ThemeToggle from './ThemeToggle';
 import LoginDialog from './LoginDialog';
@@ -80,15 +80,7 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
                         <Trophy size={18} />
                         <span>National Ranking</span>
                     </a>
-                    <a
-                        href="https://www.youtube.com/@PongTTT-bd"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="nav-link youtube-link"
-                    >
-                        <Youtube size={18} />
-                        <span>YouTube</span>
-                    </a>
+
                 </div>
 
                 {/* Desktop Actions */}
@@ -154,16 +146,7 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
                         <Trophy size={18} />
                         <span>National Ranking</span>
                     </a>
-                    <a
-                        href="https://www.youtube.com/@PongTTT-bd"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mobile-link youtube-link"
-                        onClick={() => setMobileMenuOpen(false)}
-                    >
-                        <Youtube size={18} />
-                        <span>YouTube</span>
-                    </a>
+
                     <div className="mobile-divider"></div>
                     {isLoggedIn ? (
                         <>

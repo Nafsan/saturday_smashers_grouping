@@ -23,6 +23,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
     const isMobile = useMediaQuery('(max-width:600px)');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
+    const [officialOnly, setOfficialOnly] = useState(false);
     const [selectedGraphPlayers, setSelectedGraphPlayers] = useState([]);
     const [expandedTournaments, setExpandedTournaments] = useState([]);
     const [timeRange, setTimeRange] = useState('all'); // '10', '20', 'all'
@@ -251,8 +252,15 @@ const AnalyticsDashboard = ({ onEdit }) => {
     const colors = ['#38bdf8', '#818cf8', '#4ade80', '#f472b6', '#fbbf24'];
 
     // Recent Tournaments List Pagination
-    const totalPages = Math.ceil(history.length / itemsPerPage);
-    const displayedHistory = history.slice(
+    const filteredHistory = useMemo(() => {
+        if (officialOnly) {
+            return history.filter(t => t.is_official !== false);
+        }
+        return history;
+    }, [history, officialOnly]);
+
+    const totalPages = Math.ceil(filteredHistory.length / itemsPerPage) || 1;
+    const displayedHistory = filteredHistory.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
@@ -378,7 +386,23 @@ const AnalyticsDashboard = ({ onEdit }) => {
             )}
 
             <div className="recent-history">
-                <h3>Recent Tournaments</h3>
+                <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h3>Recent Tournaments</h3>
+                    <div className="official-toggle-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Official only</span>
+                        <label className="switch">
+                            <input 
+                                type="checkbox" 
+                                checked={officialOnly} 
+                                onChange={(e) => {
+                                    setOfficialOnly(e.target.checked);
+                                    setCurrentPage(1);
+                                }} 
+                            />
+                            <span className="slider round"></span>
+                        </label>
+                    </div>
+                </div>
                 <div className="history-list">
                     {displayedHistory.map(t => {
                         const isExpanded = expandedTournaments.includes(t.id);
@@ -482,7 +506,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
                 </div>
                 <div className="pagination-container">
                     <div className="pagination-info">
-                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, history.length)} of {history.length} results
+                        Showing {filteredHistory.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to {Math.min(currentPage * itemsPerPage, filteredHistory.length)} of {filteredHistory.length} results
                     </div>
 
                     <div className="pagination-controls">

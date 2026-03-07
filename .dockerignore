@@ -1,0 +1,42 @@
+# Node dependencies
+node_modules
+npm-debug.log
+package-lock.json
+
+# Build outputs
+dist
+build
+
+# Development
+.vscode
+.env
+.env.local
+
+# Git
+.git
+.gitignore
+.github
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+.pytest_cache
+
+# Logs
+logs
+*.log
+
+# Optional files
+README.md
+deployment_guide.md
+SUPABASE_CONNECTION_FIX.md
+UPTIMEROBOT_SETUP.md
+verify_logic.js

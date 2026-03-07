@@ -12,7 +12,8 @@ import {
     TextField,
     useMediaQuery,
 } from '@mui/material';
-import { Plus, MapPin, Trophy, Calendar, Users, Eye, Edit2, Trash2, Swords, Clock, ExternalLink, Upload } from 'lucide-react';
+import { Plus, MapPin, Trophy, Calendar, Users, Share2, Edit2, Trash2, Swords, Clock, ExternalLink, Upload, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { isAdminAuthenticated, getAdminAuthCookie } from '../utils/cookieUtils';
 import { fetchClubTournaments, fetchClubVenues, deleteClubTournament } from '../api/client';
 import { useToast } from '../context/ToastContext';
@@ -34,6 +35,7 @@ import BulkImportDialog from './BulkImportDialog';
 import './ClubTournaments.scss';
 
 const ClubTournaments = () => {
+    const navigate = useNavigate();
     const { successNotification, errorNotification } = useToast();
     const isAdmin = isAdminAuthenticated();
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -140,13 +142,22 @@ const ClubTournaments = () => {
 
     return (
         <div className="club-tournaments-page">
-            <NavigationBar
-                onAddPlayer={() => {}}
-                onPlayerStats={() => {}}
-                onSubmitResults={() => {}}
-            />
-
             <div className="club-tournaments-container">
+                {/* Back Button */}
+                <Box sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                    <Button
+                        startIcon={<ArrowLeft size={20} />}
+                        onClick={() => navigate('/')}
+                        sx={{
+                            color: 'var(--text-secondary)',
+                            '&:hover': { color: 'var(--accent-primary)', backgroundColor: 'transparent' },
+                            paddingLeft: 0
+                        }}
+                    >
+                        Back to Home
+                    </Button>
+                </Box>
+
                 {/* Page Header */}
                 <div className="page-header">
                     <div className="header-title">
@@ -329,11 +340,11 @@ const ClubTournaments = () => {
                                         <Button
                                             variant="outlined"
                                             size="small"
-                                            startIcon={<Eye size={16} />}
+                                            startIcon={<Share2 size={16} />}
                                             onClick={() => setViewResultsTournament(t)}
                                             className="view-results-btn"
                                         >
-                                            View Results
+                                            Share Result
                                         </Button>
                                     )}
                                     {isAdmin && (

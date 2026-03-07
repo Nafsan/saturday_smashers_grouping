@@ -22,6 +22,7 @@ import { toPng } from 'html-to-image';
 import ClubTournamentPosterTemplate from './ClubTournamentPosterTemplate';
 import { useToast } from '../context/ToastContext';
 import { getPlayersFromResult } from '../utils/clubTournamentConstants';
+import './ClubTournamentResultsDialog.scss';
 
 const ClubTournamentResultsDialog = ({ open, onClose, tournament }) => {
     const { successNotification, errorNotification } = useToast();
@@ -134,10 +135,12 @@ const ClubTournamentResultsDialog = ({ open, onClose, tournament }) => {
         setIsGenerating(true);
         try {
             await new Promise(r => setTimeout(r, 200));
+            const isOwnMode = sharingMode === 'own';
             const dataUrl = await toPng(node, {
                 quality: 1,
                 pixelRatio: 3,
-                width: 600,
+                width: 450,
+                height: isOwnMode ? 800 : 600,
                 style: {
                     transform: 'scale(1)',
                     transformOrigin: 'top left',
@@ -211,7 +214,7 @@ const ClubTournamentResultsDialog = ({ open, onClose, tournament }) => {
             onClose={() => onClose(false)}
             maxWidth="md"
             fullWidth
-            className="share-dialog"
+            className="share-dialog club-share-dialog"
             PaperProps={{
                 sx: { borderRadius: '16px', overflow: 'hidden' },
             }}

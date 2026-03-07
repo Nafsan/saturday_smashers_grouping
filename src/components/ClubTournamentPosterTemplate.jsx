@@ -18,10 +18,20 @@ const ClubTournamentPosterTemplate = ({
 }) => {
     if (!tournament) return null;
 
-    const { venue, category, result, total_players } = tournament;
+    const { venue, category, result, total_players, tournament_datetime } = tournament;
     const baseUrl = import.meta.env.BASE_URL || '/';
     const defaultLogo = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}assets/logo.png`;
     const effectiveLogo = logoUrl || defaultLogo;
+
+    const formatDate = (datetime) => {
+        if (!datetime) return '';
+        const date = new Date(datetime);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+    };
 
     const playerRank = selectedPlayer && result ? getPlayerRank(result, selectedPlayer) : null;
 
@@ -48,7 +58,7 @@ const ClubTournamentPosterTemplate = ({
     };
 
     return (
-        <div className="club-poster-container" id="club-tournament-poster">
+        <div className={`club-poster-container ${sharingMode}`} id="club-tournament-poster">
             <div className="poster-watermark">Saturday Smashers</div>
 
             {/* Header: Venue Logo/Name + Category + Player Count */}
@@ -59,9 +69,15 @@ const ClubTournamentPosterTemplate = ({
                     <div className="venue-name-header">{venue.name}</div>
                 )}
                 <h1 className="category-title">{category}</h1>
-                {total_players > 0 && (
-                    <div className="player-count">{total_players} Players</div>
-                )}
+                <div className="poster-meta">
+                    <span className="meta-date">{formatDate(tournament_datetime)}</span>
+                    {total_players > 0 && (
+                        <>
+                            <span className="meta-divider">•</span>
+                            <span className="player-count">{total_players} Players</span>
+                        </>
+                    )}
+                </div>
             </header>
 
             {/* Individual Mode: Player Spotlight */}

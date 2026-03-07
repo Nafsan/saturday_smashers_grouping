@@ -40,15 +40,20 @@ if DATABASE_URL:
     elif DATABASE_URL.startswith("postgresql://") and "asyncpg" not in DATABASE_URL:
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-# Enable SQL logging only in development (when DEBUG=True)
+# Enable SQL logging separately from DEBUG
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+SQL_ECHO = os.getenv("SQL_ECHO", "False").lower() == "true"
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "ss_admin_panel")
+
+import logging
+if not SQL_ECHO:
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
 # Connection pool configuration for Supabase Transaction Pooler
 # Supabase uses pgbouncer in transaction mode, which doesn't support prepared statements
 engine = create_async_engine(
     DATABASE_URL, 
-    echo=DEBUG,
+    echo=SQL_ECHO,
     pool_size=5,          # Maximum number of permanent connections
     max_overflow=10,      # Maximum number of temporary connections beyond pool_size
     pool_pre_ping=True,   # Verify connections before using them

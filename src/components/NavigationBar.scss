@@ -221,7 +221,7 @@
     }
 
     // Responsive
-    @media (max-width: 768px) {
+    @media (max-width: 900px) {
         .desktop-only {
             display: none !important;
         }
@@ -239,7 +239,7 @@
         }
     }
 
-    @media (min-width: 769px) {
+    @media (min-width: 901px) {
         .mobile-only {
             display: none !important;
         }

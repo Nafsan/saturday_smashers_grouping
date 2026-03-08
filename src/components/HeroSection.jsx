@@ -9,7 +9,7 @@ const HeroSection = ({ onPlayerStats, onViewRankings, onCreateFixture }) => {
                 {/* Cover Photo */}
                 {/* <div className="hero-cover">
                     <img
-                        src="/saturday_smashers_grouping/assets/cover.png"
+                        src={`${import.meta.env.BASE_URL}assets/cover.png`}
                         alt="Saturday Smashers Cover"
                         className="cover-image"
                         onError={(e) => {

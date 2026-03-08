@@ -52,7 +52,7 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
                 {/* Logo Section */}
                 <div className="nav-logo">
                     <img
-                        src="/saturday_smashers_grouping/assets/logo.png"
+                        src={`${import.meta.env.BASE_URL}assets/logo.png`}
                         alt="Saturday Smashers Logo"
                         className="logo-image"
                         onError={(e) => {

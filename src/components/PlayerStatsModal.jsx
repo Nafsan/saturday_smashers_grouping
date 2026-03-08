@@ -209,11 +209,13 @@ const PlayerStatsModal = ({ open, onClose }) => {
                     videoId = extractVideoId(t.playlist_url);
                 }
 
+                const baseUrl = import.meta.env.BASE_URL || '/';
+                const logoPath = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}assets/logo.webp`;
                 return {
                     id: t.id,
                     date: t.date,
                     videoId,
-                    thumbnail: videoId ? getYouTubeThumbnail(videoId, 'mqdefault') : '/assets/logo.webp',
+                    thumbnail: videoId ? getYouTubeThumbnail(videoId, 'mqdefault') : logoPath,
                     embedUrl: t.embed_url,
                     playlistUrl: t.playlist_url,
                     videoUrl: videoId ? getVideoUrl(videoId) : t.playlist_url

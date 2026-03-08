@@ -1,7 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getAllPlayers, calculateRankings } from '../logic/ranking';
 import { generateGroups } from '../logic/grouping';
-import { fetchHistory, addTournament, updateTournament, deleteTournament, fetchPlayers } from '../api/client';
+import { 
+    fetchHistory, 
+    addTournament, 
+    updateTournament, 
+    deleteTournament, 
+    fetchPlayers,
+    fetchFundSettings,
+    fetchDaysPlayedComparison
+} from '../api/client';
 import { getThemeCookie, setThemeCookie } from '../utils/cookieUtils';
 
 // Async Thunks
@@ -54,6 +62,22 @@ export const addPlayerAsync = createAsyncThunk(
     }
 );
 
+export const fetchFundSettingsAsync = createAsyncThunk(
+    'app/fetchFundSettings',
+    async () => {
+        const data = await fetchFundSettings();
+        return data;
+    }
+);
+
+export const fetchDaysPlayedComparisonAsync = createAsyncThunk(
+    'app/fetchDaysPlayedComparison',
+    async () => {
+        const data = await fetchDaysPlayedComparison();
+        return data;
+    }
+);
+
 
 const initialState = {
     history: [],
@@ -68,7 +92,11 @@ const initialState = {
     groupGenerationMethod: 'snake', // 'snake' | 'random'
     status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
-    theme: typeof window !== 'undefined' ? (getThemeCookie() || 'dark') : 'dark'
+    theme: typeof window !== 'undefined' ? (getThemeCookie() || 'dark') : 'dark',
+    fundSettings: null,
+    daysPlayedData: [],
+    fundStatus: 'idle', // 'idle' | 'loading' | 'succeeded'
+    analyticsStatus: 'idle' // 'idle' | 'loading' | 'succeeded'
 };
 
 export const appSlice = createSlice({
@@ -199,6 +227,20 @@ export const appSlice = createSlice({
                     state.allPlayers.push(playerName);
                     state.allPlayers.sort();
                 }
+            })
+            .addCase(fetchFundSettingsAsync.pending, (state) => {
+                state.fundStatus = 'loading';
+            })
+            .addCase(fetchFundSettingsAsync.fulfilled, (state, action) => {
+                state.fundStatus = 'succeeded';
+                state.fundSettings = action.payload;
+            })
+            .addCase(fetchDaysPlayedComparisonAsync.pending, (state) => {
+                state.analyticsStatus = 'loading';
+            })
+            .addCase(fetchDaysPlayedComparisonAsync.fulfilled, (state, action) => {
+                state.analyticsStatus = 'succeeded';
+                state.daysPlayedData = action.payload;
             });
     },
 });

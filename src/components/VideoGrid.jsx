@@ -73,7 +73,8 @@ const VideoGrid = ({
                                     src={video.thumbnail} 
                                     alt={video.title}
                                     onError={(e) => {
-                                        e.target.src = '/assets/logo.webp';
+                                        const baseUrl = import.meta.env.BASE_URL || '/';
+                                        e.target.src = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}assets/logo.webp`;
                                         e.target.onerror = null;
                                     }}
                                 />

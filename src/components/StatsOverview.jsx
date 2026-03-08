@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Trophy, Users, Calendar, CalendarClock, Edit2 } from 'lucide-react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
-import { fetchFundSettings, updateNextTournamentDate } from '../api/client';
+import { updateNextTournamentDate } from '../api/client';
 import { isAdminAuthenticated, getAdminAuthCookie } from '../utils/cookieUtils';
 import PasswordDialog from './PasswordDialog';
 import { useToast } from '../context/ToastContext';
@@ -12,6 +12,7 @@ import './StatsOverview.scss';
 const StatsOverview = () => {
     const tournaments = useSelector((state) => state.app.history);
     const allPlayers = useSelector((state) => state.app.allPlayers);
+    const { fundSettings } = useSelector((state) => state.app);
 
     const [nextTournamentDate, setNextTournamentDate] = useState(null);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -22,8 +23,6 @@ const StatsOverview = () => {
     const { successNotification, errorNotification } = useToast();
 
     useEffect(() => {
-        loadNextTournamentDate();
-
         // Listen for authentication status changes
         const handleAuthChange = () => {
             setIsLoggedIn(isAdminAuthenticated());
@@ -33,14 +32,11 @@ const StatsOverview = () => {
         return () => window.removeEventListener('authStatusChanged', handleAuthChange);
     }, []);
 
-    const loadNextTournamentDate = async () => {
-        try {
-            const settings = await fetchFundSettings();
-            setNextTournamentDate(settings.next_tournament_date);
-        } catch (error) {
-            console.error('Failed to load next tournament date:', error);
+    useEffect(() => {
+        if (fundSettings) {
+            setNextTournamentDate(fundSettings.next_tournament_date);
         }
-    };
+    }, [fundSettings]);
 
     const getNextSaturday = () => {
         const today = new Date();

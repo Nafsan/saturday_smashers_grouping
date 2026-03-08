@@ -43,9 +43,14 @@ const ShareTournamentDialog = ({ open, onClose, tournament }) => {
     const [showCropper, setShowCropper] = useState(false);
     const [logoDataUrl, setLogoDataUrl] = useState(null);
 
+    const hasFetchedLogo = useRef(false);
+
     // Load logo as Data URL for html-to-image stability
     useEffect(() => {
         const loadLogo = async () => {
+            if (!open || hasFetchedLogo.current) return;
+            hasFetchedLogo.current = true;
+
             try {
                 const baseUrl = import.meta.env.BASE_URL || '/';
                 const logoPath = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}assets/logo.webp`;
@@ -56,10 +61,11 @@ const ShareTournamentDialog = ({ open, onClose, tournament }) => {
                 reader.readAsDataURL(blob);
             } catch (err) {
                 console.error("Failed to load logo for sharing", err);
+                hasFetchedLogo.current = false;
             }
         };
         loadLogo();
-    }, []);
+    }, [open]);
 
     // Reset state on open/close
     useEffect(() => {

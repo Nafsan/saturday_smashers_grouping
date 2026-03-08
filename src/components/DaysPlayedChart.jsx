@@ -1,27 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { fetchDaysPlayedComparison } from '../api/client';
+import { fetchDaysPlayedComparisonAsync } from '../store/appSlice';
 import LoadingSpinner from './LoadingSpinner';
 
 const DaysPlayedChart = () => {
-    const [daysPlayedData, setDaysPlayedData] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const loadData = async () => {
-            try {
-                setLoading(true);
-                const data = await fetchDaysPlayedComparison();
-                setDaysPlayedData(data);
-            } catch (error) {
-                console.error('Error loading days played data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadData();
-    }, []);
+    const { daysPlayedData, analyticsStatus } = useSelector((state) => state.app);
 
     // Prepare chart data (top 30 by days played)
     const chartData = daysPlayedData.map(player => ({
@@ -29,7 +12,7 @@ const DaysPlayedChart = () => {
         days: player.days_played
     }));
 
-    if (loading) {
+    if (analyticsStatus === 'loading') {
         return <LoadingSpinner />;
     }
 

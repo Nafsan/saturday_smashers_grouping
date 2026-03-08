@@ -36,6 +36,7 @@ import SubmitClubResultsDialog from './SubmitClubResultsDialog';
 import ManageVenuesDialog from './ManageVenuesDialog';
 import ClubTournamentResultsDialog from './ClubTournamentResultsDialog';
 import BulkImportDialog from './BulkImportDialog';
+import SmartDateRangeSelector from './SmartDateRangeSelector';
 import './ClubTournaments.scss';
 
 const ClubTournaments = () => {
@@ -295,23 +296,14 @@ const ClubTournaments = () => {
                     </div>
 
                     <div className="filter-group date-filters">
-                        <TextField
-                            label="From"
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
-                            size="small"
-                            InputLabelProps={{ shrink: true }}
-                            sx={{ minWidth: 150 }}
-                        />
-                        <TextField
-                            label="To"
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
-                            size="small"
-                            InputLabelProps={{ shrink: true }}
-                            sx={{ minWidth: 150 }}
+                        <SmartDateRangeSelector 
+                            startDate={startDate}
+                            endDate={endDate}
+                            onRangeChange={(start, end) => {
+                                setStartDate(start);
+                                setEndDate(end);
+                                setPage(1);
+                            }}
                         />
                     </div>
 

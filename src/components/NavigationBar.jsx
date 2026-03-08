@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Menu, X, Calculator, DollarSign, UserPlus, BarChart3, ChevronDown, Trophy, LogIn, LogOut, Swords } from 'lucide-react';
 import { isAdminAuthenticated, clearAdminAuthCookie } from '../utils/cookieUtils';
 import ThemeToggle from './ThemeToggle';
@@ -7,7 +7,6 @@ import LoginDialog from './LoginDialog';
 import './NavigationBar.scss';
 
 const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
-    const navigate = useNavigate();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [adminMenuOpen, setAdminMenuOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(isAdminAuthenticated());
@@ -68,22 +67,22 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
 
                 {/* Desktop Navigation Links */}
                 <div className="nav-links desktop-only">
-                    <a onClick={() => navigate('/gtt-elo-calculator')} className="nav-link">
+                    <Link to="/gtt-elo-calculator" className="nav-link">
                         <Calculator size={18} />
                         <span>ELO Calculator</span>
-                    </a>
-                    <a onClick={() => navigate('/fund')} className="nav-link">
+                    </Link>
+                    <Link to="/fund" className="nav-link">
                         <DollarSign size={18} />
                         <span>Fund</span>
-                    </a>
-                    <a onClick={() => navigate('/national-ranking')} className="nav-link">
+                    </Link>
+                    <Link to="/national-ranking" className="nav-link">
                         <Trophy size={18} />
                         <span>National Ranking</span>
-                    </a>
-                    <a onClick={() => navigate('/club-tournaments')} className="nav-link">
+                    </Link>
+                    <Link to="/club-tournaments" className="nav-link">
                         <Swords size={18} />
                         <span>Tournaments</span>
-                    </a>
+                    </Link>
 
                 </div>
 
@@ -138,22 +137,22 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
             {/* Mobile Menu */}
             {mobileMenuOpen && (
                 <div className="mobile-menu">
-                    <a onClick={() => { navigate('/gtt-elo-calculator'); setMobileMenuOpen(false); }} className="mobile-link">
+                    <Link to="/gtt-elo-calculator" onClick={() => setMobileMenuOpen(false)} className="mobile-link">
                         <Calculator size={18} />
                         <span>ELO Calculator</span>
-                    </a>
-                    <a onClick={() => { navigate('/fund'); setMobileMenuOpen(false); }} className="mobile-link">
+                    </Link>
+                    <Link to="/fund" onClick={() => setMobileMenuOpen(false)} className="mobile-link">
                         <DollarSign size={18} />
                         <span>Fund</span>
-                    </a>
-                    <a onClick={() => { navigate('/national-ranking'); setMobileMenuOpen(false); }} className="mobile-link">
+                    </Link>
+                    <Link to="/national-ranking" onClick={() => setMobileMenuOpen(false)} className="mobile-link">
                         <Trophy size={18} />
                         <span>National Ranking</span>
-                    </a>
-                    <a onClick={() => { navigate('/club-tournaments'); setMobileMenuOpen(false); }} className="mobile-link">
+                    </Link>
+                    <Link to="/club-tournaments" onClick={() => setMobileMenuOpen(false)} className="mobile-link">
                         <Swords size={18} />
                         <span>Tournaments</span>
-                    </a>
+                    </Link>
 
                     <div className="mobile-divider"></div>
                     {isLoggedIn ? (

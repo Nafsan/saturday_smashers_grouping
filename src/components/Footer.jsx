@@ -58,7 +58,7 @@ const Footer = () => {
                     <Grid item xs={12} md={4}>
                         <Box className="footer-col-brand">
                             <Box className="logo-group-inline">
-                                <img src={`${basename}assets/logo.png`} alt="Logo" className="footer-logo-sm" />
+                                <img src={`${basename}assets/logo.webp`} alt="Logo" width="40" height="40" className="footer-logo-sm" />
                                 <Typography variant="h6" className="brand-name-sm">Saturday Smashers</Typography>
                             </Box>
                             <Typography variant="caption" className="brand-desc-sm">

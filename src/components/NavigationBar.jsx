@@ -51,8 +51,10 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
                 {/* Logo Section */}
                 <div className="nav-logo">
                     <img
-                        src={`${import.meta.env.BASE_URL}assets/logo.png`}
+                        src={`${import.meta.env.BASE_URL}assets/logo.webp`}
                         alt="Saturday Smashers Logo"
+                        width="140"
+                        height="140"
                         className="logo-image"
                         onError={(e) => {
                             e.target.style.display = 'none';

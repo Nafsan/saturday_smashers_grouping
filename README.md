@@ -49,13 +49,17 @@ A modern web application designed to streamline Saturday table tennis sessions b
 
 #### Option A: Using Docker (Recommended)
 
-Start the entire stack (Frontend, Backend, and Database) with a single command:
+Thanks to our public Docker images, you can run the entire application without needing to build from source!
+
+Start the pre-built Production stack (Frontend, Backend, and Database):
 
 ```bash
-docker-compose up --build
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-- The frontend will be available at `http://localhost:5173`
+_(Note: If you want to build locally for development instead, use `docker compose -f docker-compose.dev.yml up --build`)._
+
+- The frontend will be available at `http://localhost:5173` (or your server's IP)
 - The backend API will be available at `http://localhost:8000`
 
 #### Option B: Manual Local Setup

@@ -90,8 +90,8 @@ const SmartDateRangeSelector = ({ startDate, endDate, onRangeChange }) => {
     };
 
     return (
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-            <FormControl size="small" sx={{ minWidth: 150 }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', width: '100%' }}>
+            <FormControl size="small" fullWidth sx={{ minWidth: 150 }}>
                 <InputLabel>Date Range</InputLabel>
                 <Select
                     value={mode}
@@ -116,6 +116,7 @@ const SmartDateRangeSelector = ({ startDate, endDate, onRangeChange }) => {
                         onChange={(e) => handleCustomDateChange('start', e.target.value)}
                         size="small"
                         InputLabelProps={{ shrink: true }}
+                        fullWidth
                         sx={{ minWidth: 150, background: 'var(--bg-surface)' }}
                     />
                     <TextField
@@ -125,6 +126,7 @@ const SmartDateRangeSelector = ({ startDate, endDate, onRangeChange }) => {
                         onChange={(e) => handleCustomDateChange('end', e.target.value)}
                         size="small"
                         InputLabelProps={{ shrink: true }}
+                        fullWidth
                         sx={{ minWidth: 150, background: 'var(--bg-surface)' }}
                     />
                 </>

@@ -8,7 +8,7 @@ export const FILTER_UPCOMING = 'upcoming';
 export const FILTER_PAST = 'past';
 
 export const FILTER_OPTIONS = [
-    { value: FILTER_ALL, label: 'All Tournaments' },
+    { value: FILTER_ALL, label: 'All' },
     { value: FILTER_UPCOMING, label: 'Upcoming' },
     { value: FILTER_PAST, label: 'Past' },
 ];

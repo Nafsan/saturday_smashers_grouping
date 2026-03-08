@@ -43,7 +43,7 @@ const ClubTournaments = () => {
     const navigate = useNavigate();
     const { successNotification, errorNotification } = useToast();
     const isAdmin = isAdminAuthenticated();
-    const isMobile = useMediaQuery('(max-width:600px)');
+    const isMobile = useMediaQuery('(max-width:900px)');
 
     const [tournaments, setTournaments] = useState([]);
     const [venues, setVenues] = useState([]);
@@ -261,70 +261,77 @@ const ClubTournaments = () => {
 
                 {/* Filters */}
                 <div className="filter-bar">
-                    <div className="filter-group">
-                        <ToggleButtonGroup
-                            value={filter}
-                            exclusive
-                            onChange={handleFilterChange}
-                            size="small"
-                            className="filter-toggle"
-                        >
-                            {FILTER_OPTIONS.map((opt) => (
-                                <ToggleButton key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                </ToggleButton>
-                            ))}
-                        </ToggleButtonGroup>
-                    </div>
-                    
-                    <div className="filter-group">
-                        <TextField
-                            placeholder="Search tournament..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            size="small"
-                            variant="outlined"
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Search size={18} color="var(--text-muted)" />
-                                    </InputAdornment>
-                                ),
-                            }}
-                            sx={{ minWidth: 200 }}
-                        />
-                    </div>
-
-                    <div className="filter-group date-filters">
-                        <SmartDateRangeSelector 
-                            startDate={startDate}
-                            endDate={endDate}
-                            onRangeChange={(start, end) => {
-                                setStartDate(start);
-                                setEndDate(end);
-                                setPage(1);
-                            }}
-                        />
+                    <div className="filter-group combined-top-group">
+                        <div className="toggle-group">
+                            <ToggleButtonGroup
+                                value={filter}
+                                exclusive
+                                onChange={handleFilterChange}
+                                size="small"
+                                className="filter-toggle"
+                                fullWidth={isMobile}
+                            >
+                                {FILTER_OPTIONS.map((opt) => (
+                                    <ToggleButton key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </ToggleButton>
+                                ))}
+                            </ToggleButtonGroup>
+                        </div>
+                        
+                        <div className="search-group">
+                            <TextField
+                                placeholder="Search tournament..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                size="small"
+                                variant="outlined"
+                                fullWidth
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <Search size={18} color="var(--text-muted)" />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                        </div>
                     </div>
 
-                    <div className="filter-group">
-                        <Autocomplete
-                            options={venues}
-                            getOptionLabel={(option) => option.name || ''}
-                            value={venueFilter}
-                            onChange={(e, newValue) => { setVenueFilter(newValue); setPage(1); }}
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    label="Filter by Venue"
-                                    variant="outlined"
-                                    size="small"
-                                />
-                            )}
-                            size="small"
-                            sx={{ minWidth: 200 }}
-                        />
+                    <div className="filter-group combined-mobile-group">
+                        <div className="date-filters">
+                            <SmartDateRangeSelector 
+                                startDate={startDate}
+                                endDate={endDate}
+                                onRangeChange={(start, end) => {
+                                    setStartDate(start);
+                                    setEndDate(end);
+                                    setPage(1);
+                                }}
+                            />
+                        </div>
+
+                        <div className="venue-filters">
+                            <Autocomplete
+                                options={venues}
+                                getOptionLabel={(option) => option.name || ''}
+                                value={venueFilter}
+                                onChange={(e, newValue) => { setVenueFilter(newValue); setPage(1); }}
+                                isOptionEqualToValue={(option, value) => option.id === value.id}
+                                fullWidth
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Filter by Venue"
+                                        variant="outlined"
+                                        size="small"
+                                        fullWidth
+                                    />
+                                )}
+                                size="small"
+                                sx={{ minWidth: isMobile ? 'auto' : 200 }}
+                            />
+                        </div>
                     </div>
                 </div>
 

@@ -48,7 +48,7 @@ const ShareTournamentDialog = ({ open, onClose, tournament }) => {
         const loadLogo = async () => {
             try {
                 const baseUrl = import.meta.env.BASE_URL || '/';
-                const logoPath = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}assets/logo.png`;
+                const logoPath = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}assets/logo.webp`;
                 const response = await fetch(logoPath);
                 const blob = await response.blob();
                 const reader = new FileReader();

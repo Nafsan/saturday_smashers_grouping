@@ -94,27 +94,19 @@
 
     0%,
     100% {
-        left: 10%;
-        top: 20%;
-        transform: scale(1);
+        transform: translate(40px, 50px) scale(1);
     }
 
     25% {
-        left: 30%;
-        top: 5%;
-        transform: scale(0.9);
+        transform: translate(120px, 12.5px) scale(0.9);
     }
 
     50% {
-        left: 50%;
-        top: 20%;
-        transform: scale(1);
+        transform: translate(200px, 50px) scale(1);
     }
 
     75% {
-        left: 70%;
-        top: 5%;
-        transform: scale(0.9);
+        transform: translate(280px, 12.5px) scale(0.9);
     }
 }
 
@@ -323,6 +315,22 @@
     .table-tennis-scene {
         width: 300px;
         height: 200px;
+    }
+
+    @keyframes ball-bounce {
+        0%,
+        100% {
+            transform: translate(30px, 40px) scale(1);
+        }
+        25% {
+            transform: translate(90px, 10px) scale(0.9);
+        }
+        50% {
+            transform: translate(150px, 40px) scale(1);
+        }
+        75% {
+            transform: translate(210px, 10px) scale(0.9);
+        }
     }
 
     .quote-container {

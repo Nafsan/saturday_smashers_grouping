@@ -213,7 +213,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
                     id: t.id,
                     date: t.date,
                     videoId,
-                    thumbnail: videoId ? getYouTubeThumbnail(videoId, 'mqdefault') : '/assets/logo.png',
+                    thumbnail: videoId ? getYouTubeThumbnail(videoId, 'mqdefault') : '/assets/logo.webp',
                     embedUrl: t.embed_url,
                     playlistUrl: t.playlist_url,
                     videoUrl: videoId ? getVideoUrl(videoId) : t.playlist_url

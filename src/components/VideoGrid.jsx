@@ -73,7 +73,7 @@ const VideoGrid = ({
                                     src={video.thumbnail} 
                                     alt={video.title}
                                     onError={(e) => {
-                                        e.target.src = '/assets/logo.png';
+                                        e.target.src = '/assets/logo.webp';
                                         e.target.onerror = null;
                                     }}
                                 />

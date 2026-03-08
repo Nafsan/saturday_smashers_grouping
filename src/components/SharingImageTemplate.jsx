@@ -11,7 +11,7 @@ const SharingImageTemplate = ({
     logoUrl
 }) => {
     const baseUrl = import.meta.env.BASE_URL || '/';
-    const defaultLogo = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}assets/logo.png`;
+    const defaultLogo = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}assets/logo.webp`;
     const effectiveLogo = logoUrl || defaultLogo;
     // Helper to get rank title based on rating
     const getRankTitle = (rating) => {

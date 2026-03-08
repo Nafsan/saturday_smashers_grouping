@@ -20,7 +20,7 @@ const ClubTournamentPosterTemplate = ({
 
     const { venue, category, result, total_players, tournament_datetime } = tournament;
     const baseUrl = import.meta.env.BASE_URL || '/';
-    const defaultLogo = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}assets/logo.png`;
+    const defaultLogo = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}assets/logo.webp`;
     const effectiveLogo = logoUrl || defaultLogo;
 
     const formatDate = (datetime) => {

@@ -18,9 +18,7 @@ services:
       - backend
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: nafsan/saturday-smashers-backend:latest
     container_name: saturday-smashers-backend
     restart: always
     environment:
@@ -43,9 +41,7 @@ services:
       start_period: 10s
 
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: nafsan/saturday-smashers-frontend:latest
     container_name: saturday-smashers-frontend
     restart: always
     ports:

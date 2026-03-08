@@ -635,6 +635,14 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                                     contentStyle={{ backgroundColor: 'var(--bg-surface-elevated)', border: '1px solid var(--border-main)', borderRadius: '8px', color: 'var(--text-primary)' }}
                                                     itemStyle={{ color: 'var(--text-primary)' }}
                                                 />
+                                                <Line 
+                                                    type="monotone" 
+                                                    dataKey="rating" 
+                                                    stroke="var(--accent-primary)" 
+                                                    strokeWidth={3}
+                                                    dot={{ fill: 'var(--accent-primary)', r: 4, strokeWidth: 2 }}
+                                                    activeDot={{ r: 6, strokeWidth: 0 }}
+                                                />
                                             </LineChart>
                                         </ResponsiveContainer>
                                     </div>

@@ -88,10 +88,7 @@ const SubmitClubResultsDialog = ({ open, onClose, tournament }) => {
             errorNotification('Both Semi Finalists are required');
             return;
         }
-        if (!qf1.trim() || !qf2.trim() || !qf3.trim() || !qf4.trim()) {
-            errorNotification('All four Quarter Finalists are required');
-            return;
-        }
+
 
         setLoading(true);
         try {
@@ -102,10 +99,10 @@ const SubmitClubResultsDialog = ({ open, onClose, tournament }) => {
                 runner_up: runnerUp.trim(),
                 semi_finalist_1: semi1.trim(),
                 semi_finalist_2: semi2.trim(),
-                quarter_finalist_1: qf1.trim(),
-                quarter_finalist_2: qf2.trim(),
-                quarter_finalist_3: qf3.trim(),
-                quarter_finalist_4: qf4.trim(),
+                quarter_finalist_1: qf1.trim() || null,
+                quarter_finalist_2: qf2.trim() || null,
+                quarter_finalist_3: qf3.trim() || null,
+                quarter_finalist_4: qf4.trim() || null,
                 online_link: onlineLink.trim() || null,
             };
 
@@ -236,7 +233,6 @@ const SubmitClubResultsDialog = ({ open, onClose, tournament }) => {
                         label="QF 1"
                         value={qf1}
                         onChange={(e) => setQf1(e.target.value)}
-                        required
                         sx={{ flex: '1 1 45%' }}
                         size="small"
                     />
@@ -244,7 +240,6 @@ const SubmitClubResultsDialog = ({ open, onClose, tournament }) => {
                         label="QF 2"
                         value={qf2}
                         onChange={(e) => setQf2(e.target.value)}
-                        required
                         sx={{ flex: '1 1 45%' }}
                         size="small"
                     />
@@ -252,7 +247,6 @@ const SubmitClubResultsDialog = ({ open, onClose, tournament }) => {
                         label="QF 3"
                         value={qf3}
                         onChange={(e) => setQf3(e.target.value)}
-                        required
                         sx={{ flex: '1 1 45%' }}
                         size="small"
                     />
@@ -260,7 +254,6 @@ const SubmitClubResultsDialog = ({ open, onClose, tournament }) => {
                         label="QF 4"
                         value={qf4}
                         onChange={(e) => setQf4(e.target.value)}
-                        required
                         sx={{ flex: '1 1 45%' }}
                         size="small"
                     />

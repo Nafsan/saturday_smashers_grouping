@@ -66,7 +66,7 @@ export const getPlayersFromResult = (result) => {
         result.quarter_finalist_2,
         result.quarter_finalist_3,
         result.quarter_finalist_4,
-    ];
+    ].filter(Boolean);
 };
 
 /**

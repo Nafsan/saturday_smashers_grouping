@@ -123,7 +123,7 @@ const ClubTournamentPosterTemplate = ({
                         [result.semi_finalist_1, result.semi_finalist_2],
                         selectedPlayer === result.semi_finalist_1 || selectedPlayer === result.semi_finalist_2
                     )}
-                    {renderRankEntry(
+                    {(result.quarter_finalist_1 || result.quarter_finalist_2 || result.quarter_finalist_3 || result.quarter_finalist_4) && renderRankEntry(
                         RANK_EMOJIS.quarter_finalist,
                         RANK_QUARTER_FINALIST,
                         [
@@ -131,11 +131,13 @@ const ClubTournamentPosterTemplate = ({
                             result.quarter_finalist_2,
                             result.quarter_finalist_3,
                             result.quarter_finalist_4,
-                        ],
-                        selectedPlayer === result.quarter_finalist_1 ||
-                        selectedPlayer === result.quarter_finalist_2 ||
-                        selectedPlayer === result.quarter_finalist_3 ||
-                        selectedPlayer === result.quarter_finalist_4
+                        ].filter(Boolean),
+                        selectedPlayer && [
+                            result.quarter_finalist_1,
+                            result.quarter_finalist_2,
+                            result.quarter_finalist_3,
+                            result.quarter_finalist_4,
+                        ].includes(selectedPlayer)
                     )}
                 </main>
             )}

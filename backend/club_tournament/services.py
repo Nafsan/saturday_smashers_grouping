@@ -478,10 +478,10 @@ async def bulk_import_tournaments(
                     runner_up=entry.runner_up,
                     semi_finalist_1=entry.semi_finalist_1 or "",
                     semi_finalist_2=entry.semi_finalist_2 or "",
-                    quarter_finalist_1=entry.quarter_finalist_1 or "",
-                    quarter_finalist_2=entry.quarter_finalist_2 or "",
-                    quarter_finalist_3=entry.quarter_finalist_3 or "",
-                    quarter_finalist_4=entry.quarter_finalist_4 or "",
+                    quarter_finalist_1=entry.quarter_finalist_1,
+                    quarter_finalist_2=entry.quarter_finalist_2,
+                    quarter_finalist_3=entry.quarter_finalist_3,
+                    quarter_finalist_4=entry.quarter_finalist_4,
                 )
                 db.add(result)
 

@@ -37,10 +37,10 @@ class ClubTournamentResultCreate(BaseModel):
     runner_up: str
     semi_finalist_1: str
     semi_finalist_2: str
-    quarter_finalist_1: str
-    quarter_finalist_2: str
-    quarter_finalist_3: str
-    quarter_finalist_4: str
+    quarter_finalist_1: Optional[str] = None
+    quarter_finalist_2: Optional[str] = None
+    quarter_finalist_3: Optional[str] = None
+    quarter_finalist_4: Optional[str] = None
     online_link: Optional[str] = None
 
 
@@ -55,10 +55,10 @@ class ClubTournamentResultResponse(BaseModel):
     runner_up: str
     semi_finalist_1: str
     semi_finalist_2: str
-    quarter_finalist_1: str
-    quarter_finalist_2: str
-    quarter_finalist_3: str
-    quarter_finalist_4: str
+    quarter_finalist_1: Optional[str] = None
+    quarter_finalist_2: Optional[str] = None
+    quarter_finalist_3: Optional[str] = None
+    quarter_finalist_4: Optional[str] = None
     created_at: datetime
 
     class Config:

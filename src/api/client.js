@@ -203,10 +203,28 @@ export const fetchYouTubePlaylist = async (playlistId) => {
 
 
 // ============ Club Tournament APIs ============
-export const fetchClubTournaments = async (statusFilter = 'all', venueId = null) => {
-    const params = { status_filter: statusFilter };
-    if (venueId) params.venue_id = venueId;
-    const response = await client.get('/club-tournaments', { params });
+export const fetchClubTournaments = async (params = {}) => {
+    const { 
+        statusFilter = 'all', 
+        venueId = null, 
+        startDate = null, 
+        endDate = null,
+        searchQuery = null,
+        page = 1, 
+        pageSize = 20 
+    } = params;
+    
+    const queryParams = { 
+        status_filter: statusFilter,
+        page,
+        page_size: pageSize
+    };
+    if (venueId) queryParams.venue_id = venueId;
+    if (startDate) queryParams.start_date = startDate;
+    if (endDate) queryParams.end_date = endDate;
+    if (searchQuery) queryParams.search_query = searchQuery;
+    
+    const response = await client.get('/club-tournaments', { params: queryParams });
     return response.data;
 };
 

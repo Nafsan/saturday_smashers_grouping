@@ -11,8 +11,12 @@ import {
     Autocomplete,
     TextField,
     useMediaQuery,
+    Pagination,
+    Stack,
+    InputAdornment,
 } from '@mui/material';
-import { Plus, MapPin, Trophy, Calendar, Users, Share2, Edit2, Trash2, Swords, Clock, ExternalLink, Upload, ArrowLeft } from 'lucide-react';
+import { Plus, MapPin, Trophy, Calendar, Users, Share2, Edit2, Trash2, Swords, Clock, ExternalLink, Upload, ArrowLeft, Search } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
 import { isAdminAuthenticated, getAdminAuthCookie } from '../utils/cookieUtils';
 import { fetchClubTournaments, fetchClubVenues, deleteClubTournament } from '../api/client';
@@ -45,6 +49,43 @@ const ClubTournaments = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState(FILTER_ALL);
     const [venueFilter, setVenueFilter] = useState(null);
+    
+    // Pagination and Date range
+    const [page, setPage] = useState(1);
+    const [pageSize] = useState(20);
+    const [totalCount, setTotalCount] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+            setPage(1); // Reset to first page on search
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
+    
+    // Default dates: last 6 months (including current) + next 1 month = 8 months
+    // e.g., if today is March: Sep, Oct, Nov, Dec, Jan, Feb, March (7) + April (1) = 8
+    const getDefaultStartDate = () => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 6); // 6 months older
+        d.setDate(1); // Start of month
+        return d.toISOString().split('T')[0];
+    };
+    const getDefaultEndDate = () => {
+        const d = new Date();
+        d.setMonth(d.getMonth() + 1); // April if today is march
+        // Last day of next month
+        d.setMonth(d.getMonth() + 1);
+        d.setDate(0);
+        return d.toISOString().split('T')[0];
+    };
+
+    const [startDate, setStartDate] = useState(getDefaultStartDate());
+    const [endDate, setEndDate] = useState(getDefaultEndDate());
 
     // Dialog states
     const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -57,15 +98,25 @@ const ClubTournaments = () => {
     const loadTournaments = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await fetchClubTournaments(filter, venueFilter?.id || null);
-            setTournaments(data);
+            const data = await fetchClubTournaments({
+                statusFilter: filter,
+                venueId: venueFilter?.id || null,
+                searchQuery: debouncedSearchQuery,
+                startDate,
+                endDate,
+                page,
+                pageSize
+            });
+            setTournaments(data.items || []);
+            setTotalCount(data.total_count || 0);
+            setTotalPages(data.total_pages || 0);
         } catch (err) {
             errorNotification('Failed to load tournaments');
             console.error(err);
         } finally {
             setLoading(false);
         }
-    }, [filter, venueFilter]);
+    }, [filter, venueFilter, debouncedSearchQuery, startDate, endDate, page, pageSize]);
 
     const loadVenues = useCallback(async () => {
         try {
@@ -94,7 +145,13 @@ const ClubTournaments = () => {
     const handleFilterChange = (event, newFilter) => {
         if (newFilter !== null) {
             setFilter(newFilter);
+            setPage(1); // Reset to first page on filter change
         }
+    };
+
+    const handlePageChange = (event, value) => {
+        setPage(value);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleDelete = async (tournament) => {
@@ -123,20 +180,25 @@ const ClubTournaments = () => {
     };
 
     const formatDate = (datetime) => {
-        const date = new Date(datetime);
+        // Ensure naive datetime strings from backend are treated as BDT (+06:00)
+        const dateStr = datetime.includes('+') || datetime.endsWith('Z') ? datetime : `${datetime}+06:00`;
+        const date = new Date(dateStr);
         return date.toLocaleDateString('en-US', {
             weekday: 'short',
             year: 'numeric',
             month: 'short',
             day: 'numeric',
+            timeZone: 'Asia/Dhaka',
         });
     };
 
     const formatTime = (datetime) => {
-        const date = new Date(datetime);
+        const dateStr = datetime.includes('+') || datetime.endsWith('Z') ? datetime : `${datetime}+06:00`;
+        const date = new Date(dateStr);
         return date.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
+            timeZone: 'Asia/Dhaka',
         });
     };
 
@@ -198,37 +260,80 @@ const ClubTournaments = () => {
 
                 {/* Filters */}
                 <div className="filter-bar">
-                    <ToggleButtonGroup
-                        value={filter}
-                        exclusive
-                        onChange={handleFilterChange}
-                        size="small"
-                        className="filter-toggle"
-                    >
-                        {FILTER_OPTIONS.map((opt) => (
-                            <ToggleButton key={opt.value} value={opt.value}>
-                                {opt.label}
-                            </ToggleButton>
-                        ))}
-                    </ToggleButtonGroup>
-                    <Autocomplete
-                        options={venues}
-                        getOptionLabel={(option) => option.name || ''}
-                        value={venueFilter}
-                        onChange={(e, newValue) => setVenueFilter(newValue)}
-                        isOptionEqualToValue={(option, value) => option.id === value.id}
-                        renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                label="Filter by Venue"
-                                variant="outlined"
-                                size="small"
-                                sx={{ minWidth: 200 }}
-                            />
-                        )}
-                        size="small"
-                        sx={{ minWidth: 200 }}
-                    />
+                    <div className="filter-group">
+                        <ToggleButtonGroup
+                            value={filter}
+                            exclusive
+                            onChange={handleFilterChange}
+                            size="small"
+                            className="filter-toggle"
+                        >
+                            {FILTER_OPTIONS.map((opt) => (
+                                <ToggleButton key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </ToggleButton>
+                            ))}
+                        </ToggleButtonGroup>
+                    </div>
+                    
+                    <div className="filter-group">
+                        <TextField
+                            placeholder="Search tournament..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            size="small"
+                            variant="outlined"
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Search size={18} color="var(--text-muted)" />
+                                    </InputAdornment>
+                                ),
+                            }}
+                            sx={{ minWidth: 200 }}
+                        />
+                    </div>
+
+                    <div className="filter-group date-filters">
+                        <TextField
+                            label="From"
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+                            size="small"
+                            InputLabelProps={{ shrink: true }}
+                            sx={{ minWidth: 150 }}
+                        />
+                        <TextField
+                            label="To"
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
+                            size="small"
+                            InputLabelProps={{ shrink: true }}
+                            sx={{ minWidth: 150 }}
+                        />
+                    </div>
+
+                    <div className="filter-group">
+                        <Autocomplete
+                            options={venues}
+                            getOptionLabel={(option) => option.name || ''}
+                            value={venueFilter}
+                            onChange={(e, newValue) => { setVenueFilter(newValue); setPage(1); }}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Filter by Venue"
+                                    variant="outlined"
+                                    size="small"
+                                />
+                            )}
+                            size="small"
+                            sx={{ minWidth: 200 }}
+                        />
+                    </div>
                 </div>
 
                 {/* Tournament List */}
@@ -303,9 +408,9 @@ const ClubTournaments = () => {
                                     </div>
 
                                     {t.announcement && (
-                                        <Typography variant="body2" className="tournament-announcement">
-                                            {t.announcement}
-                                        </Typography>
+                                        <div className="tournament-announcement">
+                                            <ReactMarkdown>{t.announcement}</ReactMarkdown>
+                                        </div>
                                     )}
 
                                     {t.online_link && (
@@ -393,6 +498,26 @@ const ClubTournaments = () => {
                             </div>
                         ))}
                     </div>
+                )}
+
+                {/* Pagination */}
+                {!loading && (
+                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', pb: 4 }}>
+                        <Stack spacing={2}>
+                            <Pagination
+                                count={totalPages}
+                                page={page}
+                                onChange={handlePageChange}
+                                color="primary"
+                                size={isMobile ? "small" : "large"}
+                                showFirstButton
+                                showLastButton
+                            />
+                            <Typography variant="caption" align="center" color="text.secondary">
+                                Showing {tournaments.length} of {totalCount} tournaments
+                            </Typography>
+                        </Stack>
+                    </Box>
                 )}
             </div>
 

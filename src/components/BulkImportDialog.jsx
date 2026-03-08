@@ -21,6 +21,7 @@ import {
     bulkImportClubTournaments,
 } from '../api/client';
 import { useToast } from '../context/ToastContext';
+import MDEditor from '@uiw/react-md-editor';
 
 const getNewRow = () => {
     const now = new Date();
@@ -125,7 +126,7 @@ const BulkImportDialog = ({ open, onClose }) => {
                 tournaments: rows.map(r => ({
                     venue_id: r.venue.id,
                     category: r.category.trim(),
-                    tournament_datetime: new Date(r.tournament_datetime).toISOString(),
+                    tournament_datetime: r.tournament_datetime,
                     announcement: r.announcement.trim() || null,
                     total_players: r.total_players || 0,
                     online_link: r.online_link.trim() || null,
@@ -285,13 +286,22 @@ const BulkImportDialog = ({ open, onClose }) => {
                                     sx={{ flex: '1 1 300px' }}
                                     placeholder="https://..."
                                 />
-                                <TextField
-                                    label="Announcement"
-                                    value={row.announcement}
-                                    onChange={(e) => updateRow(index, 'announcement', e.target.value)}
-                                    size="small"
-                                    sx={{ flex: '1 1 300px' }}
-                                />
+                                <Box sx={{ flex: '1 1 300px' }}>
+                                    <Typography variant="caption" sx={{ color: 'var(--text-secondary)', display: 'block', mb: 0.5 }}>
+                                        Announcement (Markdown supported)
+                                    </Typography>
+                                    <div data-color-mode="light">
+                                        <MDEditor
+                                            value={row.announcement}
+                                            onChange={(val) => updateRow(index, 'announcement', val || '')}
+                                            preview="edit"
+                                            height={150}
+                                            textareaProps={{
+                                                placeholder: 'Optional announcement or notes...'
+                                            }}
+                                        />
+                                    </div>
+                                </Box>
                             </Box>
 
                             {/* Result fields (optional) */}

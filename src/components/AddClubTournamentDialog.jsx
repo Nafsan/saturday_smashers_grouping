@@ -10,6 +10,7 @@ import {
     Box,
     IconButton,
     CircularProgress,
+    Typography
 } from '@mui/material';
 import { X, Calendar } from 'lucide-react';
 import { getAdminAuthCookie } from '../utils/cookieUtils';
@@ -23,6 +24,7 @@ import {
     TOURNAMENT_CREATED_MESSAGE,
     TOURNAMENT_UPDATED_MESSAGE,
 } from '../utils/clubTournamentConstants';
+import MDEditor from '@uiw/react-md-editor';
 
 const AddClubTournamentDialog = ({ open, onClose, tournament }) => {
     const { successNotification, errorNotification } = useToast();
@@ -108,7 +110,7 @@ const AddClubTournamentDialog = ({ open, onClose, tournament }) => {
             const payload = {
                 venue_id: selectedVenue.id,
                 category: category.trim(),
-                tournament_datetime: new Date(tournamentDatetime).toISOString(),
+                tournament_datetime: tournamentDatetime,
                 announcement: announcement.trim() || null,
                 total_players: totalPlayers || 0,
                 online_link: onlineLink.trim() || null,
@@ -224,15 +226,22 @@ const AddClubTournamentDialog = ({ open, onClose, tournament }) => {
                     placeholder="https://stadiumcompete.com/..."
                 />
 
-                <TextField
-                    label="Announcement / Notes"
-                    value={announcement}
-                    onChange={(e) => setAnnouncement(e.target.value)}
-                    multiline
-                    rows={3}
-                    fullWidth
-                    placeholder="Optional announcement or notes about the tournament..."
-                />
+                <Box>
+                    <Typography variant="caption" sx={{ color: 'var(--text-secondary)', mb: 1, display: 'block' }}>
+                        Announcement / Notes (Markdown supported)
+                    </Typography>
+                    <div data-color-mode="light">
+                        <MDEditor
+                            value={announcement}
+                            onChange={(val) => setAnnouncement(val || '')}
+                            preview="edit"
+                            height={200}
+                            textareaProps={{
+                                placeholder: 'Optional announcement or notes about the tournament...'
+                            }}
+                        />
+                    </div>
+                </Box>
             </DialogContent>
 
             <DialogActions sx={{ p: 2, gap: 1 }}>

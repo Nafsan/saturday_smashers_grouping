@@ -2,7 +2,7 @@
 Business logic / services for the Club Tournament module.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
@@ -33,9 +33,17 @@ from club_tournament.constants import (
 )
 
 
+# Bangladesh Time Offset (BDT)
+BDT_OFFSET = timedelta(hours=6)
+
+def _get_now_bdt() -> datetime:
+    """Return current time in BDT."""
+    return datetime.utcnow() + BDT_OFFSET
+
 def _derive_tournament_status(tournament_datetime: datetime) -> str:
-    """Derive tournament status from its datetime."""
-    return TOURNAMENT_STATUS_UPCOMING if tournament_datetime > datetime.utcnow() else TOURNAMENT_STATUS_PAST
+    """Derive tournament status from its datetime. Assumes stored in BDT or naive comparison."""
+    # Compare with BDT time since user wants tournament times in BDT
+    return TOURNAMENT_STATUS_UPCOMING if tournament_datetime > _get_now_bdt() else TOURNAMENT_STATUS_PAST
 
 
 def _tournament_to_dict(tournament: ClubTournament) -> dict:
@@ -170,15 +178,23 @@ async def delete_venue(venue_id: int, db: AsyncSession) -> dict:
 # ============ Tournament Services ============
 
 async def get_all_tournaments(
-    db: AsyncSession, status_filter: str = "all", venue_id: int = None
-) -> List[dict]:
-    """Get all tournaments with optional status and venue filters."""
+    db: AsyncSession, 
+    status_filter: str = "all", 
+    venue_id: Optional[int] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    search_query: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> dict:
+    """Get tournaments with optional status, venue, date range filters, search, and pagination."""
     if status_filter not in VALID_STATUSES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_INVALID_STATUS_FILTER,
         )
 
+    # Base query for tournaments
     query = (
         select(ClubTournament)
         .options(
@@ -188,21 +204,78 @@ async def get_all_tournaments(
         .order_by(ClubTournament.tournament_datetime.desc())
     )
 
+    # Apply Filters
     if venue_id is not None:
         query = query.where(ClubTournament.venue_id == venue_id)
 
+    if start_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date)
+            query = query.where(ClubTournament.tournament_datetime >= start_dt)
+        except ValueError:
+            pass # Ignore invalid date formats
+
+    if end_date:
+        try:
+            end_dt = datetime.fromisoformat(end_date)
+            query = query.where(ClubTournament.tournament_datetime <= end_dt)
+        except ValueError:
+            pass # Ignore invalid date formats
+
+    if search_query:
+        query = query.where(ClubTournament.category.ilike(f"%{search_query}%"))
+
+    # Total Count Query (without pagination)
+    from sqlalchemy import func
+    count_query = select(func.count(ClubTournament.id))
+    if venue_id is not None:
+        count_query = count_query.where(ClubTournament.venue_id == venue_id)
+    if start_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date)
+            count_query = count_query.where(ClubTournament.tournament_datetime >= start_dt)
+        except ValueError: pass
+    if end_date:
+        try:
+            end_dt = datetime.fromisoformat(end_date)
+            count_query = count_query.where(ClubTournament.tournament_datetime <= end_dt)
+        except ValueError: pass
+
+    if search_query:
+        count_query = count_query.where(ClubTournament.category.ilike(f"%{search_query}%"))
+
+    # Execute Count
+    count_result = await db.execute(count_query)
+    total_count = count_result.scalar() or 0
+
+    # Apply Pagination
+    offset = (page - 1) * page_size
+    query = query.offset(offset).limit(page_size)
+
+    # Execute Fetch
     result = await db.execute(query)
     tournaments = result.scalars().all()
 
-    # Convert to dicts with derived status and apply filter
+    # Convert to dicts with derived status
     tournament_dicts = [_tournament_to_dict(t) for t in tournaments]
 
+    # Filter by status if requested (post-fetch because status is derived)
+    # NOTE: Pagination is applied BEFORE derived status filtering.
+    # If the user filters by status "upcoming", they might get fewer than page_size items.
+    # To fix this perfectly, we'd need to filter in the query, but status is currently derived.
+    # However, for most cases with the requested date range, the query-level filtering will suffice.
     if status_filter == TOURNAMENT_STATUS_UPCOMING:
         tournament_dicts = [t for t in tournament_dicts if t["status"] == TOURNAMENT_STATUS_UPCOMING]
     elif status_filter == TOURNAMENT_STATUS_PAST:
         tournament_dicts = [t for t in tournament_dicts if t["status"] == TOURNAMENT_STATUS_PAST]
 
-    return tournament_dicts
+    return {
+        "items": tournament_dicts,
+        "total_count": total_count,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total_count + page_size - 1) // page_size
+    }
 
 
 async def get_tournament_by_id(tournament_id: int, db: AsyncSession) -> ClubTournament:

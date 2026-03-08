@@ -25,11 +25,14 @@ const ClubTournamentPosterTemplate = ({
 
     const formatDate = (datetime) => {
         if (!datetime) return '';
-        const date = new Date(datetime);
+        // Ensure naive datetime strings from backend are treated as BDT (+06:00)
+        const dateStr = datetime.includes('+') || datetime.endsWith('Z') ? datetime : `${datetime}+06:00`;
+        const date = new Date(dateStr);
         return date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
+            timeZone: 'Asia/Dhaka', // Always BDT
         });
     };
 

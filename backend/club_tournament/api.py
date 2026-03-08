@@ -80,10 +80,24 @@ async def delete_venue(
 async def list_tournaments(
     status_filter: str = "all",
     venue_id: Optional[int] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    search_query: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 20,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get all tournaments with optional status and venue filters."""
-    return await services.get_all_tournaments(db, status_filter, venue_id)
+    """Get all tournaments with optional status, venue, date range filters, search, and pagination."""
+    return await services.get_all_tournaments(
+        db, 
+        status_filter=status_filter, 
+        venue_id=venue_id, 
+        start_date=start_date, 
+        end_date=end_date, 
+        search_query=search_query,
+        page=page, 
+        page_size=page_size
+    )
 
 
 @router.post("/club-tournaments", status_code=status.HTTP_201_CREATED)

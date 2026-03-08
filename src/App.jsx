@@ -6,11 +6,12 @@ import { fetchPlayersAsync, fetchHistoryAsync } from './store/appSlice';
 import AppLandingPage from './components/AppLandingPage';
 import GroupDisplay from './components/GroupDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
-import FundManagement from './components/FundManagement';
-import AdminConsole from './components/AdminConsole';
-import GttEloCalculator from './components/GttEloCalculator';
-import NationalRanking from './components/NationalRanking';
-import ClubTournaments from './components/ClubTournaments';
+
+const FundManagement = React.lazy(() => import('./components/FundManagement'));
+const AdminConsole = React.lazy(() => import('./components/AdminConsole'));
+const GttEloCalculator = React.lazy(() => import('./components/GttEloCalculator'));
+const NationalRanking = React.lazy(() => import('./components/NationalRanking'));
+const ClubTournaments = React.lazy(() => import('./components/ClubTournaments'));
 import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { ToastProvider } from './context/ToastContext';
 import './styles/global.scss';
@@ -183,14 +184,16 @@ function AppWithTheme({ basename }) {
                 <HashRouter>
                     <div className="page-wrapper">
                         <div className="main-content">
-                            <Routes>
-                                <Route path="/" element={<MainContent />} />
-                                <Route path="/fund" element={<FundManagement />} />
-                                <Route path="/fund/admin" element={<AdminConsole />} />
-                                <Route path="/gtt-elo-calculator" element={<GttEloCalculator />} />
-                                <Route path="/national-ranking" element={<NationalRanking />} />
-                                <Route path="/club-tournaments" element={<ClubTournaments />} />
-                            </Routes>
+                            <React.Suspense fallback={<LoadingSpinner />}>
+                                <Routes>
+                                    <Route path="/" element={<MainContent />} />
+                                    <Route path="/fund" element={<FundManagement />} />
+                                    <Route path="/fund/admin" element={<AdminConsole />} />
+                                    <Route path="/gtt-elo-calculator" element={<GttEloCalculator />} />
+                                    <Route path="/national-ranking" element={<NationalRanking />} />
+                                    <Route path="/club-tournaments" element={<ClubTournaments />} />
+                                </Routes>
+                            </React.Suspense>
                         </div>
                         <Footer />
                     </div>

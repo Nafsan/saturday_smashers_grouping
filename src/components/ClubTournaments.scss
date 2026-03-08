@@ -105,6 +105,10 @@
                 align-items: center;
             }
 
+            @media (max-width: 767px) {
+                grid-template-columns: 1fr;
+            }
+
             .date-filters,
             .venue-filters,
             .toggle-group,

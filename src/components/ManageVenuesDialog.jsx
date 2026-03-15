@@ -44,6 +44,7 @@ const ManageVenuesDialog = ({ open, onClose }) => {
     const [showForm, setShowForm] = useState(false);
     const [venueName, setVenueName] = useState('');
     const [venueLogo, setVenueLogo] = useState(null);
+    const [whatsappLinks, setWhatsappLinks] = useState([]); // [{label: '', link: ''}]
 
     useEffect(() => {
         if (open) {
@@ -69,12 +70,14 @@ const ManageVenuesDialog = ({ open, onClose }) => {
         setShowForm(false);
         setVenueName('');
         setVenueLogo(null);
+        setWhatsappLinks([]);
     };
 
     const handleAddNew = () => {
         setEditingVenue(null);
         setVenueName('');
         setVenueLogo(null);
+        setWhatsappLinks([]);
         setShowForm(true);
     };
 
@@ -82,6 +85,7 @@ const ManageVenuesDialog = ({ open, onClose }) => {
         setEditingVenue(venue);
         setVenueName(venue.name);
         setVenueLogo(venue.logo_base64);
+        setWhatsappLinks(venue.whatsapp_links || []);
         setShowForm(true);
     };
 
@@ -106,6 +110,7 @@ const ManageVenuesDialog = ({ open, onClose }) => {
             const payload = {
                 name: venueName.trim(),
                 logo_base64: venueLogo || null,
+                whatsapp_links: whatsappLinks.filter(l => l.label.trim() && l.link.trim()),
             };
 
             if (editingVenue) {
@@ -251,6 +256,52 @@ const ManageVenuesDialog = ({ open, onClose }) => {
                             fullWidth
                             size="small"
                         />
+ 
+                        <Box sx={{ mt: 1 }}>
+                            <Typography variant="subtitle2" sx={{ color: 'var(--text-secondary)', mb: 1 }}>
+                                WhatsApp Group Links
+                            </Typography>
+                            {whatsappLinks.map((link, index) => (
+                                <Box key={index} sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                                    <TextField
+                                        label="Label (e.g. Elite)"
+                                        value={link.label}
+                                        onChange={(e) => {
+                                            const newLinks = [...whatsappLinks];
+                                            newLinks[index].label = e.target.value;
+                                            setWhatsappLinks(newLinks);
+                                        }}
+                                        size="small"
+                                        sx={{ flex: 1 }}
+                                    />
+                                    <TextField
+                                        label="Group Link URL"
+                                        value={link.link}
+                                        onChange={(e) => {
+                                            const newLinks = [...whatsappLinks];
+                                            newLinks[index].link = e.target.value;
+                                            setWhatsappLinks(newLinks);
+                                        }}
+                                        size="small"
+                                        sx={{ flex: 2 }}
+                                    />
+                                    <IconButton 
+                                        onClick={() => setWhatsappLinks(whatsappLinks.filter((_, i) => i !== index))}
+                                        sx={{ color: 'var(--accent-danger)' }}
+                                    >
+                                        <Trash2 size={16} />
+                                    </IconButton>
+                                </Box>
+                            ))}
+                            <Button 
+                                size="small" 
+                                startIcon={<Plus size={14} />}
+                                onClick={() => setWhatsappLinks([...whatsappLinks, { label: '', link: '' }])}
+                                sx={{ color: 'var(--accent-primary)' }}
+                            >
+                                Add Group Link
+                            </Button>
+                        </Box>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <input

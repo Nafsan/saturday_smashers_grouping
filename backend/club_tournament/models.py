@@ -15,8 +15,22 @@ class ClubVenue(Base):
     name = Column(String(255), unique=True, nullable=False, index=True)
     logo_base64 = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-
+ 
     tournaments = relationship("ClubTournament", back_populates="venue")
+    whatsapp_links = relationship("ClubVenueWhatsappLink", back_populates="venue", cascade="all, delete-orphan")
+ 
+ 
+class ClubVenueWhatsappLink(Base):
+    __tablename__ = "club_venue_whatsapp_links"
+ 
+    id = Column(Integer, primary_key=True, index=True)
+    venue_id = Column(Integer, ForeignKey("club_venues.id"), nullable=False)
+    label = Column(String(255), nullable=False)
+    link = Column(String(500), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+ 
+    venue = relationship("ClubVenue", back_populates="whatsapp_links")
+    tournaments = relationship("ClubTournament", back_populates="whatsapp_link")
 
 
 class ClubTournament(Base):
@@ -29,10 +43,12 @@ class ClubTournament(Base):
     announcement = Column(Text, nullable=True)
     total_players = Column(Integer, nullable=True, default=0)
     online_link = Column(String(500), nullable=True)
+    whatsapp_link_id = Column(Integer, ForeignKey("club_venue_whatsapp_links.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+ 
     venue = relationship("ClubVenue", back_populates="tournaments")
+    whatsapp_link = relationship("ClubVenueWhatsappLink", back_populates="tournaments")
     result = relationship(
         "ClubTournamentResult",
         back_populates="tournament",

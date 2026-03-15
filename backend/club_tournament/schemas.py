@@ -9,24 +9,41 @@ from datetime import datetime
 
 # ============ Venue Schemas ============
 
+class ClubVenueWhatsappLinkCreate(BaseModel):
+    label: str
+    link: str
+
+
+class ClubVenueWhatsappLinkResponse(BaseModel):
+    id: int
+    label: str
+    link: str
+
+    class Config:
+        from_attributes = True
+
+
 class ClubVenueCreate(BaseModel):
     name: str
     logo_base64: Optional[str] = None
+    whatsapp_links: Optional[List[ClubVenueWhatsappLinkCreate]] = []
 
 
 class ClubVenueUpdate(BaseModel):
     name: Optional[str] = None
     logo_base64: Optional[str] = None
+    whatsapp_links: Optional[List[ClubVenueWhatsappLinkCreate]] = None
 
 
 class ClubVenueResponse(BaseModel):
     id: int
     name: str
     logo_base64: Optional[str] = None
+    whatsapp_links: List[ClubVenueWhatsappLinkResponse] = []
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ============ Tournament Result Schemas ============
@@ -62,7 +79,7 @@ class ClubTournamentResultResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # ============ Tournament Schemas ============
@@ -74,6 +91,7 @@ class ClubTournamentCreate(BaseModel):
     announcement: Optional[str] = None
     total_players: Optional[int] = 0
     online_link: Optional[str] = None
+    whatsapp_link_id: Optional[int] = None
 
     @validator('tournament_datetime')
     def strip_timezone(cls, v):
@@ -90,6 +108,7 @@ class ClubTournamentUpdate(BaseModel):
     announcement: Optional[str] = None
     total_players: Optional[int] = None
     online_link: Optional[str] = None
+    whatsapp_link_id: Optional[int] = None
 
     @validator('tournament_datetime')
     def strip_timezone(cls, v):
@@ -111,6 +130,7 @@ class ClubTournamentResponse(BaseModel):
     updated_at: datetime
     venue: ClubVenueResponse
     result: Optional[ClubTournamentResultResponse] = None
+    whatsapp_link: Optional[ClubVenueWhatsappLinkResponse] = None
     status: str  # Derived field: "upcoming" or "past"
 
     class Config:

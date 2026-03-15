@@ -37,6 +37,7 @@ const getNewRow = () => {
         announcement: '',
         total_players: 0,
         online_link: '',
+        whatsapp_link_label: '',
         champion: '',
         runner_up: '',
         semi_finalist_1: '',
@@ -130,6 +131,7 @@ const BulkImportDialog = ({ open, onClose }) => {
                     announcement: r.announcement.trim() || null,
                     total_players: r.total_players || 0,
                     online_link: r.online_link.trim() || null,
+                    whatsapp_link_label: r.whatsapp_link_label.trim() || null,
                     champion: r.champion.trim() || null,
                     runner_up: r.runner_up.trim() || null,
                     semi_finalist_1: r.semi_finalist_1.trim() || null,
@@ -286,6 +288,19 @@ const BulkImportDialog = ({ open, onClose }) => {
                                     sx={{ flex: '1 1 300px' }}
                                     placeholder="https://..."
                                 />
+                                {row.venue && row.venue.whatsapp_links?.length > 0 && (
+                                    <Autocomplete
+                                        options={row.venue.whatsapp_links}
+                                        getOptionLabel={(opt) => opt.label}
+                                        value={row.venue.whatsapp_links.find(l => l.label === row.whatsapp_link_label) || null}
+                                        onChange={(e, v) => updateRow(index, 'whatsapp_link_label', v ? v.label : '')}
+                                        renderInput={(params) => (
+                                            <TextField {...params} label="WhatsApp Group" size="small" placeholder="Select Group..." />
+                                        )}
+                                        sx={{ flex: '1 1 200px' }}
+                                        size="small"
+                                    />
+                                )}
                                 <Box sx={{ flex: '1 1 300px' }}>
                                     <Typography variant="caption" sx={{ color: 'var(--text-secondary)', display: 'block', mb: 0.5 }}>
                                         Announcement (Markdown supported)

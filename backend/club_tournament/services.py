@@ -9,7 +9,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status
 
-from club_tournament.models import ClubVenue, ClubTournament, ClubTournamentResult
+from club_tournament.models import ClubVenue, ClubTournament, ClubTournamentResult, ClubVenueWhatsappLink
 from club_tournament.schemas import (
     ClubVenueCreate,
     ClubVenueUpdate,
@@ -68,9 +68,20 @@ def _tournament_to_dict(tournament: ClubTournament) -> dict:
         "id": tournament.venue.id,
         "name": tournament.venue.name,
         "logo_base64": tournament.venue.logo_base64,
+        "whatsapp_links": [
+            {"id": l.id, "label": l.label, "link": l.link} for l in tournament.venue.whatsapp_links
+        ],
         "created_at": tournament.venue.created_at,
     }
-
+ 
+    whatsapp_link_dict = None
+    if tournament.whatsapp_link:
+        whatsapp_link_dict = {
+            "id": tournament.whatsapp_link.id,
+            "label": tournament.whatsapp_link.label,
+            "link": tournament.whatsapp_link.link,
+        }
+ 
     return {
         "id": tournament.id,
         "venue_id": tournament.venue_id,
@@ -79,10 +90,12 @@ def _tournament_to_dict(tournament: ClubTournament) -> dict:
         "announcement": tournament.announcement,
         "total_players": tournament.total_players,
         "online_link": tournament.online_link,
+        "whatsapp_link_id": tournament.whatsapp_link_id,
         "created_at": tournament.created_at,
         "updated_at": tournament.updated_at,
         "venue": venue_dict,
         "result": result_dict,
+        "whatsapp_link": whatsapp_link_dict,
         "status": _derive_tournament_status(tournament.tournament_datetime),
     }
 
@@ -92,7 +105,7 @@ def _tournament_to_dict(tournament: ClubTournament) -> dict:
 async def get_all_venues(db: AsyncSession) -> List[ClubVenue]:
     """Get all venues ordered by name."""
     result = await db.execute(
-        select(ClubVenue).order_by(ClubVenue.name)
+        select(ClubVenue).options(selectinload(ClubVenue.whatsapp_links)).order_by(ClubVenue.name)
     )
     return result.scalars().all()
 
@@ -108,15 +121,25 @@ async def create_venue(data: ClubVenueCreate, db: AsyncSession) -> ClubVenue:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_VENUE_NAME_EXISTS,
         )
-
+ 
     venue = ClubVenue(
         name=data.name,
         logo_base64=data.logo_base64,
     )
     db.add(venue)
+    await db.flush()
+ 
+    if data.whatsapp_links:
+        for link_data in data.whatsapp_links:
+            wl = ClubVenueWhatsappLink(
+                venue_id=venue.id,
+                label=link_data.label,
+                link=link_data.link
+            )
+            db.add(wl)
+ 
     await db.commit()
-    await db.refresh(venue)
-    return venue
+    return await get_venue_by_id(venue.id, db)
 
 
 async def update_venue(venue_id: int, data: ClubVenueUpdate, db: AsyncSession) -> ClubVenue:
@@ -144,9 +167,35 @@ async def update_venue(venue_id: int, data: ClubVenueUpdate, db: AsyncSession) -
         venue.name = data.name
     if data.logo_base64 is not None:
         venue.logo_base64 = data.logo_base64
+ 
+    if data.whatsapp_links is not None:
+        # Simple approach: clear and recreate
+        await db.execute(delete(ClubVenueWhatsappLink).where(ClubVenueWhatsappLink.venue_id == venue_id))
+        for link_data in data.whatsapp_links:
+            wl = ClubVenueWhatsappLink(
+                venue_id=venue.id,
+                label=link_data.label,
+                link=link_data.link
+            )
+            db.add(wl)
 
     await db.commit()
-    await db.refresh(venue)
+    return await get_venue_by_id(venue_id, db)
+ 
+ 
+async def get_venue_by_id(venue_id: int, db: AsyncSession) -> ClubVenue:
+    """Get a venue by ID with relationships."""
+    result = await db.execute(
+        select(ClubVenue)
+        .options(selectinload(ClubVenue.whatsapp_links))
+        .where(ClubVenue.id == venue_id)
+    )
+    venue = result.scalars().first()
+    if not venue:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_VENUE_NOT_FOUND,
+        )
     return venue
 
 
@@ -200,6 +249,8 @@ async def get_all_tournaments(
         .options(
             selectinload(ClubTournament.venue),
             selectinload(ClubTournament.result),
+            selectinload(ClubTournament.whatsapp_link),
+            selectinload(ClubTournament.venue, ClubVenue.whatsapp_links)
         )
         .order_by(ClubTournament.tournament_datetime.desc())
     )
@@ -285,6 +336,8 @@ async def get_tournament_by_id(tournament_id: int, db: AsyncSession) -> ClubTour
         .options(
             selectinload(ClubTournament.venue),
             selectinload(ClubTournament.result),
+            selectinload(ClubTournament.whatsapp_link),
+            selectinload(ClubTournament.venue, ClubVenue.whatsapp_links)
         )
         .where(ClubTournament.id == tournament_id)
     )
@@ -316,6 +369,7 @@ async def create_tournament(data: ClubTournamentCreate, db: AsyncSession) -> dic
         announcement=data.announcement,
         total_players=data.total_players or 0,
         online_link=data.online_link,
+        whatsapp_link_id=data.whatsapp_link_id,
     )
     db.add(tournament)
     await db.commit()
@@ -353,7 +407,9 @@ async def update_tournament(
         tournament.total_players = data.total_players
     if data.online_link is not None:
         tournament.online_link = data.online_link
-
+    if getattr(data, 'whatsapp_link_id', None) is not None:
+        tournament.whatsapp_link_id = data.whatsapp_link_id
+ 
     await db.commit()
 
     # Reload with relationships
@@ -387,7 +443,9 @@ async def submit_results(
     tournament.total_players = data.total_players
     if data.online_link is not None:
         tournament.online_link = data.online_link
-
+    if getattr(data, 'whatsapp_link_id', None) is not None:
+        tournament.whatsapp_link_id = data.whatsapp_link_id
+ 
     result = ClubTournamentResult(
         tournament_id=tournament_id,
         champion=data.champion,
@@ -484,6 +542,19 @@ async def bulk_import_tournaments(
                     quarter_finalist_4=entry.quarter_finalist_4,
                 )
                 db.add(result)
+ 
+            # Sub-task: Handle whatsapp_link_label
+            if entry.whatsapp_link_label:
+                # Find the venue's links
+                venue_links_result = await db.execute(
+                    select(ClubVenueWhatsappLink).where(
+                        ClubVenueWhatsappLink.venue_id == entry.venue_id,
+                        ClubVenueWhatsappLink.label == entry.whatsapp_link_label
+                    )
+                )
+                wl = venue_links_result.scalars().first()
+                if wl:
+                    tournament.whatsapp_link_id = wl.id
 
             created_count += 1
         except Exception as e:

@@ -37,6 +37,7 @@ const AddClubTournamentDialog = ({ open, onClose, tournament }) => {
     const [announcement, setAnnouncement] = useState('');
     const [totalPlayers, setTotalPlayers] = useState(0);
     const [onlineLink, setOnlineLink] = useState('');
+    const [whatsappLinkId, setWhatsappLinkId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [venueLoading, setVenueLoading] = useState(false);
 
@@ -55,6 +56,7 @@ const AddClubTournamentDialog = ({ open, onClose, tournament }) => {
                 setAnnouncement(tournament.announcement || '');
                 setTotalPlayers(tournament.total_players || 0);
                 setOnlineLink(tournament.online_link || '');
+                setWhatsappLinkId(tournament.whatsapp_link_id || null);
             } else {
                 resetForm();
             }
@@ -88,6 +90,7 @@ const AddClubTournamentDialog = ({ open, onClose, tournament }) => {
         setAnnouncement('');
         setTotalPlayers(0);
         setOnlineLink('');
+        setWhatsappLinkId(null);
     };
 
     const handleSubmit = async () => {
@@ -114,6 +117,7 @@ const AddClubTournamentDialog = ({ open, onClose, tournament }) => {
                 announcement: announcement.trim() || null,
                 total_players: totalPlayers || 0,
                 online_link: onlineLink.trim() || null,
+                whatsapp_link_id: whatsappLinkId,
             };
 
             if (isEditing) {
@@ -189,6 +193,24 @@ const AddClubTournamentDialog = ({ open, onClose, tournament }) => {
                         </Box>
                     )}
                 />
+ 
+                {selectedVenue && selectedVenue.whatsapp_links?.length > 0 && (
+                    <Autocomplete
+                        options={selectedVenue.whatsapp_links}
+                        getOptionLabel={(option) => option.label || ''}
+                        value={selectedVenue.whatsapp_links.find(l => l.id === whatsappLinkId) || null}
+                        onChange={(e, newValue) => setWhatsappLinkId(newValue ? newValue.id : null)}
+                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="WhatsApp Registration Group"
+                                variant="outlined"
+                                placeholder="Select a WhatsApp group to join..."
+                            />
+                        )}
+                    />
+                )}
 
                 <TextField
                     label="Tournament Category"

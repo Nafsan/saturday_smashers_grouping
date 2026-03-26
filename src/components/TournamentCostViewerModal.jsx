@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions, Button,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
     List, ListItem, ListItemText, ListItemButton, Divider, TextField, InputAdornment, Box, Typography,
-    IconButton, Grid, useMediaQuery
+    IconButton, Grid, useMediaQuery, Tooltip, useTheme
 } from '@mui/material';
-import { Search, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Search, ChevronRight, ArrowLeft, Share2, Download } from 'lucide-react';
+import { toBlob, toPng } from 'html-to-image';
 import { fetchTournamentCostDates, fetchTournamentCostDetails } from '../api/client';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -16,6 +17,8 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const isMobile = useMediaQuery('(max-width:600px)');
+    const contentRef = useRef(null);
+    const theme = useTheme();
 
     const filteredDates = dates.filter(date => {
         const formattedDate = new Date(date).toLocaleDateString(undefined, {
@@ -61,6 +64,50 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
         }
     };
 
+    const handleDownloadImage = async () => {
+        if (!contentRef.current) return;
+        try {
+            const dataUrl = await toPng(contentRef.current, { 
+                backgroundColor: theme.palette.background.paper, 
+                quality: 1, 
+                pixelRatio: 3,
+                cacheBust: true
+            });
+            const link = document.createElement('a');
+            link.download = `Tournament-Cost-${selectedDate}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (err) {
+            console.error('Failed to download image', err);
+        }
+    };
+
+    const handleShareImage = async () => {
+        if (!contentRef.current) return;
+        try {
+            const blob = await toBlob(contentRef.current, { 
+                backgroundColor: theme.palette.background.paper, 
+                quality: 1, 
+                pixelRatio: 3,
+                cacheBust: true
+            });
+            const file = new File([blob], `Tournament-Cost-${selectedDate}.png`, { type: 'image/png' });
+
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: `Tournament Cost Breakdown - ${selectedDate}`,
+                    text: `Check out the tournament cost breakdown for ${selectedDate}`
+                });
+            } else {
+                // Fallback to download if sharing is not supported
+                handleDownloadImage();
+            }
+        } catch (err) {
+            console.error('Failed to share image', err);
+        }
+    };
+
     return (
         <Dialog
             open={open}
@@ -75,13 +122,29 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
                 }
             }}
         >
-            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pr: 1 }}>
                 {selectedDate && (
                     <IconButton size="small" onClick={() => { setSelectedDate(''); setDetails(null); }}>
                         <ArrowLeft size={20} />
                     </IconButton>
                 )}
-                {selectedDate ? 'Tournament Breakdown' : 'Select Tournament'}
+                <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                    {selectedDate ? 'Cost Breakdown' : 'Select Tournament'}
+                </Typography>
+                {selectedDate && details && !loading && (
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <Tooltip title="Download as Image">
+                            <IconButton size="small" onClick={handleDownloadImage} color="primary">
+                                <Download size={20} />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Share as Image">
+                            <IconButton size="small" onClick={handleShareImage} color="primary">
+                                <Share2 size={20} />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+                )}
             </DialogTitle>
             <DialogContent dividers>
                 {!selectedDate ? (
@@ -134,7 +197,7 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
                         <LoadingSpinner />
                     </Box>
                 ) : details ? (
-                    <>
+                    <Box ref={contentRef} sx={{ p: 0.5, bgcolor: theme.palette.background.paper, color: theme.palette.text.primary }}>
                         <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(74, 222, 128, 0.1)', borderRadius: 2 }}>
                             <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
                                 {new Date(selectedDate).toLocaleDateString(undefined, {
@@ -220,7 +283,7 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
                                 ))}
                             </Box>
                         )}
-                    </>
+                    </Box>
                 ) : null}
             </DialogContent>
             <DialogActions>

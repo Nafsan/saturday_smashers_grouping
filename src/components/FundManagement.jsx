@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Settings, Search, TrendingUp, TrendingDown, Users, FileText } from 'lucide-react';
+import { ArrowLeft, Settings, Search, TrendingUp, TrendingDown, Users, FileText, Share2, Download } from 'lucide-react';
+import { toBlob, toPng } from 'html-to-image';
 import { fetchFundBalances } from '../api/client';
 import LoadingSpinner from './LoadingSpinner';
 import TournamentCostViewerModal from './TournamentCostViewerModal';
@@ -18,6 +19,7 @@ const FundManagement = () => {
     const [isCostModalOpen, setIsCostModalOpen] = useState(false);
     const [isPaymentHistoryOpen, setIsPaymentHistoryOpen] = useState(false);
     const [isTrackExpensesOpen, setIsTrackExpensesOpen] = useState(false);
+    const tableRef = useRef(null);
 
 
     useEffect(() => {
@@ -53,6 +55,59 @@ const FundManagement = () => {
         if (balance > 0) return 'var(--accent-success, #4ade80)';
         if (balance < 0) return 'var(--accent-error, #f87171)';
         return 'var(--text-muted, #94a3b8)';
+    };
+
+    const handleDownloadTableImage = async () => {
+        if (!tableRef.current) return;
+        try {
+            const dataUrl = await toPng(tableRef.current, { 
+                backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary') || '#ffffff', 
+                quality: 1, 
+                pixelRatio: 3,
+                cacheBust: true,
+                style: {
+                    padding: '24px',
+                    borderRadius: '16px',
+                    backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary') || '#ffffff'
+                }
+            });
+            const link = document.createElement('a');
+            link.download = `Player-Balances-${new Date().toISOString().split('T')[0]}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (err) {
+            console.error('Failed to download image', err);
+        }
+    };
+
+    const handleShareTableImage = async () => {
+        if (!tableRef.current) return;
+        try {
+            const blob = await toBlob(tableRef.current, { 
+                backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary') || '#ffffff', 
+                quality: 1, 
+                pixelRatio: 3,
+                cacheBust: true,
+                style: {
+                    padding: '24px',
+                    borderRadius: '16px',
+                    backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary') || '#ffffff'
+                }
+            });
+            const file = new File([blob], `Player-Balances.png`, { type: 'image/png' });
+
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: `Player Balances - ${new Date().toLocaleDateString()}`,
+                    text: `Current player balances for Saturday Smashers`
+                });
+            } else {
+                handleDownloadTableImage();
+            }
+        } catch (err) {
+            console.error('Failed to share image', err);
+        }
     };
 
     if (loading) {
@@ -213,8 +268,18 @@ const FundManagement = () => {
                 </div>
 
                 {/* Player Balances Table */}
-                <div className="balance-table-container">
-                    <h2 className="section-title">Player Balances</h2>
+                <div className="balance-table-container" ref={tableRef}>
+                    <div className="table-header-row">
+                        <h2 className="section-title">Player Balances</h2>
+                        <div className="header-actions-inline">
+                            <button className="icon-btn" title="Download as Image" onClick={handleDownloadTableImage}>
+                                <Download size={18} />
+                            </button>
+                            <button className="icon-btn" title="Share as Image" onClick={handleShareTableImage}>
+                                <Share2 size={18} />
+                            </button>
+                        </div>
+                    </div>
                     <div className="table-wrapper">
                         <table className="balance-table">
                             <thead>

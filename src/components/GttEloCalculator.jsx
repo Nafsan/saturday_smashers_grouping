@@ -336,6 +336,25 @@ const GttEloCalculator = () => {
             let pointChange = 0;
             let isExpectedWin = winnerRatingBefore >= loserRatingBefore;
 
+            // --- Skip Rating if Loser is New ---
+            if (loserStatusBefore === PLAYER_STATUS.NEW) {
+                processedMatches.push({
+                    p1: match.p1Name,
+                    p2: match.p2Name,
+                    result: `${Math.max(s1, s2)}-${Math.min(s1, s2)}`,
+                    winner: winner.name,
+                    loser: loser.name,
+                    points: 0,
+                    isExpected: true,
+                    winnerRatingBefore: formatRating(winnerRatingBefore, winnerStatusBefore),
+                    loserRatingBefore: formatRating(loserRatingBefore, loserStatusBefore),
+                    winnerRatingAfter: formatRating(winnerRatingBefore, winnerStatusBefore),
+                    loserRatingAfter: formatRating(loserRatingBefore, loserStatusBefore),
+                    eloDiff: 0
+                });
+                return;
+            }
+
             // --- Rating Logic ---
             if (winnerStatusBefore === PLAYER_STATUS.NEW || winnerStatusBefore === PLAYER_STATUS.TEMP1 || winnerStatusBefore === PLAYER_STATUS.TEMP2) {
                 // Winner is New/Temp
@@ -353,27 +372,19 @@ const GttEloCalculator = () => {
                     winnerStatusAfter = PLAYER_STATUS.PERMANENT;
                 }
 
-                // Loser logic if loser is NOT New
-                if (loserStatusBefore !== PLAYER_STATUS.NEW) {
-                    // Standard ELO based on numerical values
-                    const { expected, unexpected } = getPoints(winnerRatingBefore - loserRatingBefore);
-                    const lostPoints = (winnerRatingBefore < loserRatingBefore) ? unexpected : expected;
-                    loserRatingAfter -= lostPoints;
-                    pointChange = lostPoints; // For Match Analysis display
-                }
+                // Standard ELO based on numerical values
+                const { expected, unexpected } = getPoints(winnerRatingBefore - loserRatingBefore);
+                const lostPoints = (winnerRatingBefore < loserRatingBefore) ? unexpected : expected;
+                loserRatingAfter -= lostPoints;
+                pointChange = lostPoints; // For Match Analysis display
             } else {
                 // Winner is PERMANENT
-                if (loserStatusBefore === PLAYER_STATUS.NEW) {
-                    // Losing as NEW results in 0 points for opponent
-                    pointChange = 0;
-                } else {
-                    // Standard ELO comparison
-                    const { expected, unexpected } = getPoints(winnerRatingBefore - loserRatingBefore);
-                    const gain = (winnerRatingBefore >= loserRatingBefore) ? expected : unexpected;
-                    winnerRatingAfter += gain;
-                    loserRatingAfter -= gain;
-                    pointChange = gain;
-                }
+                // Standard ELO comparison
+                const { expected, unexpected } = getPoints(winnerRatingBefore - loserRatingBefore);
+                const gain = (winnerRatingBefore >= loserRatingBefore) ? expected : unexpected;
+                winnerRatingAfter += gain;
+                loserRatingAfter -= gain;
+                pointChange = gain;
             }
 
             // Update player state

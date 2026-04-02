@@ -358,23 +358,34 @@ const GttEloCalculator = () => {
             // --- Rating Logic ---
             if (winnerStatusBefore === PLAYER_STATUS.NEW || winnerStatusBefore === PLAYER_STATUS.TEMP1 || winnerStatusBefore === PLAYER_STATUS.TEMP2) {
                 // Winner is New/Temp
+                let calculationBasisRating = winnerRatingBefore;
+
                 if (winnerStatusBefore === PLAYER_STATUS.NEW) {
                     // Win 1
                     winnerRatingAfter = loserRatingBefore;
                     winnerStatusAfter = PLAYER_STATUS.TEMP1;
+                    calculationBasisRating = loserRatingBefore;
                 } else if (winnerStatusBefore === PLAYER_STATUS.TEMP1) {
                     // Win 2
-                    winnerRatingAfter = Math.max(winnerRatingBefore, loserRatingBefore);
+                    if (winnerRatingBefore < loserRatingBefore) {
+                        winnerRatingAfter = loserRatingBefore;
+                        calculationBasisRating = loserRatingBefore;
+                    } else {
+                        winnerRatingAfter = Math.max(winnerRatingBefore, loserRatingBefore);
+                        calculationBasisRating = winnerRatingBefore;
+                    }
                     winnerStatusAfter = PLAYER_STATUS.TEMP2;
                 } else if (winnerStatusBefore === PLAYER_STATUS.TEMP2) {
                     // Win 3
-                    winnerRatingAfter = Math.round((winnerRatingBefore + loserRatingBefore) / 2);
+                    const avg = Math.round((winnerRatingBefore + loserRatingBefore) / 2);
+                    winnerRatingAfter = avg;
                     winnerStatusAfter = PLAYER_STATUS.PERMANENT;
+                    calculationBasisRating = avg;
                 }
 
                 // Standard ELO based on numerical values
-                const { expected, unexpected } = getPoints(winnerRatingBefore - loserRatingBefore);
-                const lostPoints = (winnerRatingBefore < loserRatingBefore) ? unexpected : expected;
+                const { expected, unexpected } = getPoints(calculationBasisRating - loserRatingBefore);
+                const lostPoints = (calculationBasisRating < loserRatingBefore) ? unexpected : expected;
                 loserRatingAfter -= lostPoints;
                 pointChange = lostPoints; // For Match Analysis display
             } else {

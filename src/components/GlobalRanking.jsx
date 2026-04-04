@@ -55,21 +55,39 @@ const GlobalRanking = ({ onClose }) => {
             const hasSameAverageAsPrev = i > 0 && arr[i - 1].average === p.average;
             const isTied = hasSameAverageAsNext || hasSameAverageAsPrev;
             
-            let tieInfo = null;
+            let tieInfoParts = [];
+            
             if (hasSameAverageAsNext) {
                 const next = arr[i + 1];
+                let reason = "";
                 if (p.weightedAverage < next.weightedAverage) {
-                    tieInfo = `Ranked above ${next.name} due to better Weighted Average (${p.weightedAverage.toFixed(2)} vs ${next.weightedAverage.toFixed(2)})`;
+                    reason = `having a lower Weighted Average (${p.weightedAverage.toFixed(2)} vs ${next.weightedAverage.toFixed(2)})`;
                 } else if (p.bestRating < next.bestRating) {
-                    tieInfo = `Ranked above ${next.name} due to better Best Performance (${p.bestRating} vs ${next.bestRating})`;
+                    reason = `better Best Performance (#${p.bestRating} vs #${next.bestRating})`;
                 } else if (p.playedCount > next.playedCount) {
-                    tieInfo = `Ranked above ${next.name} due to higher Attendance (${p.playedCount} vs ${next.playedCount} games)`;
+                    reason = `higher Attendance (${p.playedCount} vs ${next.playedCount} games)`;
                 } else {
-                    tieInfo = `Ranked above ${next.name} alphabetically`;
+                    reason = `alphabetical order`;
                 }
-            } else if (hasSameAverageAsPrev && !hasSameAverageAsNext) {
-                tieInfo = "Tiebreaker applied (click player row for rank details)";
+                tieInfoParts.push(`Ranked above ${next.name} due to ${reason}`);
             }
+
+            if (hasSameAverageAsPrev) {
+                const prev = arr[i - 1];
+                let reason = "";
+                if (p.weightedAverage > prev.weightedAverage) {
+                    reason = `having a higher Weighted Average (${p.weightedAverage.toFixed(2)} vs ${prev.weightedAverage.toFixed(2)})`;
+                } else if (p.bestRating > prev.bestRating) {
+                    reason = `lower Best Performance (#${p.bestRating} vs #${prev.bestRating})`;
+                } else if (p.playedCount < prev.playedCount) {
+                    reason = `lower Attendance (${p.playedCount} vs ${prev.playedCount} games)`;
+                } else {
+                    reason = `alphabetical order`;
+                }
+                tieInfoParts.push(`Ranked below ${prev.name} due to ${reason}`);
+            }
+
+            const tieInfo = tieInfoParts.join(". ");
 
             return { ...p, rank: i + 1, isTied, tieInfo };
         });
@@ -395,16 +413,37 @@ const GlobalRanking = ({ onClose }) => {
                                                 
                                                 {(selectedPlayer.isTied) && (
                                                     <div className="tiebreaker-details" style={{ marginTop: '16px', padding: '12px', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '8px', borderLeft: '3px solid var(--accent-secondary)' }}>
-                                                        <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--accent-secondary)', marginBottom: '4px', textTransform: 'uppercase' }}>
-                                                            Tiebreaker Active
+                                                        <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--accent-secondary)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                                                            Tiebreaker Breakdown
                                                         </div>
-                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                                                            Weighted Avg: <span style={{ color: 'var(--text-primary)' }}>{selectedPlayer.weightedAverage.toFixed(2)}</span>
+                                                        
+                                                        <div className="calculation-steps" style={{ fontSize: '0.85rem' }}>
+                                                            <div style={{ marginBottom: '8px' }}>
+                                                                <span style={{ color: 'var(--text-secondary)' }}>Best Performance:</span> <span style={{ color: 'var(--text-primary)', fontWeight: 'bold' }}>#{selectedPlayer.bestRating}</span>
+                                                            </div>
+                                                            
+                                                            <div style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>Weighted Average (Recency Bias):</div>
+                                                            <div style={{ 
+                                                                background: 'rgba(0,0,0,0.2)', 
+                                                                padding: '8px', 
+                                                                borderRadius: '4px', 
+                                                                fontFamily: 'monospace', 
+                                                                fontSize: '0.75rem',
+                                                                marginBottom: '8px',
+                                                                color: 'var(--accent-secondary)'
+                                                            }}>
+                                                                {selectedPlayer.ranks.slice(0, 5).map((r, i) => (
+                                                                    <span key={i}>
+                                                                        ({r} × {[1.0, 0.8, 0.6, 0.4, 0.2][i]}){i < Math.min(selectedPlayer.playedCount, 5) - 1 ? ' + ' : ''}
+                                                                    </span>
+                                                                ))}
+                                                                <div style={{ marginTop: '4px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '4px' }}>
+                                                                    Result: <strong>{selectedPlayer.weightedAverage.toFixed(2)}</strong>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                                                            Best Performance: <span style={{ color: 'var(--text-primary)' }}>#{selectedPlayer.bestRating}</span>
-                                                        </div>
-                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px', fontStyle: 'italic', opacity: 0.8 }}>
+
+                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px', fontStyle: 'italic', opacity: 0.8, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px' }}>
                                                             {selectedPlayer.tieInfo}
                                                         </div>
                                                     </div>

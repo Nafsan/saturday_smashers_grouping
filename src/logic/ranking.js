@@ -48,11 +48,13 @@ export const calculateRankings = (history, activePlayers, temporaryPlayers = [])
         });
     });
 
-    // Calculate Averages
+    // Calculate Ranks and Tiebreakers
     Object.values(playerStats).forEach(stat => {
         // If this is a temporary player, use their initial rank
         if (stat.isTemporary) {
             stat.average = tempPlayerMap[stat.name];
+            stat.weightedAverage = stat.average;
+            stat.bestRating = stat.average;
             stat.playedCount = 0;
         } else {
             stat.playedCount = stat.ranks.length;
@@ -60,46 +62,58 @@ export const calculateRankings = (history, activePlayers, temporaryPlayers = [])
             const recentRanks = stat.ranks.slice(0, 5);
 
             if (recentRanks.length > 0) {
+                // Regular Average for display (optional, but keep for consistency if needed)
                 const sum = recentRanks.reduce((a, b) => a + b, 0);
                 stat.average = sum / recentRanks.length;
+
+                // Weighted Average (Recency Bias)
+                // Weights: Most recent (index 0) to oldest (index 4)
+                const weights = [1.0, 0.8, 0.6, 0.4, 0.2];
+                let weightedSum = 0;
+                let weightTotal = 0;
+                
+                recentRanks.forEach((rating, index) => {
+                    const weight = weights[index];
+                    weightedSum += rating * weight;
+                    weightTotal += weight;
+                });
+                
+                stat.weightedAverage = weightedSum / weightTotal;
+                stat.bestRating = Math.min(...recentRanks);
             } else {
-                // New players without tournament history get initial rating of 1000
-                // This ensures they appear at the end of standings (since lower is better)
                 stat.average = 1000;
+                stat.weightedAverage = 1000;
+                stat.bestRating = 1000;
             }
         }
     });
 
-    // Sort with Tiebreaker
+    // Sort with Tiebreaker Logic
     const sortedPlayers = Object.values(playerStats).sort((a, b) => {
-        // 1. Primary Sort: Average Rank (Lower is better)
+        // 1. Primary Sort: Regular Average Rank (Lower is better)
         if (a.average !== b.average) {
             return a.average - b.average;
         }
 
-        // 2. If still tied, prefer the player who played more matches
+        // 2. Tiebreaker 1: Weighted Average (Recency Bias) (Lower is better)
+        if (a.weightedAverage !== b.weightedAverage) {
+            return a.weightedAverage - b.weightedAverage;
+        }
+
+        // 3. Tiebreaker 2: Best performance in last 5 tournaments (Lower rating is better)
+        if (a.bestRating !== b.bestRating) {
+            return a.bestRating - b.bestRating;
+        }
+
+        // 4. Tiebreaker 3: Attendance (Higher count is better)
         if (a.playedCount !== b.playedCount) {
-            return b.playedCount - a.playedCount; // Higher count is better
+            return b.playedCount - a.playedCount;
         }
 
-        // 3. Tiebreaker: Compare Nth past ranks (6th, 7th, etc.)
-        // We start looking from index 5 (which is the 6th item)
-        let i = 5;
-        while (i < a.ranks.length && i < b.ranks.length) {
-            if (a.ranks[i] !== b.ranks[i]) {
-                return a.ranks[i] - b.ranks[i];
-            }
-            i++;
-        }
-
-        // 4. If still tied (same average, same history, same match count), use random sorting
-        // Use a deterministic random based on player names to ensure consistency within a session
-        // Add defensive check to ensure name is a string
+        // 5. Final Tiebreaker: Alphabetical (Deterministic)
         const nameA = typeof a.name === 'string' ? a.name : String(a.name || '');
         const nameB = typeof b.name === 'string' ? b.name : String(b.name || '');
-        const hashA = nameA.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const hashB = nameB.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        return (hashA % 2) - (hashB % 2); // Simple pseudo-random comparison
+        return nameA.localeCompare(nameB);
     });
 
     return sortedPlayers;

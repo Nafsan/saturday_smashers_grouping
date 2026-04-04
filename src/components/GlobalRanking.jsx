@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { X, Trophy, Info } from 'lucide-react';
+import { X, Trophy, Info, HelpCircle } from 'lucide-react';
 import { calculateRankings } from '../logic/ranking';
 import { selectAllPlayerNames } from '../store/appSlice';
 import {
@@ -48,9 +48,31 @@ const GlobalRanking = ({ onClose }) => {
     }, [history, allPlayers]);
 
     const establishedPlayers = useMemo(() => {
-        return globalRankings
-            .filter(p => p.playedCount >= 2)
-            .map((p, i) => ({ ...p, rank: i + 1 }));
+        const filtered = globalRankings.filter(p => p.playedCount >= 2);
+        
+        return filtered.map((p, i, arr) => {
+            const hasSameAverageAsNext = i < arr.length - 1 && arr[i + 1].average === p.average;
+            const hasSameAverageAsPrev = i > 0 && arr[i - 1].average === p.average;
+            const isTied = hasSameAverageAsNext || hasSameAverageAsPrev;
+            
+            let tieInfo = null;
+            if (hasSameAverageAsNext) {
+                const next = arr[i + 1];
+                if (p.weightedAverage < next.weightedAverage) {
+                    tieInfo = `Ranked above ${next.name} due to better Weighted Average (${p.weightedAverage.toFixed(2)} vs ${next.weightedAverage.toFixed(2)})`;
+                } else if (p.bestRating < next.bestRating) {
+                    tieInfo = `Ranked above ${next.name} due to better Best Performance (${p.bestRating} vs ${next.bestRating})`;
+                } else if (p.playedCount > next.playedCount) {
+                    tieInfo = `Ranked above ${next.name} due to higher Attendance (${p.playedCount} vs ${next.playedCount} games)`;
+                } else {
+                    tieInfo = `Ranked above ${next.name} alphabetically`;
+                }
+            } else if (hasSameAverageAsPrev && !hasSameAverageAsNext) {
+                tieInfo = "Tiebreaker applied (click player row for rank details)";
+            }
+
+            return { ...p, rank: i + 1, isTied, tieInfo };
+        });
     }, [globalRankings]);
 
     const categorizedRankings = useMemo(() => {
@@ -182,7 +204,22 @@ const GlobalRanking = ({ onClose }) => {
                                                         #{player.rank}
                                                     </TableCell>
                                                     <TableCell sx={{ ...tableCellBodyStyle, fontWeight: 500 }}>
-                                                        {player.name}
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            {player.name}
+                                                            {player.isTied && (
+                                                                <span 
+                                                                    title={player.tieInfo} 
+                                                                    style={{ 
+                                                                        display: 'inline-flex', 
+                                                                        color: 'var(--accent-secondary)',
+                                                                        opacity: 0.7,
+                                                                        cursor: 'help'
+                                                                    }}
+                                                                >
+                                                                    <HelpCircle size={14} />
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell sx={{ ...tableCellBodyStyle, textAlign: 'center', fontFamily: 'monospace', color: 'var(--accent-success)' }}>
                                                         {player.average.toFixed(2)}
@@ -317,6 +354,14 @@ const GlobalRanking = ({ onClose }) => {
                                                 <span className="label">Average Rating:</span>
                                                 <span className="value highlight">{selectedPlayer.average.toFixed(2)}</span>
                                             </div>
+                                            <div className="summary-item" title="Tiebreaker 1: Weighted average with recency bias">
+                                                <span className="label">Weighted Avg:</span>
+                                                <span className="value">{selectedPlayer.weightedAverage.toFixed(2)}</span>
+                                            </div>
+                                            <div className="summary-item" title="Tiebreaker 2: Best performance in last 5 games">
+                                                <span className="label">Best Rating:</span>
+                                                <span className="value">{selectedPlayer.bestRating}</span>
+                                            </div>
                                         </div>
 
                                         <div className="tournaments-list">
@@ -347,6 +392,23 @@ const GlobalRanking = ({ onClose }) => {
                                                 <div className="formula-line result">
                                                     Average = {selectedPlayer.ranks.slice(0, 5).reduce((a, b) => a + b, 0)} / {Math.min(selectedPlayer.playedCount, 5)} = <strong>{selectedPlayer.average.toFixed(2)}</strong>
                                                 </div>
+                                                
+                                                {(selectedPlayer.isTied) && (
+                                                    <div className="tiebreaker-details" style={{ marginTop: '16px', padding: '12px', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '8px', borderLeft: '3px solid var(--accent-secondary)' }}>
+                                                        <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--accent-secondary)', marginBottom: '4px', textTransform: 'uppercase' }}>
+                                                            Tiebreaker Active
+                                                        </div>
+                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                                            Weighted Avg: <span style={{ color: 'var(--text-primary)' }}>{selectedPlayer.weightedAverage.toFixed(2)}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                                            Best Performance: <span style={{ color: 'var(--text-primary)' }}>#{selectedPlayer.bestRating}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px', fontStyle: 'italic', opacity: 0.8 }}>
+                                                            {selectedPlayer.tieInfo}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </>
@@ -369,7 +431,16 @@ const GlobalRanking = ({ onClose }) => {
                             <div className="info-content">
                                 <div className="info-description">
                                     <strong>Ranking Methodology:</strong>
-                                    Rankings are based on the average rating from your last 5 tournaments (or fewer if you've played less). Lower averages rank higher. Ratings range from 1-8, where 1 is the best. Click any player row to see their detailed breakdown.
+                                    <p>Rankings are primarily based on your <strong>Average Rating</strong> from the last 5 tournaments (or fewer if played less). Ratings range from 1-8, where 1 is the best.</p>
+                                    <p style={{ marginTop: '8px' }}><strong>Tiebreaker Rules (In Order):</strong></p>
+                                    <ol style={{ paddingLeft: '20px', marginTop: '4px' }}>
+                                        <li><strong>Standard Average:</strong> Primary ranking factor.</li>
+                                        <li><strong>Weighted Average:</strong> Recent games give more weight (Recency Bias).</li>
+                                        <li><strong>Best Performance:</strong> Highest rating achieved in last 5 games.</li>
+                                        <li><strong>Attendance:</strong> Number of tournaments played.</li>
+                                        <li><strong>Alphabetical:</strong> Final fallback.</li>
+                                    </ol>
+                                    <p style={{ marginTop: '8px' }}>Click any player to see their detailed breakdown.</p>
                                 </div>
                             </div>
                         </div>

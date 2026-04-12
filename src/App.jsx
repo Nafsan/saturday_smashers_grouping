@@ -14,6 +14,7 @@ const NationalRanking = React.lazy(() => import('./components/NationalRanking'))
 const ClubTournaments = React.lazy(() => import('./components/ClubTournaments'));
 import { createTheme, ThemeProvider, CssBaseline } from '@mui/material';
 import { ToastProvider } from './context/ToastContext';
+import { Analytics } from '@vercel/analytics/react';
 import './styles/global.scss';
 import Footer from './components/Footer';
 
@@ -166,6 +167,7 @@ function App() {
     return (
         <Provider store={store}>
             <AppWithTheme basename={basename} />
+            <Analytics />
         </Provider>
     );
 }

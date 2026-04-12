@@ -82,7 +82,7 @@ const Footer = () => {
                                 <Box className="social-mini-row">
                                     <IconButton component="a" href="https://www.facebook.com/nafsanVai" target="_blank" size="small" className="social-mini-btn fb"><Facebook size={14} /></IconButton>
                                     <IconButton component="a" href="https://www.linkedin.com/in/mdshafiqulislamnafsan/" target="_blank" size="small" className="social-mini-btn li"><Linkedin size={14} /></IconButton>
-                                    <IconButton component="a" href="https://www.youtube.com/@PongTTT-bd" target="_blank" size="small" className="social-mini-btn yt"><Youtube size={14} /></IconButton>
+                                    <IconButton component="a" href="https://www.youtube.com/@saturday_smashers" target="_blank" size="small" className="social-mini-btn yt"><Youtube size={14} /></IconButton>
                                 </Box>
                             </Box>
                         </Box>

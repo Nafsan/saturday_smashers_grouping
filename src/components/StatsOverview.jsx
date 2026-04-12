@@ -38,12 +38,16 @@ const StatsOverview = () => {
         }
     }, [fundSettings]);
 
-    const getNextSaturday = () => {
+    const getNextSaturday = (format = 'display') => {
         const today = new Date();
         const dayOfWeek = today.getDay();
         const daysUntilSaturday = (6 - dayOfWeek + 7) % 7 || 7;
         const nextSaturday = new Date(today);
         nextSaturday.setDate(today.getDate() + daysUntilSaturday);
+        
+        if (format === 'iso') {
+            return nextSaturday.toISOString().split('T')[0];
+        }
         return nextSaturday.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
@@ -60,8 +64,17 @@ const StatsOverview = () => {
     };
 
     const handleEditClick = () => {
-        const dateStr = nextTournamentDate || new Date().toISOString().split('T')[0];
-        setNewDate(dateStr);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        let initialDate = nextTournamentDate;
+        
+        // If current date is missing or in the past, default to next Saturday
+        if (!initialDate || new Date(initialDate) < today) {
+            initialDate = getNextSaturday('iso');
+        }
+        
+        setNewDate(initialDate);
         setIsEditDialogOpen(true);
     };
 
@@ -95,7 +108,16 @@ const StatsOverview = () => {
 
     const formatDisplayDate = (dateStr) => {
         if (!dateStr) return getNextSaturday();
+        
         const date = new Date(dateStr);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // If the date is in the past, default to next Saturday
+        if (date < today) {
+            return getNextSaturday();
+        }
+
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 

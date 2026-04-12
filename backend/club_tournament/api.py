@@ -19,6 +19,7 @@ from club_tournament.schemas import (
     BulkTournamentImport,
 )
 from club_tournament.constants import ERROR_INVALID_PASSWORD
+from club_tournament.cache import club_cache
 
 router = APIRouter(tags=["club-tournaments"])
 
@@ -37,7 +38,14 @@ def _verify_admin(password: str):
 @router.get("/club-venues", response_model=List[ClubVenueResponse])
 async def list_venues(db: AsyncSession = Depends(get_db)):
     """Get all venues."""
-    return await services.get_all_venues(db)
+    cache_key = "venues_list"
+    cached = club_cache.get(cache_key)
+    if cached:
+        return cached
+        
+    result = await services.get_all_venues(db)
+    club_cache.set(cache_key, result)
+    return result
 
 
 @router.post("/club-venues", response_model=ClubVenueResponse, status_code=status.HTTP_201_CREATED)
@@ -48,7 +56,9 @@ async def create_venue(
 ):
     """Create a new venue (admin only)."""
     _verify_admin(password)
-    return await services.create_venue(data, db)
+    result = await services.create_venue(data, db)
+    club_cache.clear()
+    return result
 
 
 @router.put("/club-venues/{venue_id}", response_model=ClubVenueResponse)
@@ -60,7 +70,9 @@ async def update_venue(
 ):
     """Update a venue (admin only)."""
     _verify_admin(password)
-    return await services.update_venue(venue_id, data, db)
+    result = await services.update_venue(venue_id, data, db)
+    club_cache.clear()
+    return result
 
 
 @router.delete("/club-venues/{venue_id}")
@@ -71,7 +83,9 @@ async def delete_venue(
 ):
     """Delete a venue (admin only)."""
     _verify_admin(password)
-    return await services.delete_venue(venue_id, db)
+    result = await services.delete_venue(venue_id, db)
+    club_cache.clear()
+    return result
 
 
 # ============ Tournament Endpoints ============
@@ -88,7 +102,12 @@ async def list_tournaments(
     db: AsyncSession = Depends(get_db),
 ):
     """Get all tournaments with optional status, venue, date range filters, search, and pagination."""
-    return await services.get_all_tournaments(
+    cache_key = f"tournaments_{status_filter}_{venue_id}_{start_date}_{end_date}_{search_query}_{page}_{page_size}"
+    cached = club_cache.get(cache_key)
+    if cached:
+        return cached
+        
+    result = await services.get_all_tournaments(
         db, 
         status_filter=status_filter, 
         venue_id=venue_id, 
@@ -98,6 +117,8 @@ async def list_tournaments(
         page=page, 
         page_size=page_size
     )
+    club_cache.set(cache_key, result)
+    return result
 
 
 @router.post("/club-tournaments", status_code=status.HTTP_201_CREATED)
@@ -108,7 +129,9 @@ async def create_tournament(
 ):
     """Create a new tournament (admin only)."""
     _verify_admin(password)
-    return await services.create_tournament(data, db)
+    result = await services.create_tournament(data, db)
+    club_cache.clear()
+    return result
 
 
 @router.put("/club-tournaments/{tournament_id}")
@@ -120,7 +143,9 @@ async def update_tournament(
 ):
     """Update a tournament (admin only)."""
     _verify_admin(password)
-    return await services.update_tournament(tournament_id, data, db)
+    result = await services.update_tournament(tournament_id, data, db)
+    club_cache.clear()
+    return result
 
 
 @router.delete("/club-tournaments/{tournament_id}")
@@ -131,7 +156,9 @@ async def delete_tournament(
 ):
     """Delete a tournament (admin only)."""
     _verify_admin(password)
-    return await services.delete_tournament(tournament_id, db)
+    result = await services.delete_tournament(tournament_id, db)
+    club_cache.clear()
+    return result
 
 
 # ============ Result Endpoints ============
@@ -145,7 +172,9 @@ async def submit_results(
 ):
     """Submit results for a tournament (admin only)."""
     _verify_admin(password)
-    return await services.submit_results(tournament_id, data, db)
+    result = await services.submit_results(tournament_id, data, db)
+    club_cache.clear()
+    return result
 
 
 @router.put("/club-tournaments/{tournament_id}/results")
@@ -157,7 +186,9 @@ async def update_results(
 ):
     """Update results for a tournament (admin only)."""
     _verify_admin(password)
-    return await services.update_results(tournament_id, data, db)
+    result = await services.update_results(tournament_id, data, db)
+    club_cache.clear()
+    return result
 
 
 # ============ Bulk Import Endpoint ============
@@ -170,4 +201,6 @@ async def bulk_import_tournaments(
 ):
     """Bulk import tournaments with optional results (admin only)."""
     _verify_admin(password)
-    return await services.bulk_import_tournaments(data.tournaments, db)
+    result = await services.bulk_import_tournaments(data.tournaments, db)
+    club_cache.clear()
+    return result

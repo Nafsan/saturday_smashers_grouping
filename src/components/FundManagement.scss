@@ -439,6 +439,11 @@
         background: transparent;
         padding: 0;
 
+        &.capturing {
+            width: max-content !important;
+            min-width: 1100px !important;
+        }
+
         .table-header-row {
             display: flex;
             justify-content: space-between;

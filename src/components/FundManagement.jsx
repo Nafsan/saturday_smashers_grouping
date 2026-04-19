@@ -19,6 +19,7 @@ const FundManagement = () => {
     const [isCostModalOpen, setIsCostModalOpen] = useState(false);
     const [isPaymentHistoryOpen, setIsPaymentHistoryOpen] = useState(false);
     const [isTrackExpensesOpen, setIsTrackExpensesOpen] = useState(false);
+    const [isCapturing, setIsCapturing] = useState(false);
     const tableRef = useRef(null);
 
 
@@ -60,15 +61,24 @@ const FundManagement = () => {
     const handleDownloadTableImage = async () => {
         if (!tableRef.current) return;
         try {
+            setIsCapturing(true);
+            // Wait for a small timeout to let the DOM update
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             const dataUrl = await toPng(tableRef.current, { 
                 backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary') || '#ffffff', 
                 quality: 1, 
                 pixelRatio: 3,
                 cacheBust: true,
                 style: {
-                    padding: '24px',
+                    padding: '32px',
+                    paddingBottom: '100px',
                     borderRadius: '16px',
-                    backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary') || '#ffffff'
+                    backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary') || '#ffffff',
+                    width: 'max-content',
+                    minWidth: '1100px',
+                    height: 'auto',
+                    overflow: 'visible'
                 }
             });
             const link = document.createElement('a');
@@ -77,21 +87,32 @@ const FundManagement = () => {
             link.click();
         } catch (err) {
             console.error('Failed to download image', err);
+        } finally {
+            setIsCapturing(false);
         }
     };
 
     const handleShareTableImage = async () => {
         if (!tableRef.current) return;
         try {
+            setIsCapturing(true);
+            // Wait for a small timeout to let the DOM update
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             const blob = await toBlob(tableRef.current, { 
                 backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary') || '#ffffff', 
                 quality: 1, 
                 pixelRatio: 3,
                 cacheBust: true,
                 style: {
-                    padding: '24px',
+                    padding: '32px',
+                    paddingBottom: '100px',
                     borderRadius: '16px',
-                    backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary') || '#ffffff'
+                    backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary') || '#ffffff',
+                    width: 'max-content',
+                    minWidth: '1100px',
+                    height: 'auto',
+                    overflow: 'visible'
                 }
             });
             const file = new File([blob], `Player-Balances.png`, { type: 'image/png' });
@@ -107,6 +128,8 @@ const FundManagement = () => {
             }
         } catch (err) {
             console.error('Failed to share image', err);
+        } finally {
+            setIsCapturing(false);
         }
     };
 
@@ -268,10 +291,25 @@ const FundManagement = () => {
                 </div>
 
                 {/* Player Balances Table */}
-                <div className="balance-table-container" ref={tableRef}>
+                <div className={`balance-table-container ${isCapturing ? 'capturing' : ''}`} ref={tableRef}>
                     <div className="table-header-row">
-                        <h2 className="section-title">Player Balances</h2>
-                        <div className="header-actions-inline">
+                        <div>
+                            <h2 className="section-title">Player Balances</h2>
+                            {(isCapturing || filterType !== 'all' || searchTerm) && (
+                                <div className="filter-description" style={{ 
+                                    color: 'var(--text-secondary)', 
+                                    fontSize: '0.9rem',
+                                    marginTop: '0.25rem',
+                                    fontWeight: '500'
+                                }}>
+                                    {filterType === 'positive' && "Showing Positive Balances"}
+                                    {filterType === 'negative' && "Showing Negative Balances"}
+                                    {filterType === 'all' && "Showing All Players"}
+                                    {searchTerm && ` | Search: "${searchTerm}"`}
+                                </div>
+                            )}
+                        </div>
+                        <div className="header-actions-inline" style={{ display: isCapturing ? 'none' : 'flex' }}>
                             <button className="icon-btn" title="Download as Image" onClick={handleDownloadTableImage}>
                                 <Download size={18} />
                             </button>
@@ -280,7 +318,7 @@ const FundManagement = () => {
                             </button>
                         </div>
                     </div>
-                    <div className="table-wrapper">
+                    <div className="table-wrapper" style={{ overflow: isCapturing ? 'visible' : 'hidden' }}>
                         <table className="balance-table">
                             <thead>
                                 <tr>
@@ -318,6 +356,20 @@ const FundManagement = () => {
                                 )}
                             </tbody>
                         </table>
+                        {isCapturing && (
+                            <div className="capture-footer" style={{ 
+                                textAlign: 'center', 
+                                padding: '24px 0', 
+                                color: 'var(--text-secondary)',
+                                fontSize: '0.85rem',
+                                fontWeight: '600',
+                                opacity: 0.8,
+                                borderTop: '1px solid var(--border-color)',
+                                backgroundColor: 'rgba(0,0,0,0.05)'
+                            }}>
+                                Saturday Smashers Fund • {new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

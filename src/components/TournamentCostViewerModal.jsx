@@ -16,6 +16,7 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
     const [details, setDetails] = useState(null);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isCapturing, setIsCapturing] = useState(false);
     const isMobile = useMediaQuery('(max-width:600px)');
     const contentRef = useRef(null);
     const theme = useTheme();
@@ -67,11 +68,23 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
     const handleDownloadImage = async () => {
         if (!contentRef.current) return;
         try {
+            setIsCapturing(true);
+            // Wait for a small timeout to let the DOM update
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             const dataUrl = await toPng(contentRef.current, { 
                 backgroundColor: theme.palette.background.paper, 
                 quality: 1, 
                 pixelRatio: 3,
-                cacheBust: true
+                cacheBust: true,
+                style: {
+                    maxHeight: 'none',
+                    height: 'auto',
+                    width: 'max-content',
+                    minWidth: '800px',
+                    overflow: 'visible',
+                    padding: '20px'
+                }
             });
             const link = document.createElement('a');
             link.download = `Tournament-Cost-${selectedDate}.png`;
@@ -79,17 +92,31 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
             link.click();
         } catch (err) {
             console.error('Failed to download image', err);
+        } finally {
+            setIsCapturing(false);
         }
     };
 
     const handleShareImage = async () => {
         if (!contentRef.current) return;
         try {
+            setIsCapturing(true);
+            // Wait for a small timeout to let the DOM update
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             const blob = await toBlob(contentRef.current, { 
                 backgroundColor: theme.palette.background.paper, 
                 quality: 1, 
                 pixelRatio: 3,
-                cacheBust: true
+                cacheBust: true,
+                style: {
+                    maxHeight: 'none',
+                    height: 'auto',
+                    width: 'max-content',
+                    minWidth: '800px',
+                    overflow: 'visible',
+                    padding: '20px'
+                }
             });
             const file = new File([blob], `Tournament-Cost-${selectedDate}.png`, { type: 'image/png' });
 
@@ -105,6 +132,8 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
             }
         } catch (err) {
             console.error('Failed to share image', err);
+        } finally {
+            setIsCapturing(false);
         }
     };
 
@@ -197,7 +226,13 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
                         <LoadingSpinner />
                     </Box>
                 ) : details ? (
-                    <Box ref={contentRef} sx={{ p: 0.5, bgcolor: theme.palette.background.paper, color: theme.palette.text.primary }}>
+                    <Box ref={contentRef} sx={{ 
+                        p: isCapturing ? 3 : 0.5, 
+                        bgcolor: theme.palette.background.paper, 
+                        color: theme.palette.text.primary,
+                        width: isCapturing ? 'max-content' : '100%',
+                        minWidth: isCapturing ? '850px' : 'auto'
+                    }}>
                         <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(74, 222, 128, 0.1)', borderRadius: 2 }}>
                             <Typography variant="h6" gutterBottom color="primary" fontWeight="bold">
                                 {new Date(selectedDate).toLocaleDateString(undefined, {
@@ -226,7 +261,7 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
                             </Grid>
                         </Box>
 
-                        <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 460 }}>
+                        <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: isCapturing ? 'none' : 460, overflow: isCapturing ? 'visible' : 'auto' }}>
                             <Table stickyHeader size="small">
                                 <TableHead>
                                     <TableRow>

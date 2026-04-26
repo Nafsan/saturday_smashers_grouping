@@ -379,7 +379,11 @@ const GttEloCalculator = () => {
                 // Standard ELO based on numerical values
                 const { expected, unexpected } = getPoints(calculationBasisRating - loserRatingBefore);
                 const lostPoints = (calculationBasisRating < loserRatingBefore) ? unexpected : expected;
-                loserRatingAfter -= lostPoints;
+                
+                // Only subtract points if loser is PERMANENT
+                if (loserStatusBefore === PLAYER_STATUS.PERMANENT) {
+                    loserRatingAfter -= lostPoints;
+                }
                 pointChange = lostPoints; // For Match Analysis display
             } else {
                 // Winner is PERMANENT
@@ -387,7 +391,11 @@ const GttEloCalculator = () => {
                 const { expected, unexpected } = getPoints(winnerRatingBefore - loserRatingBefore);
                 const gain = (winnerRatingBefore >= loserRatingBefore) ? expected : unexpected;
                 winnerRatingAfter += gain;
-                loserRatingAfter -= gain;
+                
+                // Only subtract points if loser is PERMANENT
+                if (loserStatusBefore === PLAYER_STATUS.PERMANENT) {
+                    loserRatingAfter -= gain;
+                }
                 pointChange = gain;
             }
 

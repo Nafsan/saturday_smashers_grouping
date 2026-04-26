@@ -128,6 +128,12 @@ button {
   flex-direction: column;
   min-height: 100vh;
   
+  // Safe area padding for mobile devices (notches/home indicators)
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  
   .main-content {
     flex: 1;
   }

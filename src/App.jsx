@@ -17,6 +17,8 @@ import { ToastProvider } from './context/ToastContext';
 import { Analytics } from '@vercel/analytics/react';
 import './styles/global.scss';
 import Footer from './components/Footer';
+import IOSInstallPrompt from './components/IOSInstallPrompt';
+import './components/IOSInstallPrompt.scss';
 
 // Create custom themes matching the global SCSS variables
 const lightTheme = createTheme({
@@ -185,6 +187,7 @@ function AppWithTheme({ basename }) {
         <ThemeProvider theme={currentTheme}>
             <CssBaseline />
             <ToastProvider>
+                <IOSInstallPrompt />
                 <HashRouter>
                     <div className="page-wrapper">
                         <div className="main-content">

@@ -134,6 +134,7 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
                     break
         
         recent_trend = recent_ratings[:10]
+        logging.info(f"recent trend : {recent_trend}")
         
         # Initialize inference client
         client = InferenceClient(token=hf_token)
@@ -150,7 +151,7 @@ Analyze these stats for {player_name}:
 - Total Tournaments: {total_tournaments}
 - Cup Championships: {cup_wins}
 - Plate Championships: {plate_wins}
-- Recent Ratings Trend (1 is best, 8 is worst): {recent_trend}
+- Recent Ratings Trend (1 is best, 8 is worst, ordered from LATEST to OLDEST): {recent_trend}
 
 Return the JSON object.</s>
 <|assistant|>"""

@@ -43,4 +43,10 @@ async def get_player_statistics(
     """Get tournament statistics for a specific player"""
     return await services.get_player_statistics(player_id, database_session)
 
-
+@router.get("/{player_id}/insights")
+async def get_player_insights(
+    player_id: int,
+    database_session: AsyncSession = Depends(get_db)
+):
+    """Generate AI-powered insights for a player"""
+    return await services.generate_player_insight(player_id, database_session)

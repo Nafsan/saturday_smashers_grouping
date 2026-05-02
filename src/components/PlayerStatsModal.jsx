@@ -3,7 +3,8 @@ import { useSelector } from 'react-redux';
 import { X, Trophy, TrendingUp, Award, Target, Youtube, FileText } from 'lucide-react';
 import Select from 'react-select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { fetchPlayerStatistics, fetchYouTubeSearch } from '../api/client';
+import { fetchPlayerStatistics, fetchYouTubeSearch, fetchPlayerInsights } from '../api/client';
+import { Sparkles, RefreshCw, AlertCircle } from 'lucide-react';
 import { extractVideoId, getYouTubeThumbnail, getVideoUrl, getYouTubeMetadata } from '../utils/youtubeUtils';
 import VideoGrid from './VideoGrid';
 import VideoPlayer from './VideoPlayer';
@@ -44,6 +45,10 @@ const PlayerStatsModal = ({ open, onClose }) => {
     const [youtubeVideos, setYoutubeVideos] = useState([]);
     const [searchingVideos, setSearchingVideos] = useState(false);
     const [currentEmbedUrl, setCurrentEmbedUrl] = useState('');
+    const [aiInsight, setAiInsight] = useState('');
+    const [performanceSummary, setPerformanceSummary] = useState('');
+    const [loadingInsight, setLoadingInsight] = useState(false);
+    const [insightError, setInsightError] = useState(null);
 
 
     // Reset state and manage scroll lock when modal closes/opens
@@ -60,7 +65,12 @@ const PlayerStatsModal = ({ open, onClose }) => {
             setMatchMetadata({});
             setYoutubeVideos([]);
             setViewMode('grid');
+            setViewMode('grid');
             setCurrentEmbedUrl('');
+            setAiInsight('');
+            setPerformanceSummary('');
+            setLoadingInsight(false);
+            setInsightError(null);
         }
         return () => {
             document.body.style.overflow = 'unset';
@@ -148,6 +158,25 @@ const PlayerStatsModal = ({ open, onClose }) => {
             setPlayerData(null);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleGenerateInsight = async () => {
+        if (!selectedPlayer) return;
+        
+        setLoadingInsight(true);
+        setInsightError(null);
+        
+        try {
+            const playerId = selectedPlayer.isLegacy ? null : selectedPlayer.value;
+            const data = await fetchPlayerInsights(playerId);
+            setAiInsight(data.insight);
+            setPerformanceSummary(data.performance_summary);
+        } catch (err) {
+            setInsightError('Failed to generate AI insight. Please try again.');
+            console.error(err);
+        } finally {
+            setLoadingInsight(false);
         }
     };
 
@@ -483,6 +512,41 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                     <p className="motivational-statement">{playerCategory.selectedStatement}</p>
                                 </div>
                             )} */}
+
+                            {/* AI Performance Insight Section */}
+                            <div className="ai-insight-section">
+                                <div className="insight-header">
+                                    <h3><Sparkles size={18} /> AI Performance Insight</h3>
+                                    <button 
+                                        className="generate-btn" 
+                                        onClick={handleGenerateInsight}
+                                        disabled={loadingInsight}
+                                    >
+                                        {loadingInsight ? (
+                                            <><RefreshCw size={14} className="spin" /> Generating...</>
+                                        ) : aiInsight ? (
+                                            <><RefreshCw size={14} /> Regenerate</>
+                                        ) : (
+                                            'Generate ✨'
+                                        )}
+                                    </button>
+                                </div>
+                                
+                                {aiInsight ? (
+                                    <div className="insight-body">
+                                        <p className="insight-content">"{aiInsight}"</p>
+                                        {performanceSummary && (
+                                            <div className="performance-summary">
+                                                <p>{performanceSummary}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : insightError ? (
+                                    <p className="insight-error"><AlertCircle size={14} /> {insightError}</p>
+                                ) : (
+                                    <p className="insight-placeholder">Get an AI-powered summary of {playerData?.player_name}'s recent performance and potential.</p>
+                                )}
+                            </div>
 
                             {/* Statistics Summary */}
                             <div className="stats-summary">

@@ -58,6 +58,11 @@ export const fetchPlayerStatistics = async (playerId) => {
     return response.data;
 };
 
+export const fetchPlayerInsights = async (playerId) => {
+    const response = await client.get(`/players/${playerId}/insights`);
+    return response.data;
+};
+
 
 // ============ Fund Management APIs ============
 export const fetchFundSettings = async () => {

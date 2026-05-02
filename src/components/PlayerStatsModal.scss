@@ -449,6 +449,113 @@
             }
         }
 
+        .ai-insight-section {
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.1) 0%, rgba(56, 189, 248, 0.1) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+
+            &::before {
+                content: '✨';
+                position: absolute;
+                top: -10px;
+                right: -10px;
+                font-size: 4rem;
+                opacity: 0.1;
+                transform: rotate(15deg);
+            }
+
+            .insight-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+
+                h3 {
+                    margin: 0;
+                    font-size: 1.1rem;
+                    color: var(--accent-primary);
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                .generate-btn {
+                    background: var(--accent-primary);
+                    color: white;
+                    border: none;
+                    padding: 0.5rem 1rem;
+                    border-radius: 8px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+
+                    &:hover:not(:disabled) {
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4);
+                        background: #0ea5e9;
+                    }
+
+                    &:disabled {
+                        opacity: 0.6;
+                        cursor: not-allowed;
+                        background: var(--bg-surface-elevated);
+                        color: var(--text-muted);
+                        box-shadow: none;
+                    }
+
+                    .spin {
+                        animation: spin 1s linear infinite;
+                    }
+                }
+            }
+
+            .insight-content {
+                color: var(--text-primary);
+                font-size: 1.05rem;
+                line-height: 1.6;
+                font-style: italic;
+                margin: 0 0 1rem 0;
+            }
+
+            .performance-summary {
+                background: rgba(255, 255, 255, 0.05);
+                border-left: 3px solid var(--accent-primary);
+                padding: 1rem;
+                border-radius: 4px 8px 8px 4px;
+                
+                p {
+                    margin: 0;
+                    font-size: 0.95rem;
+                    line-height: 1.6;
+                    color: var(--text-secondary);
+                }
+            }
+
+            .insight-placeholder {
+                color: var(--text-muted);
+                font-size: 0.9rem;
+                margin: 0;
+            }
+
+            .insight-error {
+                color: #ef4444;
+                font-size: 0.9rem;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+        }
+
         .stats-summary {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

@@ -141,6 +141,9 @@ const PlayerStatsModal = ({ open, onClose }) => {
         setSelectedPlayer(selectedOption);
         setLoading(true);
         setError(null);
+        setAiInsight('');
+        setPerformanceSummary('');
+        setInsightError(null);
 
         try {
             // Use player ID for API call

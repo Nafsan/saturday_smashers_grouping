@@ -177,9 +177,13 @@ Your goal is to provide a realistic "reality check" of a player's performance ba
 STRICT CONSTRAINTS:
 1. Return ONLY a JSON object with keys "comment" and "summary".
 2. DO NOT include ANY numeric ratings in parentheses in your text.
-3. Use the 'GROUND TRUTH STATS' below as your primary source of truth.
-4. DO NOT hallucinate achievements. If a title is not in the history, it never happened.
-5. Tournaments happen WEEKLY. Do not refer to "years" or long timeframes.
+3. Use the 'FACTUAL ANCHORS' below ONLY to ensure you don't hallucinate. DO NOT just list these stats.
+4. Tournaments happen WEEKLY. Focus on "recent weeks" or "the current run".
+
+Analytical Focus:
+- Narrative: Tell the story of their recent momentum (getting better, staying consistent, or things not going well lately).
+- Spikes & Consistency: Identify sudden spikes of excellence or periods of stagnant performance.
+- Reality Check: Be objective. If they are stuck in the Plate round, explain the scope for improvement needed to reach the Cup round.
 
 Provide:
 1. A short, insightful 1-sentence analytical comment.
@@ -188,20 +192,20 @@ Provide:
 Analyze these stats for {player_name}:
 - Total Tournaments: {total_tournaments} (Weekly frequency)
 
-GROUND TRUTH STATS:
-- Most Recent Result: {most_recent_title}
-- Best Ever Result: {best_title}
-- Last 5 Tournament Results: {", ".join(last_5_titles)}
-- Total Cup Championship Wins: {cup_wins}
-- Total Plate Championship Wins: {plate_wins}
+FACTUAL ANCHORS (Use these to stay accurate, but don't just repeat them):
+- Most Recent: {most_recent_title}
+- Best Ever: {best_title}
+- Last 5: {", ".join(last_5_titles)}
+- Total Cup Wins: {cup_wins}
+- Total Plate Wins: {plate_wins}
 
-PLAYER HISTORY (Ordered LATEST to OLDEST):
+PLAYER HISTORY (LATEST to OLDEST):
 {formatted_history}
 
 Important Context:
-- 'Cup' tiers (Champion to Quarter Finalist) are elite/supreme levels.
+- 'Cup' tiers (Champion to Quarter Finalist) are elite levels.
 - 'Plate' tiers are lower/relegated levels.
-- If 'Total Cup Championship Wins' is 0, they have NEVER won the Cup.
+- If 'Total Cup Wins' is 0, they have NEVER won the Cup. Be careful not to invent a Cup championship.
 
 Return the JSON object.</s>
 <|assistant|>"""

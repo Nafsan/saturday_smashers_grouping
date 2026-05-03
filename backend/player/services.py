@@ -162,7 +162,7 @@ Analyze these stats for {player_name}:
 - Ratings Trend (1 is best, 8 is worst, ordered from LATEST to OLDEST): {recent_trend}
 
 Important Analysis Instructions:
-1. Use descriptive titles instead of numeric values in your response. 
+1. Use descriptive titles instead of numeric values in your response. DO NOT include the numeric rating in parentheses (e.g., use "Plate Semi Finalist", NOT "Plate Semi Finalist (7)").
    Mapping: 1="Cup Champion", 2="Cup Runner Up", 3="Cup Semi Finalist", 4="Cup Quarter Finalist", 5="Plate Champion", 6="Plate Runner Up", 7="Plate Semi Finalist", 8="Plate Quarter Finalist".
 2. Focus more heavily on the MOST RECENT results (first few numbers) to determine current form.
 3. Analyze the full history to identify long-term consistency or improvement over time.

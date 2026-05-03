@@ -112,6 +112,15 @@ async def get_tournament_cost_details(
     return await services.get_tournament_cost_details(date_str, db)
 
 
+@router.get("/tournament-costs/{date_str}/input", response_model=fund_schemas.TournamentCostInputResponse)
+async def get_tournament_cost_input(
+    date_str: date,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get original input parameters for a tournament cost record"""
+    return await services.get_tournament_cost_input(date_str, db)
+
+
 # ============ Attendance ============
 @router.get("/attendance", response_model=List[fund_schemas.PlayerAttendanceStats])
 async def get_player_attendance(db: AsyncSession = Depends(get_db)):
@@ -142,6 +151,20 @@ async def get_payment_history(
 ):
     """Get paginated payment history"""
     return await services.get_payment_history(page, page_size, player_name, db)
+
+
+@router.put("/payments/{payment_id}")
+async def update_player_payment(
+    payment_id: int,
+    payment_data: fund_schemas.UpdatePaymentRequest,
+    password: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Update a payment record (password protected)"""
+    if password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=403, detail="Invalid password")
+    
+    return await services.update_player_payment(payment_id, payment_data, db)
 
 
 

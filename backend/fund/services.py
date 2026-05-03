@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import selectinload
 from datetime import datetime, date
 from typing import List, Optional
@@ -242,7 +242,19 @@ async def save_tournament_costs_and_update_balances(
     cost_request: fund_schemas.AddTournamentCostRequest,
     db: AsyncSession
 ):
-    """Save tournament costs and update player balances"""
+    """Save tournament costs and update player balances (supports updates by date)"""
+    
+    # Check if a cost record for this date already exists
+    existing_cost_result = await db.execute(
+        select(fund_models.TournamentCost)
+        .join(models.Tournament)
+        .where(models.Tournament.date == cost_request.tournament_date)
+    )
+    existing_cost = existing_cost_result.scalar()
+    
+    if existing_cost:
+        # Revert balances for all players affected by the old cost
+        await delete_tournament_costs_and_revert_balances(cost_request.tournament_date, db)
     
     # Calculate costs first
     calculation = await calculate_tournament_costs(cost_request, db)
@@ -297,7 +309,7 @@ async def save_tournament_costs_and_update_balances(
         player = player_result.scalar()
         
         if player:
-            # Check if attendance record already exists (e.g., from unofficial tournament creation)
+            # Check if attendance record already exists
             existing_attendance_result = await db.execute(
                 select(fund_models.TournamentAttendance).where(
                     fund_models.TournamentAttendance.tournament_id == tournament.id,
@@ -849,6 +861,190 @@ async def get_player_misc_costs(
         page=page,
         page_size=page_size,
         total_pages=total_pages
+    )
+
+
+async def update_player_payment(
+    payment_id: int,
+    payment_data: fund_schemas.UpdatePaymentRequest,
+    db: AsyncSession
+):
+    """Update a payment record and adjust player balances"""
+    # Get existing transaction
+    result = await db.execute(
+        select(fund_models.PaymentTransaction)
+        .where(fund_models.PaymentTransaction.id == payment_id)
+        .options(selectinload(fund_models.PaymentTransaction.player))
+    )
+    transaction = result.scalar()
+    
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Payment transaction not found")
+    
+    old_amount = transaction.amount
+    old_player_id = transaction.player_id
+    
+    # Get new player
+    player_result = await db.execute(
+        select(models.Player).where(models.Player.name == payment_data.player_name)
+    )
+    new_player = player_result.scalar()
+    
+    if not new_player:
+        raise HTTPException(status_code=404, detail=f"Player '{payment_data.player_name}' not found")
+    
+    # If player changed
+    if old_player_id != new_player.id:
+        # Revert from old player
+        old_fund_result = await db.execute(
+            select(fund_models.PlayerFund).where(fund_models.PlayerFund.player_id == old_player_id)
+        )
+        old_fund = old_fund_result.scalar()
+        if old_fund:
+            old_fund.current_balance -= old_amount
+            old_fund.total_paid -= old_amount
+            old_fund.last_updated = datetime.utcnow()
+        
+        # Apply to new player
+        new_fund_result = await db.execute(
+            select(fund_models.PlayerFund).where(fund_models.PlayerFund.player_id == new_player.id)
+        )
+        new_fund = new_fund_result.scalar()
+        if not new_fund:
+            new_fund = fund_models.PlayerFund(
+                player_id=new_player.id,
+                current_balance=0.0,
+                days_played=0,
+                total_paid=0.0,
+                total_cost=0.0
+            )
+            db.add(new_fund)
+            await db.flush()
+        
+        new_fund.current_balance += payment_data.amount
+        new_fund.total_paid += payment_data.amount
+        new_fund.last_updated = datetime.utcnow()
+        
+        transaction.player_id = new_player.id
+    else:
+        # Same player, just update amount
+        fund_result = await db.execute(
+            select(fund_models.PlayerFund).where(fund_models.PlayerFund.player_id == old_player_id)
+        )
+        fund = fund_result.scalar()
+        if fund:
+            diff = payment_data.amount - old_amount
+            fund.current_balance += diff
+            fund.total_paid += diff
+            fund.last_updated = datetime.utcnow()
+
+    # Update transaction details
+    transaction.amount = payment_data.amount
+    transaction.payment_date = datetime.combine(payment_data.payment_date, datetime.min.time())
+    transaction.notes = payment_data.notes
+    
+    await db.commit()
+    return {"message": "Payment updated successfully"}
+
+
+async def delete_tournament_costs_and_revert_balances(
+    tournament_date: date,
+    db: AsyncSession
+):
+    """Internal helper to revert balances and delete cost records for a date"""
+    # Get current breakdown first
+    current_breakdown = await get_tournament_cost_details(tournament_date, db)
+    
+    # Revert balances
+    for breakdown in current_breakdown.player_breakdowns:
+        player_result = await db.execute(
+            select(models.Player).where(models.Player.name == breakdown.player_name)
+        )
+        player = player_result.scalar()
+        if player:
+            fund_result = await db.execute(
+                select(fund_models.PlayerFund).where(fund_models.PlayerFund.player_id == player.id)
+            )
+            fund = fund_result.scalar()
+            if fund:
+                fund.current_balance += breakdown.total_cost
+                fund.total_cost -= breakdown.total_cost
+                fund.last_updated = datetime.utcnow()
+    
+    # Delete cost records
+    tournament_result = await db.execute(
+        select(models.Tournament).where(models.Tournament.date == tournament_date)
+    )
+    tournament = tournament_result.scalar()
+    
+    if tournament:
+        # Cascade delete takes care of PlayerSpecificCost
+        await db.execute(
+            text("DELETE FROM tournament_costs WHERE tournament_id = :tid"),
+            {"tid": tournament.id}
+        )
+        # We don't delete attendance yet, it's managed by save_tournament_costs_and_update_balances
+
+
+async def get_tournament_cost_input(
+    tournament_date: date,
+    db: AsyncSession
+) -> fund_schemas.TournamentCostInputResponse:
+    """Get original input parameters for a tournament cost record"""
+    # Reuse get_tournament_cost_details to get basic info
+    details = await get_tournament_cost_details(tournament_date, db)
+    
+    # Get the cost record for fees and misc name
+    cost_result = await db.execute(
+        select(fund_models.TournamentCost)
+        .join(models.Tournament)
+        .where(models.Tournament.date == tournament_date)
+    )
+    cost_record = cost_result.scalar()
+    
+    # Get fund settings for comparison
+    settings = await get_or_create_fund_settings(db)
+    
+    use_default_venue = abs(cost_record.venue_fee_per_person - settings.default_venue_fee) < 0.01
+    use_default_ball = abs(cost_record.ball_fee_per_ball - settings.default_ball_fee) < 0.01
+    
+    # Reconstruct player specific costs in Create format
+    # We need to group them by (amount, name)
+    specific_costs_result = await db.execute(
+        select(fund_models.PlayerSpecificCost)
+        .where(fund_models.PlayerSpecificCost.tournament_cost_id == cost_record.id)
+        .options(selectinload(fund_models.PlayerSpecificCost.player))
+    )
+    specific_costs = specific_costs_result.scalars().all()
+    
+    grouped_specific = {}
+    for sc in specific_costs:
+        key = (sc.cost_amount, sc.cost_name)
+        if key not in grouped_specific:
+            grouped_specific[key] = []
+        grouped_specific[key].append(sc.player.name)
+    
+    player_specific_costs = [
+        fund_schemas.PlayerSpecificCostCreate(
+            player_names=names,
+            cost_amount=amount,
+            cost_name=name
+        )
+        for (amount, name), names in grouped_specific.items()
+    ]
+    
+    return fund_schemas.TournamentCostInputResponse(
+        tournament_date=tournament_date,
+        use_default_venue_fee=use_default_venue,
+        use_default_ball_fee=use_default_ball,
+        venue_fee_per_person=cost_record.venue_fee_per_person,
+        ball_fee_per_ball=cost_record.ball_fee_per_ball,
+        tournament_players=[p.player_name for p in details.player_breakdowns],
+        club_members=[p.player_name for p in details.player_breakdowns if p.is_club_member],
+        num_balls_purchased=cost_record.num_balls_purchased,
+        common_misc_cost=cost_record.common_misc_cost,
+        common_misc_name=cost_record.common_misc_name,
+        player_specific_costs=player_specific_costs
     )
 
 

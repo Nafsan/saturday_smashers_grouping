@@ -134,6 +134,13 @@ export const fetchPaymentHistory = async (page = 1, pageSize = 20, playerName = 
     return response.data;
 };
 
+export const updatePayment = async (id, data, password) => {
+    const response = await client.put(`/fund/payments/${id}`, data, {
+        params: { password }
+    });
+    return response.data;
+};
+
 
 export const fetchDaysPlayedComparison = async () => {
     const response = await client.get('/fund/days-played-comparison');
@@ -147,6 +154,11 @@ export const fetchTournamentCostDates = async () => {
 
 export const fetchTournamentCostDetails = async (date) => {
     const response = await client.get(`/fund/tournament-costs/${date}`);
+    return response.data;
+};
+
+export const fetchTournamentCostInput = async (date) => {
+    const response = await client.get(`/fund/tournament-costs/${date}/input`);
     return response.data;
 };
 

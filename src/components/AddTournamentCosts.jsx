@@ -4,12 +4,12 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, Paper, useMediaQuery
 } from '@mui/material';
-import { fetchPlayers, fetchFundSettings, fetchTournamentPlayersByDate, calculateTournamentCosts, saveTournamentCosts, createUnofficialTournament } from '../api/client';
-import { Plus, Calculator, Save, Sparkles } from 'lucide-react';
+import { fetchPlayers, fetchFundSettings, fetchTournamentPlayersByDate, calculateTournamentCosts, saveTournamentCosts, createUnofficialTournament, fetchTournamentCostInput } from '../api/client';
+import { Plus, Calculator, Save, Sparkles, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getAdminAuthCookie, setAdminAuthCookie } from '../utils/cookieUtils';
+import { getAdminAuthCookie, setAdminAuthCookie, isAdminAuthenticated } from '../utils/cookieUtils';
 
-const AddTournamentCosts = () => {
+const AddTournamentCosts = ({ editDate = null, onSuccess = null, standalone = true }) => {
     const navigate = useNavigate();
     const isMobile = useMediaQuery('(max-width:600px)');
     const [allPlayers, setAllPlayers] = useState([]);
@@ -58,8 +58,24 @@ const AddTournamentCosts = () => {
             ]);
             setAllPlayers(players.map(p => p.name));
             setSettings(fundSettings);
-            setVenueFee(fundSettings.default_venue_fee);
-            setBallFee(fundSettings.default_ball_fee);
+            
+            if (editDate) {
+                setTournamentDate(editDate);
+                const inputData = await fetchTournamentCostInput(editDate);
+                setUseDefaultVenue(inputData.use_default_venue_fee);
+                setUseDefaultBall(inputData.use_default_ball_fee);
+                setVenueFee(inputData.venue_fee_per_person);
+                setBallFee(inputData.ball_fee_per_ball);
+                setTournamentPlayers(inputData.tournament_players);
+                setClubMembers(inputData.club_members);
+                setNumBalls(inputData.num_balls_purchased);
+                setCommonMiscCost(inputData.common_misc_cost);
+                setCommonMiscName(inputData.common_misc_name || '');
+                setPlayerSpecificCosts(inputData.player_specific_costs);
+            } else {
+                setVenueFee(fundSettings.default_venue_fee);
+                setBallFee(fundSettings.default_ball_fee);
+            }
         } catch (error) {
             console.error('Error loading data:', error);
             setMessage({ type: 'error', text: 'Failed to load data' });
@@ -223,10 +239,16 @@ const AddTournamentCosts = () => {
             setMessage({ type: 'success', text: 'Tournament costs saved and balances updated successfully!' });
             setShowPreview(false);
 
-            // Reset form
-            setTimeout(() => {
-                navigate('/fund');
-            }, 2000);
+            if (onSuccess) {
+                onSuccess();
+            }
+
+            // Reset form if standalone
+            if (standalone) {
+                setTimeout(() => {
+                    navigate('/fund');
+                }, 2000);
+            }
         } catch (error) {
             console.error('Error saving costs:', error);
             setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to save costs' });
@@ -240,8 +262,8 @@ const AddTournamentCosts = () => {
     }
 
     return (
-        <div>
-            <h2 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Add Tournament Costs</h2>
+        <div style={{ padding: standalone ? '0' : '1rem' }}>
+            {standalone && <h2 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{editDate ? 'Edit' : 'Add'} Tournament Costs</h2>}
 
             {message && (
                 <Alert severity={message.type} sx={{ mb: 3 }}>

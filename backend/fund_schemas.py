@@ -109,6 +109,19 @@ class TournamentCostCalculationResponse(BaseModel):
     total_cost: float
     player_breakdowns: List[PlayerCostBreakdown]
 
+class TournamentCostInputResponse(BaseModel):
+    tournament_date: date
+    use_default_venue_fee: bool
+    use_default_ball_fee: bool
+    venue_fee_per_person: Optional[float] = None
+    ball_fee_per_ball: Optional[float] = None
+    tournament_players: List[str]
+    club_members: List[str]
+    num_balls_purchased: int
+    common_misc_cost: float
+    common_misc_name: Optional[str] = None
+    player_specific_costs: List[PlayerSpecificCostCreate]
+
 class UpdatePlayerBalancesRequest(BaseModel):
     tournament_id: str
     player_balances: List[PlayerFundCreate]
@@ -144,6 +157,12 @@ class RecordPaymentRequest(BaseModel):
     player_name: str
     amount: float
     payment_date: Optional[date] = None
+    notes: Optional[str] = None
+
+class UpdatePaymentRequest(BaseModel):
+    player_name: str
+    amount: float
+    payment_date: date
     notes: Optional[str] = None
 
 

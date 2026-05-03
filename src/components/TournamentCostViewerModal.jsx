@@ -5,10 +5,12 @@ import {
     List, ListItem, ListItemText, ListItemButton, Divider, TextField, InputAdornment, Box, Typography,
     IconButton, Grid, useMediaQuery, Tooltip, useTheme
 } from '@mui/material';
-import { Search, ChevronRight, ArrowLeft, Share2, Download } from 'lucide-react';
+import { Search, ChevronRight, ArrowLeft, Share2, Download, Edit, X } from 'lucide-react';
 import { toBlob, toPng } from 'html-to-image';
 import { fetchTournamentCostDates, fetchTournamentCostDetails } from '../api/client';
 import LoadingSpinner from './LoadingSpinner';
+import { isAdminAuthenticated } from '../utils/cookieUtils';
+import AddTournamentCosts from './AddTournamentCosts';
 
 const TournamentCostViewerModal = ({ open, onClose }) => {
     const [dates, setDates] = useState([]);
@@ -20,6 +22,8 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
     const isMobile = useMediaQuery('(max-width:600px)');
     const contentRef = useRef(null);
     const theme = useTheme();
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const isAdmin = isAdminAuthenticated();
 
     const filteredDates = dates.filter(date => {
         const formattedDate = new Date(date).toLocaleDateString(undefined, {
@@ -321,9 +325,54 @@ const TournamentCostViewerModal = ({ open, onClose }) => {
                     </Box>
                 ) : null}
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={{ px: 3, pb: 2, display: 'flex', gap: 1 }}>
                 <Button onClick={onClose} variant="outlined">Close</Button>
+                {isAdmin && selectedDate && (
+                    <Button 
+                        onClick={() => setEditDialogOpen(true)} 
+                        variant="contained" 
+                        startIcon={<Edit size={18} />}
+                        sx={{ 
+                            background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 100%)',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        Edit Costs
+                    </Button>
+                )}
             </DialogActions>
+
+            {/* Edit Costs Dialog */}
+            <Dialog 
+                open={editDialogOpen} 
+                onClose={() => setEditDialogOpen(false)} 
+                maxWidth="md" 
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        width: isMobile ? '97%' : undefined,
+                        maxHeight: isMobile ? '95vh' : undefined,
+                        margin: isMobile ? '8px' : undefined
+                    }
+                }}
+            >
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Edit Tournament Costs
+                    <IconButton onClick={() => setEditDialogOpen(false)}>
+                        <X size={20} />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers>
+                    <AddTournamentCosts 
+                        editDate={selectedDate} 
+                        standalone={false} 
+                        onSuccess={() => {
+                            setEditDialogOpen(false);
+                            handleDateChange(selectedDate); // Refresh details
+                        }}
+                    />
+                </DialogContent>
+            </Dialog>
         </Dialog>
     );
 };

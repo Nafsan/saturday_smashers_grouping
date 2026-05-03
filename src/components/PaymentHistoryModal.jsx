@@ -5,9 +5,11 @@ import {
     TableHead, TableRow, Paper, TextField, IconButton,
     Box, Pagination, useMediaQuery
 } from '@mui/material';
-import { X, Search } from 'lucide-react';
-import { fetchPaymentHistory } from '../api/client';
+import { X, Search, Edit2 } from 'lucide-react';
+import { fetchPaymentHistory, updatePayment, fetchPlayers } from '../api/client';
 import LoadingSpinner from './LoadingSpinner';
+import { getAdminAuthCookie, isAdminAuthenticated } from '../utils/cookieUtils';
+import { Autocomplete } from '@mui/material';
 
 const PaymentHistoryModal = ({ open, onClose }) => {
     const [transactions, setTransactions] = useState([]);
@@ -32,16 +34,52 @@ const PaymentHistoryModal = ({ open, onClose }) => {
         }
     }, [open, page, debouncedSearch]);
 
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [editingTransaction, setEditingTransaction] = useState(null);
+    const [allPlayers, setAllPlayers] = useState([]);
+    const isAdmin = isAdminAuthenticated();
+
     const loadHistory = async () => {
         setLoading(true);
         try {
             const data = await fetchPaymentHistory(page, 20, debouncedSearch);
             setTransactions(data.items);
             setTotalPages(data.total_pages);
+            
+            if (isAdmin && allPlayers.length === 0) {
+                const players = await fetchPlayers();
+                setAllPlayers(players.map(p => p.name));
+            }
         } catch (error) {
             console.error("Failed to load payment history", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleEditClick = (transaction) => {
+        setEditingTransaction({
+            ...transaction,
+            payment_date: transaction.payment_date.split('T')[0] // Format for date input
+        });
+        setEditDialogOpen(true);
+    };
+
+    const handleUpdatePayment = async () => {
+        try {
+            const adminPassword = getAdminAuthCookie();
+            await updatePayment(editingTransaction.id, {
+                player_name: editingTransaction.player_name,
+                amount: parseFloat(editingTransaction.amount),
+                payment_date: editingTransaction.payment_date,
+                notes: editingTransaction.notes
+            }, adminPassword);
+            
+            setEditDialogOpen(false);
+            loadHistory();
+        } catch (error) {
+            console.error("Failed to update payment", error);
+            alert(error.response?.data?.detail || "Failed to update payment");
         }
     };
 
@@ -98,6 +136,7 @@ const PaymentHistoryModal = ({ open, onClose }) => {
                                         <TableCell>Player</TableCell>
                                         <TableCell>Amount</TableCell>
                                         <TableCell>Notes</TableCell>
+                                        {isAdmin && <TableCell align="right">Actions</TableCell>}
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -110,6 +149,17 @@ const PaymentHistoryModal = ({ open, onClose }) => {
                                                     {formatCurrency(t.amount)}
                                                 </TableCell>
                                                 <TableCell>{t.notes || '-'}</TableCell>
+                                                {isAdmin && (
+                                                    <TableCell align="right">
+                                                        <IconButton 
+                                                            size="small" 
+                                                            onClick={() => handleEditClick(t)}
+                                                            color="primary"
+                                                        >
+                                                            <Edit2 size={16} />
+                                                        </IconButton>
+                                                    </TableCell>
+                                                )}
                                             </TableRow>
                                         ))
                                     ) : (
@@ -136,6 +186,51 @@ const PaymentHistoryModal = ({ open, onClose }) => {
             <DialogActions>
                 <Button onClick={onClose}>Close</Button>
             </DialogActions>
+
+            {/* Edit Dialog */}
+            <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="xs" fullWidth>
+                <DialogTitle>Edit Payment</DialogTitle>
+                <DialogContent dividers>
+                    {editingTransaction && (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                            <Autocomplete
+                                options={allPlayers}
+                                value={editingTransaction.player_name}
+                                onChange={(e, v) => setEditingTransaction({...editingTransaction, player_name: v})}
+                                renderInput={(params) => <TextField {...params} label="Player Name" size="small" />}
+                            />
+                            <TextField
+                                label="Amount"
+                                type="number"
+                                size="small"
+                                value={editingTransaction.amount}
+                                onChange={(e) => setEditingTransaction({...editingTransaction, amount: e.target.value})}
+                                InputProps={{ startAdornment: <Box sx={{ mr: 1 }}>৳</Box> }}
+                            />
+                            <TextField
+                                label="Date"
+                                type="date"
+                                size="small"
+                                value={editingTransaction.payment_date}
+                                onChange={(e) => setEditingTransaction({...editingTransaction, payment_date: e.target.value})}
+                                InputLabelProps={{ shrink: true }}
+                            />
+                            <TextField
+                                label="Notes"
+                                size="small"
+                                multiline
+                                rows={2}
+                                value={editingTransaction.notes || ''}
+                                onChange={(e) => setEditingTransaction({...editingTransaction, notes: e.target.value})}
+                            />
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleUpdatePayment} variant="contained" color="primary">Update</Button>
+                </DialogActions>
+            </Dialog>
         </Dialog>
     );
 };

@@ -140,12 +140,20 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
         client = InferenceClient(token=hf_token)
         
         prompt = f"""<|system|>
-You are an enthusiastic sports commentator for a table tennis club called 'Saturday Smashers'. 
-Your goal is to provide two things for a player's performance:
-1. A short, encouraging 1-sentence comment.
-2. A more detailed 2-3 sentence overall performance summary based on their stats.
+You are an honest and analytical sports commentator for a table tennis club called 'Saturday Smashers'. 
+Your goal is to provide a realistic "reality check" of a player's performance based on their data.
+Don't be overly encouraging if the data shows a decline; be objective and factual.
 
-Return ONLY a JSON object with keys "comment" and "summary". Keep it punchy, friendly, and analytical.</s>
+Provide two things:
+1. A short, insightful 1-sentence analytical comment (highlighting a key strength or a critical area for improvement).
+2. A detailed 2-3 sentence performance summary that explains their recent trend (improving, stagnant, or declining) and their overall standing.
+
+Context: The club has two tiers:
+- Cup Round (Supreme level): Rating 1=Champion, 2=Runner-up, 3=Semi-finalist, 4=Quarter-finalist/Super Six.
+- Plate Round (Lower level/Relegated): Rating 5=Plate Champion, 6=Plate Runner-up, 7=Plate Semi-finalist, 8=Plate Quarter-finalist.
+Ratings 7 and 8 are considered equivalent and indicate a high need for improvement. Plate wins (Rating 5) are good but represent a lower tier of competition compared to the Cup round.
+
+Return ONLY a JSON object with keys "comment" and "summary". Keep it punchy, professional, and data-driven.</s>
 <|user|>
 Analyze these stats for {player_name}:
 - Total Tournaments: {total_tournaments}

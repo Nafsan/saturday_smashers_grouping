@@ -153,7 +153,7 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
         for i, r in enumerate(recent_ratings):
             title = rating_titles.get(r, f"Rank {r}")
             pos = i + 1
-            if pos == 1: suffix = "st (LATEST)"
+            if pos == 1: suffix = "st (MOST RECENT / THIS WEEK)"
             elif pos == 2: suffix = "nd"
             elif pos == 3: suffix = "rd"
             else: suffix = "th"
@@ -177,13 +177,14 @@ Your goal is to provide a realistic "reality check" of a player's performance ba
 STRICT CONSTRAINTS:
 1. Return ONLY a JSON object with keys "comment" and "summary".
 2. DO NOT include ANY numeric ratings in parentheses in your text.
-3. Use the 'FACTUAL ANCHORS' below ONLY to ensure you don't hallucinate. DO NOT just list these stats.
-4. Tournaments happen WEEKLY. Focus on "recent weeks" or "the current run".
+3. Use the 'FACTUAL ANCHORS' below to verify your story. 
+4. 'RECENT' means the last 5 tournaments ONLY. 'HISTORIC' means the older tournaments. DO NOT confuse them.
+5. Tournaments happen WEEKLY. Focus on "recent weeks".
 
 Analytical Focus:
-- Narrative: Tell the story of their recent momentum (getting better, staying consistent, or things not going well lately).
-- Spikes & Consistency: Identify sudden spikes of excellence or periods of stagnant performance.
-- Reality Check: Be objective. If they are stuck in the Plate round, explain the scope for improvement needed to reach the Cup round.
+- Narrative: Compare their 'RECENT' form (last 5) against their 'HISTORIC' best.
+- Reality Check: If they were once a Cup Champion but are now only reaching Quarter Finals, mention this specifically.
+- Spikes & Consistency: Identify if they have high potential (spikes) but lack recent consistency.
 
 Provide:
 1. A short, insightful 1-sentence analytical comment.
@@ -216,7 +217,7 @@ Return the JSON object.</s>
             model=HF_MODEL,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=250,
-            temperature=0.7
+            temperature=0.4
         )
         
         content = response.choices[0].message.content.strip()

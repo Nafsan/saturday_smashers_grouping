@@ -146,13 +146,16 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
         history_descriptions = []
         for i, r in enumerate(recent_ratings):
             title = rating_titles.get(r, f"Rank {r}")
-            if i == 0:
-                label = "1st (LATEST/MOST RECENT)"
-            elif i == len(recent_ratings) - 1:
-                label = f"{i+1}th (OLDEST)"
-            else:
-                label = f"{i+1}th"
-            history_descriptions.append(f"- {label}: {title}")
+            pos = i + 1
+            if pos == 1: suffix = "st (LATEST/MOST RECENT)"
+            elif pos == 2: suffix = "nd"
+            elif pos == 3: suffix = "rd"
+            else: suffix = "th"
+            
+            if i == len(recent_ratings) - 1 and i > 0:
+                suffix += " (OLDEST)"
+                
+            history_descriptions.append(f"- {pos}{suffix}: {title}")
         
         formatted_history = "\n".join(history_descriptions)
         
@@ -167,8 +170,9 @@ Your goal is to provide a realistic "reality check" of a player's performance ba
 
 STRICT CONSTRAINTS:
 1. Return ONLY a JSON object with keys "comment" and "summary".
-2. DO NOT include ANY numeric ratings in parentheses in your text (e.g., use "Plate Semi Finalist", NEVER "Plate Semi Finalist (7)").
-3. Be objective and factual. If the trend is declining, say "things aren't going well lately".
+2. DO NOT include ANY numeric ratings in parentheses in your text.
+3. DO NOT hallucinate achievements. ONLY refer to levels and titles that appear in the 'PLAYER HISTORY' below. If a title is not in the list, the player has NEVER achieved it.
+4. Be objective and factual. If the trend is declining, say "things aren't going well lately".
 
 Provide:
 1. A short, insightful 1-sentence analytical comment.
@@ -176,8 +180,8 @@ Provide:
 <|user|>
 Analyze these stats for {player_name}:
 - Total Tournaments: {total_tournaments}
-- Cup Championships: {cup_wins}
-- Plate Championships: {plate_wins}
+- Total Cup Championship Wins: {cup_wins} (This is the number of times they were 'Cup Champion')
+- Total Plate Championship Wins: {plate_wins} (This is the number of times they were 'Plate Champion')
 
 PLAYER HISTORY (Ordered LATEST to OLDEST):
 {formatted_history}
@@ -185,7 +189,7 @@ PLAYER HISTORY (Ordered LATEST to OLDEST):
 Important Context:
 - 'Cup' tiers (Champion to Quarter Finalist) are elite/supreme levels.
 - 'Plate' tiers are lower/relegated levels.
-- Ratings 7 and 8 (Semi Finalist/Quarter Finalist in Plate) indicate high need for improvement.
+- If 'Total Cup Championship Wins' is 0, the player has NEVER been a Cup Champion.
 
 Return the JSON object.</s>
 <|assistant|>"""

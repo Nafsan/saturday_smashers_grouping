@@ -136,39 +136,56 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
         recent_trend = recent_ratings
         logging.info(f"recent trend : {recent_trend}")
         
+        # Map numbers to titles for the prompt to reduce hallucination
+        rating_titles = {
+            1: "Cup Champion", 2: "Cup Runner Up", 3: "Cup Semi Finalist", 4: "Cup Quarter Finalist",
+            5: "Plate Champion", 6: "Plate Runner Up", 7: "Plate Semi Finalist", 8: "Plate Quarter Finalist"
+        }
+        
+        # Create a more descriptive history string for the LLM
+        history_descriptions = []
+        for i, r in enumerate(recent_ratings):
+            title = rating_titles.get(r, f"Rank {r}")
+            if i == 0:
+                label = "1st (LATEST/MOST RECENT)"
+            elif i == len(recent_ratings) - 1:
+                label = f"{i+1}th (OLDEST)"
+            else:
+                label = f"{i+1}th"
+            history_descriptions.append(f"- {label}: {title}")
+        
+        formatted_history = "\n".join(history_descriptions)
+        
+        logging.info(f"formatted history : {formatted_history}")
+        
         # Initialize inference client
         client = InferenceClient(token=hf_token)
         
         prompt = f"""<|system|>
 You are an honest and analytical sports commentator for a table tennis club called 'Saturday Smashers'. 
 Your goal is to provide a realistic "reality check" of a player's performance based on their data.
-Don't be overly encouraging if the data shows a decline; be objective and factual.
 
-Provide two things:
-1. A short, insightful 1-sentence analytical comment (highlighting a key strength or a critical area for improvement).
-2. A detailed 2-3 sentence performance summary that explains if they are getting better, staying consistent, or if things aren't going well lately, along with their overall standing.
+STRICT CONSTRAINTS:
+1. Return ONLY a JSON object with keys "comment" and "summary".
+2. DO NOT include ANY numeric ratings in parentheses in your text (e.g., use "Plate Semi Finalist", NEVER "Plate Semi Finalist (7)").
+3. Be objective and factual. If the trend is declining, say "things aren't going well lately".
 
-Context: The club has two tiers:
-- Cup Round (Supreme level): Rating 1=Champion, 2=Runner-up, 3=Semi-finalist, 4=Quarter-finalist/Super Six.
-- Plate Round (Lower level/Relegated): Rating 5=Plate Champion, 6=Plate Runner-up, 7=Plate Semi-finalist, 8=Plate Quarter-finalist.
-Ratings 7 and 8 are considered equivalent and indicate a high need for improvement. Plate wins (Rating 5) are good but represent a lower tier of competition compared to the Cup round.
-
-Return ONLY a JSON object with keys "comment" and "summary". Keep it punchy, professional, and data-driven.</s>
+Provide:
+1. A short, insightful 1-sentence analytical comment.
+2. A detailed 2-3 sentence performance summary explaining if they are getting better, staying consistent, or if things aren't going well lately.</s>
 <|user|>
 Analyze these stats for {player_name}:
 - Total Tournaments: {total_tournaments}
 - Cup Championships: {cup_wins}
 - Plate Championships: {plate_wins}
-- Ratings Trend (1 is best, 8 is worst, ordered from LATEST to OLDEST): {recent_trend}
 
-Important Analysis Instructions:
-1. Use descriptive titles instead of numeric values in your response. DO NOT include the numeric rating in parentheses (e.g., use "Plate Semi Finalist", NOT "Plate Semi Finalist (7)").
-   Mapping: 1="Cup Champion", 2="Cup Runner Up", 3="Cup Semi Finalist", 4="Cup Quarter Finalist", 5="Plate Champion", 6="Plate Runner Up", 7="Plate Semi Finalist", 8="Plate Quarter Finalist".
-2. Focus more heavily on the MOST RECENT results (first few numbers) to determine current form.
-3. Analyze the full history to identify long-term consistency or improvement over time.
-4. The first number in the list is the MOST RECENT result.
-5. The 1st index of the array is the most recent result, and the last index is the oldest result. The list is strictly ordered in DESCENDING order of the tournament date.
-Example: If the trend is [8, 5, 2], it means the player just got an 8 (Plate Quarter Finalist) in the latest tournament, but used to get a 2 (Cup Runner Up) in the oldest recorded tournament. This means the player's performance is not going well lately.
+PLAYER HISTORY (Ordered LATEST to OLDEST):
+{formatted_history}
+
+Important Context:
+- 'Cup' tiers (Champion to Quarter Finalist) are elite/supreme levels.
+- 'Plate' tiers are lower/relegated levels.
+- Ratings 7 and 8 (Semi Finalist/Quarter Finalist in Plate) indicate high need for improvement.
 
 Return the JSON object.</s>
 <|assistant|>"""

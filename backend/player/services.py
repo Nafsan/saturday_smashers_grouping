@@ -142,12 +142,18 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
             5: "Plate Champion", 6: "Plate Runner Up", 7: "Plate Semi Finalist", 8: "Plate Quarter Finalist"
         }
         
+        # Pre-calculate key milestones to prevent LLM hallucination
+        best_rating = min(recent_ratings) if recent_ratings else 8
+        best_title = rating_titles.get(best_rating, "N/A")
+        most_recent_title = rating_titles.get(recent_ratings[0], "N/A") if recent_ratings else "N/A"
+        last_5_titles = [rating_titles.get(r, "N/A") for r in recent_ratings[:5]]
+        
         # Create a more descriptive history string for the LLM
         history_descriptions = []
         for i, r in enumerate(recent_ratings):
             title = rating_titles.get(r, f"Rank {r}")
             pos = i + 1
-            if pos == 1: suffix = "st (LATEST/MOST RECENT)"
+            if pos == 1: suffix = "st (LATEST)"
             elif pos == 2: suffix = "nd"
             elif pos == 3: suffix = "rd"
             else: suffix = "th"
@@ -171,17 +177,23 @@ Your goal is to provide a realistic "reality check" of a player's performance ba
 STRICT CONSTRAINTS:
 1. Return ONLY a JSON object with keys "comment" and "summary".
 2. DO NOT include ANY numeric ratings in parentheses in your text.
-3. DO NOT hallucinate achievements. ONLY refer to levels and titles that appear in the 'PLAYER HISTORY' below. If a title is not in the list, the player has NEVER achieved it.
-4. Be objective and factual. If the trend is declining, say "things aren't going well lately".
+3. Use the 'GROUND TRUTH STATS' below as your primary source of truth.
+4. DO NOT hallucinate achievements. If a title is not in the history, it never happened.
+5. Tournaments happen WEEKLY. Do not refer to "years" or long timeframes.
 
 Provide:
 1. A short, insightful 1-sentence analytical comment.
-2. A detailed 2-3 sentence performance summary explaining if they are getting better, staying consistent, or if things aren't going well lately.</s>
+2. A detailed 2-3 sentence performance summary.</s>
 <|user|>
 Analyze these stats for {player_name}:
-- Total Tournaments: {total_tournaments}
-- Total Cup Championship Wins: {cup_wins} (This is the number of times they were 'Cup Champion')
-- Total Plate Championship Wins: {plate_wins} (This is the number of times they were 'Plate Champion')
+- Total Tournaments: {total_tournaments} (Weekly frequency)
+
+GROUND TRUTH STATS:
+- Most Recent Result: {most_recent_title}
+- Best Ever Result: {best_title}
+- Last 5 Tournament Results: {", ".join(last_5_titles)}
+- Total Cup Championship Wins: {cup_wins}
+- Total Plate Championship Wins: {plate_wins}
 
 PLAYER HISTORY (Ordered LATEST to OLDEST):
 {formatted_history}
@@ -189,7 +201,7 @@ PLAYER HISTORY (Ordered LATEST to OLDEST):
 Important Context:
 - 'Cup' tiers (Champion to Quarter Finalist) are elite/supreme levels.
 - 'Plate' tiers are lower/relegated levels.
-- If 'Total Cup Championship Wins' is 0, the player has NEVER been a Cup Champion.
+- If 'Total Cup Championship Wins' is 0, they have NEVER won the Cup.
 
 Return the JSON object.</s>
 <|assistant|>"""

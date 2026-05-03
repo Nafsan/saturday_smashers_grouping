@@ -133,7 +133,7 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
                     recent_ratings.append(rating)
                     break
         
-        recent_trend = recent_ratings[:10]
+        recent_trend = recent_ratings
         logging.info(f"recent trend : {recent_trend}")
         
         # Initialize inference client
@@ -159,7 +159,14 @@ Analyze these stats for {player_name}:
 - Total Tournaments: {total_tournaments}
 - Cup Championships: {cup_wins}
 - Plate Championships: {plate_wins}
-- Recent Ratings Trend (1 is best, 8 is worst, ordered from LATEST to OLDEST): {recent_trend}
+- Ratings Trend (1 is best, 8 is worst, ordered from LATEST to OLDEST): {recent_trend}
+
+Important Analysis Instructions:
+1. Focus more heavily on the MOST RECENT results (first few numbers) to determine current form.
+2. Analyze the full history to identify long-term consistency or improvement over time.
+3. The first number in the list is the MOST RECENT result.
+Example: If the trend is [8, 5, 2], it means the player just got an 8 (most recent), but used to get a 2 (oldest). This is a DECLINING trend.
+Example: If the trend is [1, 3, 6], it means the player just got a 1 (most recent), but used to get a 6 (oldest). This is an IMPROVING trend.
 
 Return the JSON object.</s>
 <|assistant|>"""

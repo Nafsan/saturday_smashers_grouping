@@ -28,7 +28,6 @@ import {
     ClipboardList
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
-import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import './TournamentScoresheetModal.scss';
 
@@ -190,90 +189,96 @@ Same for all the groups`;
         setGenerating(true);
         try {
             const matches = generateMatches();
+            const rowsCount = Number(rowsPerPage) || 1;
+            const totalPages = Math.ceil(matches.length / rowsCount);
+            
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            
             const margin = 10;
-            const availableWidth = pageWidth - (2 * margin);
+            const cardWidth = pageWidth - (2 * margin);
             const availableHeight = pageHeight - (2 * margin);
-            
-            const cellWidth = availableWidth;
-            const rowsCount = Number(rowsPerPage) || 1;
             const cellHeight = availableHeight / rowsCount;
 
-            // Prepare the template in the DOM
-            const container = document.createElement('div');
-            container.style.position = 'absolute';
-            container.style.left = '-9999px';
-            container.style.top = '0';
-            document.body.appendChild(container);
+            for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+                if (pageIdx > 0) pdf.addPage();
 
-            for (let i = 0; i < matches.length; i++) {
-                const match = matches[i];
-                const rowsCount = Number(rowsPerPage) || 1;
-                const matchIdx = i % rowsCount;
+                const pageMatches = matches.slice(pageIdx * rowsCount, (pageIdx + 1) * rowsCount);
                 
-                if (i > 0 && matchIdx === 0) {
-                    pdf.addPage();
-                }
+                pageMatches.forEach((match, idx) => {
+                    const yPos = margin + (idx * cellHeight);
+                    const cardHeight = cellHeight - 5;
+                    const headerHeight = 12;
+                    const tableY = yPos + headerHeight;
+                    const tableHeight = cardHeight - headerHeight;
+                    const rowHeight = tableHeight / 2;
+                    
+                    // Column Calculations
+                    const col1W = cardWidth * 0.12; // Input cell
+                    const scoreColW = cardWidth * 0.08; // Each score cell
+                    const nameColW = cardWidth - col1W - (5 * scoreColW);
 
-                const col = 0;
-                const row = matchIdx;
+                    // 1. DRAW ALL BACKGROUNDS FIRST
+                    // Header Background
+                    pdf.setFillColor(249, 250, 251); // #f9fafb
+                    pdf.rect(margin, yPos, cardWidth, headerHeight, 'F');
+                    
+                    // Input Cells Background
+                    pdf.setFillColor(243, 244, 246); // #f3f4f6
+                    pdf.rect(margin, tableY, col1W, tableHeight, 'F');
+                    
+                    // 2. DRAW ALL INTERNAL LINES
+                    pdf.setDrawColor(156, 163, 175); // #9ca3af (Consistent grid color)
+                    pdf.setLineWidth(0.25); // Clearer visibility
+                    
+                    // Header Bottom Separator
+                    pdf.line(margin, tableY, margin + cardWidth, tableY);
+                    
+                    // Horizontal separator between players
+                    pdf.line(margin, tableY + rowHeight, margin + cardWidth, tableY + rowHeight);
+                    
+                    // Vertical Lines (Full Height for continuity)
+                    let currentX = margin + col1W;
+                    pdf.line(currentX, tableY, currentX, tableY + tableHeight); // After input
+                    
+                    currentX += nameColW;
+                    pdf.line(currentX, tableY, currentX, tableY + tableHeight); // After name
+                    
+                    for (let i = 0; i < 4; i++) {
+                        currentX += scoreColW;
+                        pdf.line(currentX, tableY, currentX, tableY + tableHeight); // Score dividers
+                    }
+                    
+                    // 3. DRAW TEXT
+                    // Match Title
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setFontSize(12);
+                    pdf.setTextColor(17, 24, 39); // #111827
+                    pdf.text(match.title, margin + 5, yPos + 8);
+                    
+                    // Tournament Category
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setFontSize(9);
+                    pdf.setTextColor(107, 114, 128); // #6b7280
+                    pdf.text(tournament?.category || 'Tournament', margin + cardWidth - 5, yPos + 8, { align: 'right' });
 
-                // Create scoresheet HTML
-                const sheetDiv = document.createElement('div');
-                sheetDiv.className = 'scoresheet-template';
-                sheetDiv.innerHTML = `
-                    <div class="scoresheet-card">
-                        <div class="scoresheet-header">
-                            <span class="match-title">${match.title}</span>
-                            <span class="tournament-name">${tournament?.category || 'Tournament'}</span>
-                        </div>
-                        <div class="scoresheet-table">
-                            <div class="table-row">
-                                <div class="table-cell input-cell"></div>
-                                <div class="table-cell name-cell">
-                                    <span class="player-name">${match.player1 || ''}</span>
-                                </div>
-                                <div class="table-cell score-cell"></div>
-                                <div class="table-cell score-cell"></div>
-                                <div class="table-cell score-cell"></div>
-                                <div class="table-cell score-cell"></div>
-                                <div class="table-cell score-cell"></div>
-                            </div>
-                            <div class="table-row">
-                                <div class="table-cell input-cell"></div>
-                                <div class="table-cell name-cell">
-                                    <span class="player-name">${match.player2 || ''}</span>
-                                </div>
-                                <div class="table-cell score-cell"></div>
-                                <div class="table-cell score-cell"></div>
-                                <div class="table-cell score-cell"></div>
-                                <div class="table-cell score-cell"></div>
-                                <div class="table-cell score-cell"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(sheetDiv);
+                    const drawRowText = (pName, y) => {
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.setFontSize(11);
+                        pdf.setTextColor(31, 41, 55); // #1f2937
+                        const textY = y + (rowHeight / 2) + 1.5; 
+                        pdf.text(pName, margin + col1W + 4, textY);
+                    };
+                    
+                    drawRowText(match.player1 || '', tableY);
+                    drawRowText(match.player2 || '', tableY + rowHeight);
 
-                const dataUrl = await toPng(sheetDiv, { 
-                    pixelRatio: 2,
-                    skipFonts: true // Avoid SecurityError with cross-origin Google Fonts
+                    // 4. DRAW OUTER BORDER LAST (Seal the card)
+                    pdf.setDrawColor(75, 85, 99); // Slightly darker #4b5563 for the main frame
+                    pdf.setLineWidth(0.35);
+                    pdf.roundedRect(margin, yPos, cardWidth, cardHeight, 3, 3, 'D');
                 });
-                
-                const x = margin + (col * cellWidth);
-                const y = margin + (row * cellHeight);
-                
-                // Add image to PDF. We need to fit it within cellWidth/cellHeight while maintaining aspect ratio or just filling it.
-                // The template is designed to be a certain size.
-                pdf.addImage(dataUrl, 'PNG', x + 2, y + 2, cellWidth - 4, cellHeight - 4);
-                
-                container.removeChild(sheetDiv);
             }
-
-            document.body.removeChild(container);
 
             if (mode === 'download') {
                 pdf.save(`${tournament?.category || 'tournament'}_scoresheets.pdf`);

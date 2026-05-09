@@ -1,0 +1,219 @@
+.tournament-scoresheet-modal {
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        padding: 16px 24px;
+        background: var(--bg-paper);
+
+        .close-btn {
+            color: var(--text-muted);
+            &:hover {
+                color: var(--text-primary);
+                background: var(--bg-hover);
+            }
+        }
+    }
+
+    .modal-content {
+        padding: 24px;
+        background: var(--bg-default);
+
+        .section-container {
+            margin-bottom: 24px;
+            
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            .section-title {
+                font-weight: 600;
+                color: var(--text-primary);
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+            }
+
+            .instruction-box {
+                background: var(--bg-paper);
+                border: 1px solid var(--border-color);
+                border-radius: 12px;
+                padding: 16px;
+
+                a {
+                    color: var(--accent-primary);
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    font-weight: 500;
+                    
+                    &:hover {
+                        text-decoration: underline;
+                    }
+                }
+
+                .prompt-container {
+                    margin-top: 12px;
+                    background: #1e1e1e; // VS Code-like background
+                    border: 1px solid #333;
+                    border-radius: 8px;
+                    padding: 16px;
+                    position: relative;
+                    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+
+                    pre {
+                        margin: 0;
+                        font-family: 'Fira Code', 'Consolas', 'Roboto Mono', monospace;
+                        font-size: 13px;
+                        color: #d4d4d4;
+                        line-height: 1.5;
+                        white-space: pre-wrap;
+                        word-break: break-word;
+                    }
+
+                    .copy-btn {
+                        position: absolute;
+                        top: 8px;
+                        right: 8px;
+                        background: #333;
+                        border: 1px solid #444;
+                        color: #fff;
+                        text-transform: none;
+                        font-size: 11px;
+                        padding: 4px 8px;
+                        min-width: auto;
+                        
+                        &:hover {
+                            background: #444;
+                            border-color: #555;
+                        }
+
+                        svg {
+                            margin-right: 4px;
+                        }
+                    }
+
+                    &::before {
+                        content: '';
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        height: 4px;
+                        background: #007acc; // VS Code blue accent
+                        border-top-left-radius: 8px;
+                        border-top-right-radius: 8px;
+                    }
+                }
+            }
+
+            .player-input,
+            .MuiFormControl-root {
+                width: 100%;
+                .MuiOutlinedInput-root {
+                    background: var(--bg-paper);
+                    border-radius: 12px;
+                }
+            }
+        }
+    }
+
+    .modal-actions {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-paper);
+        gap: 8px;
+
+        button {
+            border-radius: 8px;
+            text-transform: none;
+            font-weight: 600;
+        }
+    }
+}
+
+// Template styles for PDF generation (always light theme)
+.scoresheet-template {
+    width: 800px; // Fixed width for consistent capture
+    background: white;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    .scoresheet-card {
+        border: 1.5px solid #6b7280;
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .scoresheet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px;
+        background: #f9fafb;
+        border-bottom: 1.5px solid #6b7280;
+
+        .match-title {
+            font-weight: 700;
+            font-size: 18px;
+            color: #111827;
+        }
+
+        .tournament-name {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+    }
+
+    .scoresheet-table {
+        .table-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 60px 60px 60px 60px 60px;
+            border-bottom: 1px solid #9ca3af;
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            .table-cell {
+                padding: 12px 16px;
+                border-right: 1px solid #9ca3af;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                min-height: 80px;
+
+                &:last-child {
+                    border-right: none;
+                }
+
+                &.input-cell {
+                    background: #f3f4f6;
+                }
+
+                &.name-cell {
+                    .player-label {
+                        font-size: 11px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.05em;
+                        color: #9ca3af;
+                        margin-bottom: 4px;
+                    }
+                    .player-name {
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: #1f2937;
+                    }
+                }
+
+                &.score-cell {
+                    background: white;
+                }
+            }
+        }
+    }
+}

@@ -15,7 +15,7 @@ import {
     Stack,
     InputAdornment,
 } from '@mui/material';
-import { Plus, MapPin, Trophy, Calendar, Users, Share2, Edit2, Trash2, Swords, Clock, ExternalLink, Upload, ArrowLeft, Search } from 'lucide-react';
+import { Plus, MapPin, Trophy, Calendar, Users, Share2, Edit2, Trash2, Swords, Clock, ExternalLink, Upload, ArrowLeft, Search, ClipboardList } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
 import { isAdminAuthenticated, getAdminAuthCookie } from '../utils/cookieUtils';
@@ -37,6 +37,7 @@ import ManageVenuesDialog from './ManageVenuesDialog';
 import ClubTournamentResultsDialog from './ClubTournamentResultsDialog';
 import BulkImportDialog from './BulkImportDialog';
 import SmartDateRangeSelector from './SmartDateRangeSelector';
+import TournamentScoresheetModal from './TournamentScoresheetModal';
 import './ClubTournaments.scss';
 
 const WhatsAppIcon = ({ size = 20 }) => (
@@ -109,6 +110,7 @@ const ClubTournaments = () => {
     const [editTournament, setEditTournament] = useState(null);
     const [submitResultsTournament, setSubmitResultsTournament] = useState(null);
     const [viewResultsTournament, setViewResultsTournament] = useState(null);
+    const [scoresheetTournament, setScoresheetTournament] = useState(null);
     const [manageVenuesOpen, setManageVenuesOpen] = useState(false);
     const [bulkImportOpen, setBulkImportOpen] = useState(false);
 
@@ -188,6 +190,7 @@ const ClubTournaments = () => {
         setEditTournament(null);
         setSubmitResultsTournament(null);
         setViewResultsTournament(null);
+        setScoresheetTournament(null);
         setManageVenuesOpen(false);
         setBulkImportOpen(false);
         if (refresh) {
@@ -518,6 +521,14 @@ const ClubTournaments = () => {
                                             )}
                                             <IconButton
                                                 size="small"
+                                                onClick={() => setScoresheetTournament(t)}
+                                                className="scoresheet-btn"
+                                                title="Generate scoresheets"
+                                            >
+                                                <ClipboardList size={16} />
+                                            </IconButton>
+                                            <IconButton
+                                                size="small"
                                                 onClick={() => setEditTournament(t)}
                                                 className="edit-btn"
                                                 title="Edit tournament"
@@ -588,6 +599,12 @@ const ClubTournaments = () => {
             <BulkImportDialog
                 open={bulkImportOpen}
                 onClose={handleDialogClose}
+            />
+
+            <TournamentScoresheetModal
+                open={!!scoresheetTournament}
+                onClose={handleDialogClose}
+                tournament={scoresheetTournament}
             />
         </div>
     );

@@ -258,7 +258,10 @@ Same for all the groups`;
                 `;
                 container.appendChild(sheetDiv);
 
-                const dataUrl = await toPng(sheetDiv, { pixelRatio: 2 });
+                const dataUrl = await toPng(sheetDiv, { 
+                    pixelRatio: 2,
+                    skipFonts: true // Avoid SecurityError with cross-origin Google Fonts
+                });
                 
                 const x = margin + (col * cellWidth);
                 const y = margin + (row * cellHeight);

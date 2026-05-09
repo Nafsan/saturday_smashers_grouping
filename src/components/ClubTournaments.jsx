@@ -495,6 +495,14 @@ const ClubTournaments = () => {
                                             Register
                                         </Button>
                                     )}
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => setScoresheetTournament(t)}
+                                        className="scoresheet-btn"
+                                        title="Generate scoresheets"
+                                    >
+                                        <ClipboardList size={16} />
+                                    </IconButton>
                                     {isAdmin && (
                                         <>
                                             {!t.result && t.status === 'past' && (
@@ -519,14 +527,6 @@ const ClubTournaments = () => {
                                                     Edit Results
                                                 </Button>
                                             )}
-                                            <IconButton
-                                                size="small"
-                                                onClick={() => setScoresheetTournament(t)}
-                                                className="scoresheet-btn"
-                                                title="Generate scoresheets"
-                                            >
-                                                <ClipboardList size={16} />
-                                            </IconButton>
                                             <IconButton
                                                 size="small"
                                                 onClick={() => setEditTournament(t)}

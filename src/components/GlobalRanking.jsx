@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { X, Trophy, Info, HelpCircle } from 'lucide-react';
 import { calculateRankings } from '../logic/ranking';
-import { selectAllPlayerNames } from '../store/appSlice';
+import { selectAllPlayers } from '../store/appSlice';
 import {
     Table,
     TableBody,
@@ -37,7 +37,7 @@ const tableCellBodyStyle = {
 
 const GlobalRanking = ({ onClose }) => {
     const { history } = useSelector(state => state.app);
-    const allPlayers = useSelector(selectAllPlayerNames);
+    const allPlayers = useSelector(selectAllPlayers);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [showBreakdown, setShowBreakdown] = useState(false);
@@ -95,17 +95,27 @@ const GlobalRanking = ({ onClose }) => {
 
     const categorizedRankings = useMemo(() => {
         const query = searchTerm.toLowerCase();
+        
+        // Identify guests from allPlayers list (which could be names or objects)
+        const guestNames = allPlayers
+            .filter(p => typeof p === 'object' && p !== null && p.is_guest)
+            .map(p => p.name);
 
         return {
-            established: establishedPlayers.filter(p => p.name.toLowerCase().includes(query)),
+            established: establishedPlayers
+                .filter(p => !guestNames.includes(p.name))
+                .filter(p => p.name.toLowerCase().includes(query)),
             newPlayers: globalRankings
-                .filter(p => p.playedCount === 1)
+                .filter(p => p.playedCount === 1 && !guestNames.includes(p.name))
                 .filter(p => p.name.toLowerCase().includes(query)),
             neverPlayed: globalRankings
-                .filter(p => p.playedCount === 0)
+                .filter(p => p.playedCount === 0 && !guestNames.includes(p.name))
+                .filter(p => p.name.toLowerCase().includes(query)),
+            guests: globalRankings
+                .filter(p => guestNames.includes(p.name))
                 .filter(p => p.name.toLowerCase().includes(query))
         };
-    }, [globalRankings, establishedPlayers, searchTerm]);
+    }, [globalRankings, establishedPlayers, searchTerm, allPlayers]);
 
     // Get detailed tournament breakdown for a player
     const getPlayerBreakdown = (playerName) => {
@@ -325,6 +335,47 @@ const GlobalRanking = ({ onClose }) => {
                                                     </TableCell>
                                                     <TableCell sx={{ ...tableCellBodyStyle, width: '80px', textAlign: 'center', color: 'var(--text-muted)' }}>
                                                         0
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </div>
+                        )}
+
+                        {/* Section 4: Guest Players */}
+                        {categorizedRankings.guests.length > 0 && (
+                            <div className="ranking-section guests">
+                                <div className="section-header">
+                                    <div className="badge guest" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase' }}>Guest</div>
+                                    <h3>Guest Players ({categorizedRankings.guests.length})</h3>
+                                </div>
+                                <p className="section-desc">Visiting players and seasonal guests</p>
+                                <TableContainer component={Paper} sx={{ boxShadow: 'none', backgroundColor: 'transparent' }}>
+                                    <Table aria-label="guest players table">
+                                        <TableBody>
+                                            {categorizedRankings.guests.sort((a, b) => b.playedCount - a.playedCount).map((player) => (
+                                                <TableRow
+                                                    key={player.name}
+                                                    sx={{
+                                                        '&:last-child td, &:last-child th': { border: 0 },
+                                                        '&:hover': { backgroundColor: 'var(--bg-surface-soft)' },
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    onClick={() => handleShowBreakdown(player)}
+                                                >
+                                                    <TableCell sx={{ ...tableCellBodyStyle, width: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                        -
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, fontWeight: 500, color: '#f59e0b' }}>
+                                                        {player.name}
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, width: '100px', textAlign: 'center', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
+                                                        {player.playedCount > 0 ? player.average.toFixed(2) : '-'}
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...tableCellBodyStyle, width: '80px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                        {player.playedCount}
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

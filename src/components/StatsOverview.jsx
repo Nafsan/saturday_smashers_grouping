@@ -124,7 +124,16 @@ const StatsOverview = () => {
     // Handle both formats: array of strings or array of objects with name property
     const getPlayersCount = () => {
         if (!allPlayers || allPlayers.length === 0) return 0;
-        return allPlayers.length;
+        
+        // Filter out guests if the data is in object format
+        const nonGuests = allPlayers.filter(p => {
+            if (typeof p === 'object' && p !== null) {
+                return !p.is_guest;
+            }
+            return true; // If just strings, we don't know guest status, so count them
+        });
+        
+        return nonGuests.length;
     };
 
     const stats = [

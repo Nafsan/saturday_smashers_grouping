@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Database, DollarSign, Settings as SettingsIcon, Lock, Wallet, Receipt } from 'lucide-react';
+import { ArrowLeft, Database, DollarSign, Settings as SettingsIcon, Lock, Wallet, Receipt, Users } from 'lucide-react';
 import { Tabs, Tab, Box } from '@mui/material';
 import SeedInitialData from './SeedInitialData';
 import AddTournamentCosts from './AddTournamentCosts';
 import FundSettings from './FundSettings';
 import RecordPayment from './RecordPayment';
 import AddPlayerMiscCost from './AddPlayerMiscCost';
+import ManagePlayers from './ManagePlayers';
 import PasswordDialog from './PasswordDialog';
 import { getAdminAuthCookie } from '../utils/cookieUtils';
 import './AdminConsole.scss';
@@ -70,7 +71,8 @@ const AdminConsole = () => {
                     <Tabs
                         value={activeTab}
                         onChange={(e, newValue) => setActiveTab(newValue)}
-                        variant="fullWidth"
+                        variant="scrollable"
+                        scrollButtons="auto"
                         sx={{
                             '& .MuiTab-root': {
                                 color: '#94a3b8',
@@ -87,11 +89,11 @@ const AdminConsole = () => {
                             }
                         }}
                     >
-                        {/* <Tab
-                            icon={<Database size={18} />}
-                            label="Seed/Edit Data"
+                        <Tab
+                            icon={<Users size={18} />}
+                            label="Manage Players"
                             iconPosition="start"
-                        /> */}
+                        />
                         <Tab
                             icon={<Wallet size={18} />}
                             label="Record Payment"
@@ -116,10 +118,11 @@ const AdminConsole = () => {
                 </Box>
 
                 <div className="tab-content">
-                    {activeTab === 0 && <RecordPayment />}
-                    {activeTab === 1 && <AddPlayerMiscCost />}
-                    {activeTab === 2 && <AddTournamentCosts />}
-                    {activeTab === 3 && <FundSettings />}
+                    {activeTab === 0 && <ManagePlayers />}
+                    {activeTab === 1 && <RecordPayment />}
+                    {activeTab === 2 && <AddPlayerMiscCost />}
+                    {activeTab === 3 && <AddTournamentCosts />}
+                    {activeTab === 4 && <FundSettings />}
                 </div>
             </div>
         </div>

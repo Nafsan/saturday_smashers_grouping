@@ -58,7 +58,16 @@ export const addPlayerAsync = createAsyncThunk(
     async ({ playerName, password }) => {
         const { addPlayer } = await import('../api/client');
         const player = await addPlayer(playerName, password);
-        return player.name;
+        return player; // Return full player object
+    }
+);
+
+export const updatePlayerAsync = createAsyncThunk(
+    'app/updatePlayer',
+    async ({ playerId, isGuest, password }) => {
+        const { updatePlayer } = await import('../api/client');
+        const player = await updatePlayer(playerId, { is_guest: isGuest }, password);
+        return player;
     }
 );
 
@@ -222,10 +231,17 @@ export const appSlice = createSlice({
                 state.rankedPlayers = [];
             })
             .addCase(addPlayerAsync.fulfilled, (state, action) => {
-                const playerName = action.payload;
-                if (!state.allPlayers.includes(playerName)) {
-                    state.allPlayers.push(playerName);
-                    state.allPlayers.sort();
+                const player = action.payload;
+                if (!state.allPlayers.find(p => p.id === player.id)) {
+                    state.allPlayers.push(player);
+                    state.allPlayers.sort((a, b) => a.name.localeCompare(b.name));
+                }
+            })
+            .addCase(updatePlayerAsync.fulfilled, (state, action) => {
+                const updatedPlayer = action.payload;
+                const index = state.allPlayers.findIndex(p => p.id === updatedPlayer.id);
+                if (index !== -1) {
+                    state.allPlayers[index] = updatedPlayer;
                 }
             })
             .addCase(fetchFundSettingsAsync.pending, (state) => {
@@ -252,12 +268,26 @@ export const selectAllPlayerNames = (state) => {
     const players = state.app.allPlayers;
     if (!players || players.length === 0) return [];
     
-    // Convert all entries to names (strings) safely
+    // Filter out guest players from the primary player names list if needed, 
+    // but usually this selector is used for grouping etc.
+    // For now, let's keep it returning all names, but handle objects.
     return players.map(p => {
         if (typeof p === 'string') return p;
         if (p && typeof p === 'object' && p.name) return p.name;
         return String(p);
     }).sort((a, b) => a.localeCompare(b));
+};
+
+export const selectRegularPlayers = (state) => {
+    const players = state.app.allPlayers;
+    if (!players || players.length === 0) return [];
+    return players.filter(p => !p.is_guest);
+};
+
+export const selectGuestPlayers = (state) => {
+    const players = state.app.allPlayers;
+    if (!players || players.length === 0) return [];
+    return players.filter(p => p.is_guest);
 };
 
 export const selectAllPlayers = (state) => state.app.allPlayers;

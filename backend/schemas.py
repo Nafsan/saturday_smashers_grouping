@@ -10,6 +10,7 @@ class PlayerCreate(PlayerBase):
 
 class Player(PlayerBase):
     id: int
+    is_guest: bool
 
     class Config:
         orm_mode = True

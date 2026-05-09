@@ -538,6 +538,35 @@
                         font-weight: 800;
                     }
                 }
+
+                &.table-divider {
+                    background: var(--bg-surface-soft);
+                    border-bottom: 1px solid var(--border-main);
+                    
+                    td {
+                        padding: 0.75rem 1.5rem;
+                        
+                        .guest-section-header {
+                            font-weight: 800;
+                            font-size: 0.9rem;
+                            text-transform: uppercase;
+                            color: #f59e0b;
+                            letter-spacing: 1px;
+                        }
+                    }
+                }
+
+                &.guest-row {
+                    background: rgba(245, 158, 11, 0.03);
+                    
+                    &:hover {
+                        background: rgba(245, 158, 11, 0.06);
+                    }
+                    
+                    .player-name {
+                        color: #f59e0b;
+                    }
+                }
             }
         }
     }

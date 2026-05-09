@@ -1,0 +1,131 @@
+.manage-players {
+    padding: 1.5rem;
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        gap: 1.5rem;
+
+        @media (max-width: 640px) {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .header-info {
+            h3 {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #f8fafc;
+                margin-bottom: 0.25rem;
+            }
+            p {
+                color: #94a3b8;
+                font-size: 0.9rem;
+            }
+        }
+
+        .header-search {
+            min-width: 280px;
+        }
+    }
+
+    .players-table-container {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        overflow: hidden;
+
+        .MuiTableCell-root {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem 1.5rem;
+        }
+
+        .MuiTableHead-root {
+            .MuiTableCell-root {
+                background: rgba(30, 41, 59, 0.8);
+                color: #94a3b8;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                font-size: 0.75rem;
+                border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        .MuiTableBody-root {
+            .MuiTableRow-root {
+                transition: all 0.2s ease;
+                
+                &:hover {
+                    background: rgba(255, 255, 255, 0.02);
+                }
+
+                &.guest-row {
+                    background: rgba(245, 158, 11, 0.03);
+                    &:hover {
+                        background: rgba(245, 158, 11, 0.06);
+                    }
+                }
+            }
+
+            .empty-cell {
+                color: #64748b;
+                padding: 4rem 2rem;
+                font-style: italic;
+            }
+        }
+
+        .player-info-cell {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: #f8fafc;
+            font-weight: 500;
+
+            .avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                
+                &.regular {
+                    background: rgba(16, 185, 129, 0.1);
+                    color: #10b981;
+                }
+                
+                &.guest {
+                    background: rgba(245, 158, 11, 0.1);
+                    color: #f59e0b;
+                }
+            }
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+
+            &.regular {
+                background: rgba(16, 185, 129, 0.1);
+                color: #10b981;
+                border: 1px solid rgba(16, 185, 129, 0.2);
+            }
+
+            &.guest {
+                background: rgba(245, 158, 11, 0.1);
+                color: #f59e0b;
+                border: 1px solid rgba(245, 158, 11, 0.2);
+            }
+        }
+    }
+}

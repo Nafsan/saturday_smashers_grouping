@@ -39,6 +39,7 @@ class Player(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
+    is_guest = Column(Boolean, default=False, nullable=False)
 
     rank_groups = relationship("RankGroup", secondary=rank_group_players, back_populates="players")
     fund = relationship("PlayerFund", back_populates="player", uselist=False, cascade="all, delete-orphan")

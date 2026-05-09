@@ -27,14 +27,31 @@ async def create_player(player_name: str, database_session: AsyncSession):
     await database_session.commit()
     await database_session.refresh(new_player)
     
-    return {"id": new_player.id, "name": new_player.name}
+    return {"id": new_player.id, "name": new_player.name, "is_guest": new_player.is_guest}
 
 
 async def get_all_players(database_session: AsyncSession):
     """Get all players"""
     query_result = await database_session.execute(select(models.Player).order_by(models.Player.name))
     players = query_result.scalars().all()
-    return [{"id": player.id, "name": player.name} for player in players]
+    return [{"id": player.id, "name": player.name, "is_guest": player.is_guest} for player in players]
+
+
+async def update_player_guest_status(player_id: int, is_guest: bool, database_session: AsyncSession):
+    """Update a player's guest status"""
+    player_query = await database_session.execute(
+        select(models.Player).where(models.Player.id == player_id)
+    )
+    player = player_query.scalar()
+    
+    if not player:
+        raise HTTPException(status_code=404, detail=f"Player with ID {player_id} not found")
+    
+    player.is_guest = is_guest
+    await database_session.commit()
+    await database_session.refresh(player)
+    
+    return {"id": player.id, "name": player.name, "is_guest": player.is_guest}
 
 
 async def get_player_statistics(player_id: int, database_session: AsyncSession):

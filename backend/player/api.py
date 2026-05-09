@@ -12,9 +12,14 @@ class PlayerCreate(BaseModel):
     name: str
 
 
+class PlayerUpdate(BaseModel):
+    is_guest: bool
+
+
 class PlayerResponse(BaseModel):
     id: int
     name: str
+    is_guest: bool
 
 
 @router.post("", response_model=PlayerResponse, status_code=201)
@@ -27,6 +32,19 @@ async def add_player(
     if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=403, detail="Invalid password")
     return await services.create_player(player.name, database_session)
+
+
+@router.put("/{player_id}", response_model=PlayerResponse)
+async def update_player(
+    player_id: int,
+    player_update: PlayerUpdate,
+    password: str,
+    database_session: AsyncSession = Depends(get_db)
+):
+    """Update a player's details (e.g., guest status)"""
+    if password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=403, detail="Invalid password")
+    return await services.update_player_guest_status(player_id, player_update.is_guest, database_session)
 
 
 @router.get("", response_model=List[PlayerResponse])

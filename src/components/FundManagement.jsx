@@ -234,7 +234,7 @@ const FundManagement = () => {
                         </div>
                         <div className="stat-info">
                             <span className="stat-label">Total Players</span>
-                            <span className="stat-value">{balances.length}</span>
+                            <span className="stat-value">{balances.filter(p => !p.is_guest).length}</span>
                         </div>
                     </div>
                     <div className="stat-card">
@@ -243,7 +243,7 @@ const FundManagement = () => {
                         </div>
                         <div className="stat-info">
                             <span className="stat-label">Positive Balance</span>
-                            <span className="stat-value">{balances.filter(p => p.current_balance >= 0).length}</span>
+                            <span className="stat-value">{balances.filter(p => !p.is_guest && p.current_balance >= 0).length}</span>
                         </div>
                     </div>
                     <div className="stat-card">
@@ -252,7 +252,7 @@ const FundManagement = () => {
                         </div>
                         <div className="stat-info">
                             <span className="stat-label">Negative Balance</span>
-                            <span className="stat-value">{balances.filter(p => p.current_balance < 0).length}</span>
+                            <span className="stat-value">{balances.filter(p => !p.is_guest && p.current_balance < 0).length}</span>
                         </div>
                     </div>
                 </div>
@@ -330,14 +330,14 @@ const FundManagement = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredBalances.length === 0 ? (
+                                {filteredBalances.filter(p => !p.is_guest).length === 0 ? (
                                     <tr>
                                         <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                                            No players found
+                                            No regular players found
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredBalances.map((player) => (
+                                    filteredBalances.filter(p => !p.is_guest).map((player) => (
                                         <tr key={player.id}>
                                             <td className="player-name">{player.player_name}</td>
                                             <td>
@@ -353,6 +353,32 @@ const FundManagement = () => {
                                             <td>{formatCurrency(player.total_cost)}</td>
                                         </tr>
                                     ))
+                                )}
+
+                                {filteredBalances.filter(p => p.is_guest).length > 0 && (
+                                    <>
+                                        <tr className="table-divider">
+                                            <td colSpan="5">
+                                                <div className="guest-section-header">Guest Players</div>
+                                            </td>
+                                        </tr>
+                                        {filteredBalances.filter(p => p.is_guest).map((player) => (
+                                            <tr key={player.id} className="guest-row">
+                                                <td className="player-name">{player.player_name} (Guest)</td>
+                                                <td>
+                                                    <span
+                                                        className="balance-amount"
+                                                        style={{ color: getBalanceColor(player.current_balance) }}
+                                                    >
+                                                        {formatCurrency(player.current_balance)}
+                                                    </span>
+                                                </td>
+                                                <td>{player.days_played}</td>
+                                                <td>{formatCurrency(player.total_paid)}</td>
+                                                <td>{formatCurrency(player.total_cost)}</td>
+                                            </tr>
+                                        ))}
+                                    </>
                                 )}
                             </tbody>
                         </table>

@@ -37,6 +37,7 @@ class PlayerFundCreate(BaseModel):
 class PlayerFundResponse(PlayerFundBase):
     id: int
     player_name: str
+    is_guest: bool
     last_updated: datetime
 
     class Config:
@@ -179,6 +180,7 @@ class PaymentTransactionResponse(BaseModel):
     id: int
     player_id: int
     player_name: str
+    is_guest: bool
     amount: float
     payment_date: datetime
     notes: Optional[str] = None

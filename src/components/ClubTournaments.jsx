@@ -193,7 +193,7 @@ const ClubTournaments = () => {
         setScoresheetTournament(null);
         setManageVenuesOpen(false);
         setBulkImportOpen(false);
-        if (refresh) {
+        if (refresh === true) {
             loadTournaments();
             loadVenues();
         }

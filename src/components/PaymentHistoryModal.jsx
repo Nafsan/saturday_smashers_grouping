@@ -19,6 +19,8 @@ const PaymentHistoryModal = ({ open, onClose }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const isMobile = useMediaQuery('(max-width:600px)');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [deleting, setDeleting] = useState(false);
+
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -36,6 +38,8 @@ const PaymentHistoryModal = ({ open, onClose }) => {
 
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [transactionToDelete, setTransactionToDelete] = useState(null);
     const [allPlayers, setAllPlayers] = useState([]);
     const isAdmin = isAdminAuthenticated();
 
@@ -84,16 +88,26 @@ const PaymentHistoryModal = ({ open, onClose }) => {
         }
     };
 
-    const handleDeleteClick = async (transaction) => {
-        if (window.confirm(`Are you sure you want to delete this payment of ৳${transaction.amount} for ${transaction.player_name}?`)) {
-            try {
-                const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-                await deletePayment(transaction.id, adminPassword);
-                loadHistory();
-            } catch (error) {
-                console.error("Failed to delete payment", error);
-                alert(error.response?.data?.detail || "Failed to delete payment");
-            }
+    const handleDeleteClick = (transaction) => {
+        setTransactionToDelete(transaction);
+        setDeleteConfirmOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!transactionToDelete || deleting) return;
+        
+        try {
+            setDeleting(true);
+            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+            await deletePayment(transactionToDelete.id, adminPassword);
+            setDeleteConfirmOpen(false);
+            setTransactionToDelete(null);
+            await loadHistory();
+        } catch (error) {
+            console.error("Failed to delete payment", error);
+            alert(error.response?.data?.detail || "Failed to delete payment");
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -170,6 +184,7 @@ const PaymentHistoryModal = ({ open, onClose }) => {
                                                                 size="small" 
                                                                 onClick={() => handleEditClick(t)}
                                                                 color="primary"
+                                                                disabled={deleting}
                                                             >
                                                                 <Edit2 size={16} />
                                                             </IconButton>
@@ -177,6 +192,7 @@ const PaymentHistoryModal = ({ open, onClose }) => {
                                                                 size="small" 
                                                                 onClick={() => handleDeleteClick(t)}
                                                                 color="error"
+                                                                disabled={deleting}
                                                             >
                                                                 <Trash2 size={16} />
                                                             </IconButton>
@@ -252,6 +268,37 @@ const PaymentHistoryModal = ({ open, onClose }) => {
                 <DialogActions>
                     <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
                     <Button onClick={handleUpdatePayment} variant="contained" color="primary">Update</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog 
+                open={deleteConfirmOpen} 
+                onClose={() => !deleting && setDeleteConfirmOpen(false)}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle>Confirm Delete</DialogTitle>
+                <DialogContent dividers>
+                    {transactionToDelete && (
+                        <Box sx={{ py: 1 }}>
+                            Are you sure you want to delete this payment of <strong>৳{transactionToDelete.amount}</strong> for <strong>{transactionToDelete.player_name}</strong>?
+                            <Box sx={{ mt: 2, color: 'text.secondary', fontSize: '0.875rem' }}>
+                                This action cannot be undone and will revert the player's balance.
+                            </Box>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteConfirmOpen(false)} disabled={deleting}>Cancel</Button>
+                    <Button 
+                        onClick={handleConfirmDelete} 
+                        variant="contained" 
+                        color="error" 
+                        disabled={deleting}
+                    >
+                        {deleting ? 'Deleting...' : 'Delete'}
+                    </Button>
                 </DialogActions>
             </Dialog>
         </Dialog>

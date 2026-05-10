@@ -167,6 +167,20 @@ async def update_player_payment(
     return await services.update_player_payment(payment_id, payment_data, db)
 
 
+@router.delete("/payments/{payment_id}")
+async def delete_player_payment(
+    payment_id: int,
+    password: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete a payment record (password protected)"""
+    if password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=403, detail="Invalid password")
+    
+    return await services.delete_player_payment(payment_id, db)
+
+
+
 
 # ============ Days Played Comparison ============
 @router.get("/days-played-comparison")

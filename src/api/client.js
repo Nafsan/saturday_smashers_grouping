@@ -148,6 +148,14 @@ export const updatePayment = async (id, data, password) => {
     return response.data;
 };
 
+export const deletePayment = async (id, password) => {
+    const response = await client.delete(`/fund/payments/${id}`, {
+        params: { password }
+    });
+    return response.data;
+};
+
+
 
 export const fetchDaysPlayedComparison = async () => {
     const response = await client.get('/fund/days-played-comparison');

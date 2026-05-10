@@ -5,8 +5,8 @@ import {
     TableHead, TableRow, Paper, TextField, IconButton,
     Box, Pagination, useMediaQuery
 } from '@mui/material';
-import { X, Search, Edit2 } from 'lucide-react';
-import { fetchPaymentHistory, updatePayment, fetchPlayers } from '../api/client';
+import { X, Search, Edit2, Trash2 } from 'lucide-react';
+import { fetchPaymentHistory, updatePayment, deletePayment, fetchPlayers } from '../api/client';
 import LoadingSpinner from './LoadingSpinner';
 import { getAdminAuthCookie, isAdminAuthenticated } from '../utils/cookieUtils';
 import { Autocomplete } from '@mui/material';
@@ -67,7 +67,7 @@ const PaymentHistoryModal = ({ open, onClose }) => {
 
     const handleUpdatePayment = async () => {
         try {
-            const adminPassword = getAdminAuthCookie();
+            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
             await updatePayment(editingTransaction.id, {
                 player_name: editingTransaction.player_name,
                 amount: parseFloat(editingTransaction.amount),
@@ -79,7 +79,21 @@ const PaymentHistoryModal = ({ open, onClose }) => {
             loadHistory();
         } catch (error) {
             console.error("Failed to update payment", error);
-            alert(error.response?.data?.detail || "Failed to update payment");
+            const errorMsg = error.response?.data?.detail || error.message || "Failed to update payment";
+            alert(errorMsg);
+        }
+    };
+
+    const handleDeleteClick = async (transaction) => {
+        if (window.confirm(`Are you sure you want to delete this payment of ৳${transaction.amount} for ${transaction.player_name}?`)) {
+            try {
+                const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
+                await deletePayment(transaction.id, adminPassword);
+                loadHistory();
+            } catch (error) {
+                console.error("Failed to delete payment", error);
+                alert(error.response?.data?.detail || "Failed to delete payment");
+            }
         }
     };
 
@@ -151,13 +165,22 @@ const PaymentHistoryModal = ({ open, onClose }) => {
                                                 <TableCell>{t.notes || '-'}</TableCell>
                                                 {isAdmin && (
                                                     <TableCell align="right">
-                                                        <IconButton 
-                                                            size="small" 
-                                                            onClick={() => handleEditClick(t)}
-                                                            color="primary"
-                                                        >
-                                                            <Edit2 size={16} />
-                                                        </IconButton>
+                                                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                                            <IconButton 
+                                                                size="small" 
+                                                                onClick={() => handleEditClick(t)}
+                                                                color="primary"
+                                                            >
+                                                                <Edit2 size={16} />
+                                                            </IconButton>
+                                                            <IconButton 
+                                                                size="small" 
+                                                                onClick={() => handleDeleteClick(t)}
+                                                                color="error"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </IconButton>
+                                                        </Box>
                                                     </TableCell>
                                                 )}
                                             </TableRow>

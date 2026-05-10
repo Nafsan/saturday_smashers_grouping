@@ -35,6 +35,8 @@ const RecordPayment = () => {
     };
 
     const handleSave = async () => {
+        if (saving) return;
+
         if (!playerName) {
             setMessage({ type: 'error', text: 'Please select a player' });
             return;
@@ -73,7 +75,8 @@ const RecordPayment = () => {
             }, 2000);
         } catch (error) {
             console.error('Error recording payment:', error);
-            setMessage({ type: 'error', text: error.response?.data?.detail || 'Failed to record payment' });
+            const errorText = error.response?.data?.detail || error.message || 'Failed to record payment';
+            setMessage({ type: 'error', text: errorText });
         } finally {
             setSaving(false);
         }

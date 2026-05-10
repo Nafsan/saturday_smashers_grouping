@@ -1050,3 +1050,36 @@ async def get_tournament_cost_input(
     )
 
 
+async def delete_player_payment(
+    payment_id: int,
+    db: AsyncSession
+):
+    """Delete a payment record and revert player balance"""
+    # Get existing transaction
+    result = await db.execute(
+        select(fund_models.PaymentTransaction)
+        .where(fund_models.PaymentTransaction.id == payment_id)
+    )
+    transaction = result.scalar()
+    
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Payment transaction not found")
+    
+    # Revert balance and total paid
+    fund_result = await db.execute(
+        select(fund_models.PlayerFund).where(fund_models.PlayerFund.player_id == transaction.player_id)
+    )
+    fund = fund_result.scalar()
+    if fund:
+        fund.current_balance -= transaction.amount
+        fund.total_paid -= transaction.amount
+        fund.last_updated = datetime.utcnow()
+    
+    # Delete transaction
+    await db.delete(transaction)
+    
+    await db.commit()
+    return {"message": "Payment deleted successfully"}
+
+
+

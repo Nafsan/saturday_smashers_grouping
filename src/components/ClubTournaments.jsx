@@ -504,30 +504,32 @@ const ClubTournaments = () => {
                                     >
                                         Scoresheet
                                     </Button>
-                                    {isAdmin && (
-                                        <>
-                                            {!t.result && t.status === 'past' && (
-                                                <Button
-                                                    variant="contained"
-                                                    size="small"
-                                                    startIcon={<Trophy size={16} />}
-                                                    onClick={() => setSubmitResultsTournament(t)}
-                                                    className="submit-results-btn"
-                                                >
-                                                    Submit Results
-                                                </Button>
-                                            )}
-                                            {t.result && (
-                                                <Button
-                                                    variant="text"
-                                                    size="small"
-                                                    startIcon={<Edit2 size={14} />}
-                                                    onClick={() => setSubmitResultsTournament(t)}
-                                                    className="edit-results-btn"
-                                                >
-                                                    Edit Results
-                                                </Button>
-                                            )}
+                                </div>
+                                {isAdmin && (
+                                    <div className="admin-actions">
+                                        {!t.result && t.status === 'past' && (
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                startIcon={<Trophy size={16} />}
+                                                onClick={() => setSubmitResultsTournament(t)}
+                                                className="submit-results-btn"
+                                            >
+                                                Submit Results
+                                            </Button>
+                                        )}
+                                        {t.result && (
+                                            <Button
+                                                variant="text"
+                                                size="small"
+                                                startIcon={<Edit2 size={14} />}
+                                                onClick={() => setSubmitResultsTournament(t)}
+                                                className="edit-results-btn"
+                                            >
+                                                Edit Results
+                                            </Button>
+                                        )}
+                                        <div className="admin-icon-actions">
                                             <IconButton
                                                 size="small"
                                                 onClick={() => setEditTournament(t)}
@@ -544,9 +546,9 @@ const ClubTournaments = () => {
                                             >
                                                 <Trash2 size={16} />
                                             </IconButton>
-                                        </>
-                                    )}
-                                </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

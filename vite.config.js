@@ -8,7 +8,7 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['favicon.png', 'assets/cover.png'],
+            includeAssets: [],
             manifest: {
                 name: 'Saturday Smashers',
                 short_name: 'Saturday Smashers',

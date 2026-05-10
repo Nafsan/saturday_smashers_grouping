@@ -20,6 +20,7 @@ const PaymentHistoryModal = ({ open, onClose }) => {
     const isMobile = useMediaQuery('(max-width:600px)');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [deleting, setDeleting] = useState(false);
+    const isProcessingRef = React.useRef(false);
 
 
     useEffect(() => {
@@ -70,7 +71,10 @@ const PaymentHistoryModal = ({ open, onClose }) => {
     };
 
     const handleUpdatePayment = async () => {
+        if (isProcessingRef.current) return;
+        
         try {
+            isProcessingRef.current = true;
             const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
             await updatePayment(editingTransaction.id, {
                 player_name: editingTransaction.player_name,
@@ -85,6 +89,8 @@ const PaymentHistoryModal = ({ open, onClose }) => {
             console.error("Failed to update payment", error);
             const errorMsg = error.response?.data?.detail || error.message || "Failed to update payment";
             alert(errorMsg);
+        } finally {
+            isProcessingRef.current = false;
         }
     };
 
@@ -94,9 +100,10 @@ const PaymentHistoryModal = ({ open, onClose }) => {
     };
 
     const handleConfirmDelete = async () => {
-        if (!transactionToDelete || deleting) return;
+        if (!transactionToDelete || deleting || isProcessingRef.current) return;
         
         try {
+            isProcessingRef.current = true;
             setDeleting(true);
             const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
             await deletePayment(transactionToDelete.id, adminPassword);
@@ -108,6 +115,7 @@ const PaymentHistoryModal = ({ open, onClose }) => {
             alert(error.response?.data?.detail || "Failed to delete payment");
         } finally {
             setDeleting(false);
+            isProcessingRef.current = false;
         }
     };
 

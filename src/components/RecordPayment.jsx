@@ -11,6 +11,7 @@ const RecordPayment = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState(null);
+    const isSavingRef = React.useRef(false);
 
     const [playerName, setPlayerName] = useState('');
     const [amount, setAmount] = useState(0);
@@ -35,7 +36,8 @@ const RecordPayment = () => {
     };
 
     const handleSave = async () => {
-        if (saving) return;
+        if (saving || isSavingRef.current) return;
+        isSavingRef.current = true;
 
         if (!playerName) {
             setMessage({ type: 'error', text: 'Please select a player' });
@@ -79,6 +81,7 @@ const RecordPayment = () => {
             setMessage({ type: 'error', text: errorText });
         } finally {
             setSaving(false);
+            isSavingRef.current = false;
         }
     };
 

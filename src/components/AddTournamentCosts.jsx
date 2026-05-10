@@ -94,8 +94,6 @@ const AddTournamentCosts = ({ editDate = null, onSuccess = null, standalone = tr
             const response = await fetchTournamentPlayersByDate(tournamentDate);
             setTournamentPlayers(response.players);
             setMessage({ type: 'success', text: `Auto-populated ${response.players.length} players` });
-            console.log('Auto-populated players:', response.players);
-            console.log(response);
             // Clear unofficial tournament flag if successfully populated
             setIsUnofficialTournament(false);
         } catch (error) {

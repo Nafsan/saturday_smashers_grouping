@@ -12,9 +12,7 @@ const client = axios.create({
 
 export const fetchHistory = async () => {
     try {
-        console.log("Fetching history from API...");
         const response = await client.get('/history');
-        console.log("API Response:", response.data);
         return response.data;
     } catch (error) {
         console.error("API Error:", error);

@@ -44,8 +44,6 @@ export const setAdminAuthCookie = (password) => {
     }
 
     document.cookie = cookieParts.join('; ');
-
-    console.log('[Cookie Debug] Set cookie:', document.cookie);
 };
 
 /**

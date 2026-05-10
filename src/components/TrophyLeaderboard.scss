@@ -66,7 +66,7 @@
         .player-info {
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 0.5rem;
 
             .player-name {
                 font-size: 1.25rem;
@@ -76,6 +76,12 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
                 max-width: 180px;
+            }
+
+            .stats-container {
+                display: flex;
+                align-items: flex-end;
+                gap: 1.5rem;
             }
 
             .trophy-count-container {
@@ -96,6 +102,29 @@
                     color: var(--text-secondary);
                     text-transform: uppercase;
                     letter-spacing: 0.05em;
+                }
+            }
+
+            .tournaments-played-container {
+                display: flex;
+                align-items: baseline;
+                gap: 0.25rem;
+                padding-bottom: 0.2rem;
+                border-left: 1px solid rgba(148, 163, 184, 0.2);
+                padding-left: 1rem;
+
+                .p-count {
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    color: var(--text-secondary);
+                }
+
+                .p-label {
+                    font-size: 0.7rem;
+                    font-weight: 600;
+                    color: rgba(148, 163, 184, 0.6);
+                    text-transform: uppercase;
+                    letter-spacing: 0.02em;
                 }
             }
         }

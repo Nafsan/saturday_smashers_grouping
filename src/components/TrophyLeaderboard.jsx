@@ -37,9 +37,15 @@ const TrophyLeaderboard = () => {
                             </div>
                             <div className="player-info">
                                 <span className="player-name">{player.name}</span>
-                                <div className="trophy-count-container">
-                                    <span className="count">{player.trophy_count}</span>
-                                    <span className="label">{player.trophy_count === 1 ? 'Trophy' : 'Trophies'}</span>
+                                <div className="stats-container">
+                                    <div className="trophy-count-container">
+                                        <span className="count">{player.trophy_count}</span>
+                                        <span className="label">{player.trophy_count === 1 ? 'Trophy' : 'Trophies'}</span>
+                                    </div>
+                                    <div className="tournaments-played-container">
+                                        <span className="p-count">{player.tournaments_played}</span>
+                                        <span className="p-label">Played</span>
+                                    </div>
                                 </div>
                             </div>
                             {isTopThree && (

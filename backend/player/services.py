@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func
+from sqlalchemy import func, case
 import models
 
 
@@ -279,15 +279,29 @@ Return the JSON object.</s>
         }
 
 async def get_trophy_leaderboard(database_session: AsyncSession):
-    """Fetch the trophy count for players (only players having a trophy will be returned)"""
+    """Fetch the trophy count for players (only players having a trophy will be returned) along with their total tournaments played"""
     query = (
-        select(models.Player.name, func.count(models.RankGroup.id).label("trophy_count"))
+        select(
+            models.Player.name, 
+            func.count(case((models.RankGroup.rating == 1, models.RankGroup.id))).label("trophy_count"),
+            func.count(models.RankGroup.id).label("tournaments_played")
+        )
         .join(models.Player.rank_groups)
-        .where(models.RankGroup.rating == 1)
         .group_by(models.Player.id, models.Player.name)
-        .order_by(func.count(models.RankGroup.id).desc(), models.Player.name)
+        .having(func.count(case((models.RankGroup.rating == 1, models.RankGroup.id))) > 0)
+        .order_by(
+            func.count(case((models.RankGroup.rating == 1, models.RankGroup.id))).desc(), 
+            func.count(models.RankGroup.id).asc(),
+            models.Player.name
+        )
     )
     result = await database_session.execute(query)
     leaderboard = result.all()
     
-    return [{"name": name, "trophy_count": count} for name, count in leaderboard]
+    return [
+        {
+            "name": row.name, 
+            "trophy_count": row.trophy_count, 
+            "tournaments_played": row.tournaments_played
+        } for row in leaderboard
+    ]

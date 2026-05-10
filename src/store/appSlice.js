@@ -8,7 +8,8 @@ import {
     deleteTournament, 
     fetchPlayers,
     fetchFundSettings,
-    fetchDaysPlayedComparison
+    fetchDaysPlayedComparison,
+    fetchTrophyLeaderboard
 } from '../api/client';
 import { getThemeCookie, setThemeCookie } from '../utils/cookieUtils';
 
@@ -87,6 +88,14 @@ export const fetchDaysPlayedComparisonAsync = createAsyncThunk(
     }
 );
 
+export const fetchTrophyLeaderboardAsync = createAsyncThunk(
+    'app/fetchTrophyLeaderboard',
+    async () => {
+        const data = await fetchTrophyLeaderboard();
+        return data;
+    }
+);
+
 
 const initialState = {
     history: [],
@@ -105,7 +114,8 @@ const initialState = {
     fundSettings: null,
     daysPlayedData: [],
     fundStatus: 'idle', // 'idle' | 'loading' | 'succeeded'
-    analyticsStatus: 'idle' // 'idle' | 'loading' | 'succeeded'
+    analyticsStatus: 'idle', // 'idle' | 'loading' | 'succeeded'
+    trophyLeaderboard: []
 };
 
 export const appSlice = createSlice({
@@ -257,6 +267,9 @@ export const appSlice = createSlice({
             .addCase(fetchDaysPlayedComparisonAsync.fulfilled, (state, action) => {
                 state.analyticsStatus = 'succeeded';
                 state.daysPlayedData = action.payload;
+            })
+            .addCase(fetchTrophyLeaderboardAsync.fulfilled, (state, action) => {
+                state.trophyLeaderboard = action.payload;
             });
     },
 });

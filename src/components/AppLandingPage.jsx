@@ -10,6 +10,7 @@ import GlobalRanking from './GlobalRanking';
 import TournamentFixtureModal from './TournamentFixtureModal';
 import AddPlayer from './AddPlayer';
 import DaysPlayedChart from './DaysPlayedChart';
+import TrophyLeaderboard from './TrophyLeaderboard';
 import PlayerStatsModal from './PlayerStatsModal';
 import { isAdminAuthenticated } from '../utils/cookieUtils';
 import './AppLandingPage.scss';
@@ -81,6 +82,7 @@ const AppLandingPage = () => {
                     <p>Track player participation and tournament frequency</p>
                 </div>
                 <DaysPlayedChart />
+                <TrophyLeaderboard />
             </section>
 
             {/* Modals */}

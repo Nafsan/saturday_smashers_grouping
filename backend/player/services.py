@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 import models
 
 
@@ -276,3 +277,17 @@ Return the JSON object.</s>
             "insight": "The AI is currently resting.",
             "performance_summary": "Please try again later!"
         }
+
+async def get_trophy_leaderboard(database_session: AsyncSession):
+    """Fetch the trophy count for players (only players having a trophy will be returned)"""
+    query = (
+        select(models.Player.name, func.count(models.RankGroup.id).label("trophy_count"))
+        .join(models.Player.rank_groups)
+        .where(models.RankGroup.rating == 1)
+        .group_by(models.Player.id, models.Player.name)
+        .order_by(func.count(models.RankGroup.id).desc(), models.Player.name)
+    )
+    result = await database_session.execute(query)
+    leaderboard = result.all()
+    
+    return [{"name": name, "trophy_count": count} for name, count in leaderboard]

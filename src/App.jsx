@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { Provider, useSelector, useDispatch } from 'react-redux';
 import { store } from './store/store';
-import { fetchPlayersAsync, fetchHistoryAsync, fetchFundSettingsAsync, fetchDaysPlayedComparisonAsync } from './store/appSlice';
+import { fetchPlayersAsync, fetchHistoryAsync, fetchFundSettingsAsync, fetchDaysPlayedComparisonAsync, fetchTrophyLeaderboardAsync } from './store/appSlice';
 import AppLandingPage from './components/AppLandingPage';
 import GroupDisplay from './components/GroupDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -146,6 +146,7 @@ const MainContent = () => {
             });
             dispatch(fetchFundSettingsAsync());
             dispatch(fetchDaysPlayedComparisonAsync());
+            dispatch(fetchTrophyLeaderboardAsync());
         }
     }, [status, dispatch]);
 

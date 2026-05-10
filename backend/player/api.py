@@ -68,3 +68,10 @@ async def get_player_insights(
 ):
     """Generate AI-powered insights for a player"""
     return await services.generate_player_insight(player_id, database_session)
+
+@router.get("/trophy-leaderboard")
+async def get_trophy_leaderboard(
+    database_session: AsyncSession = Depends(get_db)
+):
+    """Get players with their trophy counts (rating 1)"""
+    return await services.get_trophy_leaderboard(database_session)

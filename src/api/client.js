@@ -68,6 +68,11 @@ export const fetchPlayerInsights = async (playerId) => {
     return response.data;
 };
 
+export const fetchTrophyLeaderboard = async () => {
+    const response = await client.get('/players/trophy-leaderboard');
+    return response.data;
+};
+
 
 // ============ Fund Management APIs ============
 export const fetchFundSettings = async () => {

@@ -211,14 +211,239 @@
 
 @media (max-width: 768px) {
     .trophy-leaderboard-container {
-        padding: 1.5rem;
+        padding: 1.25rem 1rem;
+        margin-top: 2rem;
+        border-radius: 16px;
         
         .section-title {
-            font-size: 1.5rem;
+            font-size: 1.35rem;
+            margin-bottom: 1.25rem;
         }
 
         .leaderboard-grid {
             grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .trophy-card {
+            flex-direction: row;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            gap: 0.75rem;
+            border-radius: 14px;
+            min-height: auto;
+            
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+            }
+
+            .rank-badge {
+                position: static;
+                width: 32px;
+                height: 32px;
+                font-size: 0.8rem;
+                flex-shrink: 0;
+                svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+
+            .player-info {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                flex-grow: 1;
+                gap: 0.5rem;
+                min-width: 0;
+
+                .player-name {
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                    margin-bottom: 0;
+                    max-width: 110px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .stats-container {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 0.75rem;
+                }
+
+                .trophy-count-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.2rem;
+                    
+                    .count {
+                        font-size: 1.2rem;
+                        font-weight: 800;
+                    }
+                    
+                    .label {
+                        font-size: 0.65rem;
+                        text-transform: none;
+                        font-weight: 500;
+                        letter-spacing: normal;
+                    }
+                }
+
+                .tournaments-played-container {
+                    padding-bottom: 0;
+                    border-left: 1px solid rgba(148, 163, 184, 0.15);
+                    padding-left: 0.75rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.2rem;
+
+                    .p-count {
+                        font-size: 0.9rem;
+                    }
+
+                    .p-label {
+                        font-size: 0.6rem;
+                        text-transform: none;
+                        font-weight: 500;
+                        letter-spacing: normal;
+                    }
+                }
+            }
+
+            .visual-indicator {
+                margin-top: 0;
+                display: flex;
+                flex-wrap: nowrap;
+                flex-shrink: 0;
+                gap: 0.15rem;
+                align-items: center;
+
+                .mini-trophy {
+                    width: 11px;
+                    height: 11px;
+                }
+
+                .more-indicator {
+                    font-size: 0.6rem;
+                    padding: 1px 4px;
+                    border-radius: 6px;
+                }
+            }
+        }
+    }
+
+    @media (max-width: 480px) {
+        .trophy-leaderboard-container {
+            .trophy-card {
+                .player-info {
+                    .trophy-count-container .label {
+                        display: none;
+                    }
+                    .tournaments-played-container .p-label {
+                        display: none;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Light Mode Theme Support
+[data-theme="light"] {
+    .trophy-leaderboard-container {
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(241, 245, 249, 0.95));
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
+
+        .trophy-card {
+            background: rgba(255, 255, 255, 0.65);
+            border-color: rgba(226, 232, 240, 0.8);
+            
+            &:hover {
+                background: rgba(255, 255, 255, 0.95);
+                border-color: rgba(203, 213, 225, 1);
+                box-shadow: 0 15px 25px -5px rgba(15, 23, 42, 0.06);
+            }
+
+            .rank-badge {
+                background: rgba(241, 245, 249, 0.8);
+                border-color: rgba(226, 232, 240, 0.6);
+                color: var(--text-secondary);
+            }
+
+            .tournaments-played-container {
+                border-left-color: rgba(226, 232, 240, 0.8);
+                .p-label {
+                    color: rgba(100, 116, 139, 0.6);
+                }
+            }
+
+            .visual-indicator {
+                .more-indicator {
+                    background: rgba(241, 245, 249, 0.8);
+                }
+            }
+
+            // High contrast and elegant styling for Light mode rank cards
+            &.gold {
+                background: linear-gradient(145deg, rgba(251, 191, 36, 0.12), rgba(255, 255, 255, 0.65));
+                border-color: rgba(251, 191, 36, 0.4);
+
+                .rank-badge {
+                    background: #fbbf24;
+                    color: #78350f;
+                    box-shadow: 0 0 10px rgba(251, 191, 36, 0.25);
+                }
+
+                .count {
+                    color: #d97706;
+                    text-shadow: none;
+                }
+
+                .mini-trophy {
+                    color: #d97706;
+                }
+            }
+
+            &.silver {
+                background: linear-gradient(145deg, rgba(148, 163, 184, 0.12), rgba(255, 255, 255, 0.65));
+                border-color: rgba(148, 163, 184, 0.4);
+
+                .rank-badge {
+                    background: #94a3b8;
+                    color: #1e293b;
+                }
+
+                .count {
+                    color: #475569;
+                }
+
+                .mini-trophy {
+                    color: #475569;
+                }
+            }
+
+            &.bronze {
+                background: linear-gradient(145deg, rgba(180, 83, 9, 0.12), rgba(255, 255, 255, 0.65));
+                border-color: rgba(180, 83, 9, 0.4);
+
+                .rank-badge {
+                    background: #b45309;
+                    color: #fef3c7;
+                }
+
+                .count {
+                    color: #92400e;
+                }
+
+                .mini-trophy {
+                    color: #b45309;
+                }
+            }
         }
     }
 }

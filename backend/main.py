@@ -35,6 +35,19 @@ async def startup():
     logger.info("Starting up and initializing database...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        
+        # Automatically enable Row Level Security (RLS) on all public tables to fix/prevent Supabase security advisor errors
+        logger.info("Enabling Row Level Security (RLS) on all public tables...")
+        try:
+            result = await conn.execute(text("SELECT tablename FROM pg_tables WHERE schemaname = 'public';"))
+            tables = [row[0] for row in result.fetchall()]
+            for table in tables:
+                await conn.execute(text(f'ALTER TABLE "{table}" ENABLE ROW LEVEL SECURITY;'))
+                logger.info(f"Enabled RLS on table: {table}")
+            logger.info("Row Level Security (RLS) auto-enablement complete.")
+        except Exception as e:
+            logger.error(f"Failed to automatically enable RLS on public tables: {e}")
+            
     logger.info("Database initialization complete.")
 
 # Health check endpoints

@@ -16,7 +16,7 @@ RUN npm run build
 
 # Production stage
 FROM nginx:stable-alpine
-LABEL maintainer="your-email@example.com"
+LABEL maintainer="iamnafsan@gmail.com"
 
 # Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html

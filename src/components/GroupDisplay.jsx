@@ -22,6 +22,7 @@ const GroupDisplay = () => {
     const openExportMenu = Boolean(anchorEl);
     const [showShareDialog, setShowShareDialog] = useState(false);
     const [sharing, setSharing] = useState(false);
+    const [isCapturing, setIsCapturing] = useState(false);
     const [selectedShareOptions, setSelectedShareOptions] = useState({
         groups: true,
         bracket: false,
@@ -38,50 +39,65 @@ const GroupDisplay = () => {
     }, [groups]);
 
     // Consolidated Export Handler
-    const handleExport = useCallback((type) => {
+    const handleExport = useCallback(async (type) => {
         // Close menu first
         setAnchorEl(null);
 
         let node = null;
         let filename = '';
+        let targetMinWidth = '1000px';
         const dateStr = new Date().toISOString().slice(0, 10);
 
         if (type === 'groups') {
             node = groupsOnlyRef.current;
             filename = `saturday-smashers-groups-${dateStr}.png`;
+            targetMinWidth = '1000px';
         } else if (type === 'bracket') {
             node = knockoutRef.current;
             filename = `saturday-smashers-bracket-${dateStr}.png`;
+            targetMinWidth = '1100px';
         } else if (type === 'rankings') {
             node = rankingsRef.current;
             filename = `saturday-smashers-rankings-${dateStr}.png`;
+            targetMinWidth = '900px';
         }
 
         if (!node) return;
 
-        const config = {
-            cacheBust: true,
-            backgroundColor: '#0f172a',
-            style: { padding: '20px' },
-            width: node.scrollWidth + 40,
-            height: node.scrollHeight + 40,
-            filter: (domNode) => {
-                // Remove some elements that might still be captured if using a larger node
-                if (domNode.classList?.contains('actions-bar')) return false;
-                return true;
-            }
-        };
+        try {
+            setIsCapturing(true);
+            await new Promise(resolve => setTimeout(resolve, 150));
 
-        toPng(node, config)
-            .then((dataUrl) => {
-                const link = document.createElement('a');
-                link.download = filename;
-                link.href = dataUrl;
-                link.click();
-            })
-            .catch((err) => {
-                console.error('oops, something went wrong!', err);
-            });
+            const config = {
+                cacheBust: true,
+                backgroundColor: '#0f172a',
+                pixelRatio: 3,
+                style: { 
+                    padding: '32px',
+                    width: 'max-content',
+                    minWidth: targetMinWidth,
+                    height: 'auto',
+                    overflow: 'visible',
+                    borderRadius: '24px',
+                    backgroundColor: '#0f172a'
+                },
+                filter: (domNode) => {
+                    // Remove some elements that might still be captured if using a larger node
+                    if (domNode.classList?.contains('actions-bar')) return false;
+                    return true;
+                }
+            };
+
+            const dataUrl = await toPng(node, config);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataUrl;
+            link.click();
+        } catch (err) {
+            console.error('oops, something went wrong!', err);
+        } finally {
+            setIsCapturing(false);
+        }
     }, [groupsOnlyRef, knockoutRef, rankingsRef]);
 
     const handleMenuClick = (event) => {
@@ -115,19 +131,29 @@ const GroupDisplay = () => {
             const dateStr = new Date().toISOString().slice(0, 10);
 
             const options = [
-                { id: 'groups', node: groupsOnlyRef.current, filename: `groups-${dateStr}.png` },
-                { id: 'bracket', node: knockoutRef.current, filename: `bracket-${dateStr}.png` },
-                { id: 'rankings', node: rankingsRef.current, filename: `rankings-${dateStr}.png` }
+                { id: 'groups', node: groupsOnlyRef.current, filename: `groups-${dateStr}.png`, minWidth: '1000px' },
+                { id: 'bracket', node: knockoutRef.current, filename: `bracket-${dateStr}.png`, minWidth: '1100px' },
+                { id: 'rankings', node: rankingsRef.current, filename: `rankings-${dateStr}.png`, minWidth: '900px' }
             ];
+
+            setIsCapturing(true);
+            await new Promise(resolve => setTimeout(resolve, 150));
 
             for (const opt of options) {
                 if (selectedShareOptions[opt.id] && opt.node) {
                     const dataUrl = await toPng(opt.node, {
                         cacheBust: true,
                         backgroundColor: '#0f172a',
-                        style: { padding: '20px' },
-                        width: opt.node.scrollWidth + 40,
-                        height: opt.node.scrollHeight + 40,
+                        pixelRatio: 3,
+                        style: { 
+                            padding: '32px',
+                            width: 'max-content',
+                            minWidth: opt.minWidth,
+                            height: 'auto',
+                            overflow: 'visible',
+                            borderRadius: '24px',
+                            backgroundColor: '#0f172a'
+                        },
                     });
 
                     // Convert dataUrl to File object
@@ -139,6 +165,7 @@ const GroupDisplay = () => {
 
             if (files.length === 0) {
                 alert("Please select at least one item to share.");
+                setIsCapturing(false);
                 return;
             }
 
@@ -163,6 +190,7 @@ const GroupDisplay = () => {
             console.error('Error sharing:', error);
             alert("Something went wrong while sharing.");
         } finally {
+            setIsCapturing(false);
             setSharing(false);
         }
     };
@@ -252,7 +280,7 @@ const GroupDisplay = () => {
             </div>
 
             <div className="content-to-export" ref={exportRef}>
-                <div className="groups-export-wrapper" ref={groupsOnlyRef}>
+                <div className={`groups-export-wrapper ${isCapturing ? 'capturing' : ''}`} ref={groupsOnlyRef}>
                     <div className="header">
                         <h2>This Week's Groups</h2>
                         <p>{new Date(tournamentDate).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
@@ -278,7 +306,7 @@ const GroupDisplay = () => {
 
                 {/* Knockout Fixtures */}
                 {(fixtures.cup.length > 0 || fixtures.plate.length > 0) && (
-                    <div className="knockout-section" ref={knockoutRef}>
+                    <div className={`knockout-section ${isCapturing ? 'capturing' : ''}`} ref={knockoutRef}>
                         <div className="bracket-column">
                             <h3 className="cup-title"><Trophy size={18} /> Cup Round</h3>
                             {fixtures.cup.map((round, idx) => (
@@ -325,7 +353,7 @@ const GroupDisplay = () => {
                     </div>
                 )}
 
-                <div className="rankings-summary" ref={rankingsRef}>
+                <div className={`rankings-summary ${isCapturing ? 'capturing' : ''}`} ref={rankingsRef}>
                     <h4>Ranking Breakdown</h4>
                     <div className="rank-list">
                         {rankedPlayers.map((p, i) => (

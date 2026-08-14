@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
     TextField, Button, Alert, Checkbox, FormControlLabel, Autocomplete,
     Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody,
-    TableCell, TableContainer, TableHead, TableRow, Paper, useMediaQuery
+    TableCell, TableContainer, TableHead, TableRow, Paper, useMediaQuery,
+    Radio, RadioGroup, FormControl
 } from '@mui/material';
 import { fetchPlayers, fetchFundSettings, fetchTournamentPlayersByDate, calculateTournamentCosts, saveTournamentCosts, createUnofficialTournament, fetchTournamentCostInput } from '../api/client';
 import { Plus, Calculator, Save, Sparkles, X } from 'lucide-react';
@@ -22,6 +23,7 @@ const AddTournamentCosts = ({ editDate = null, onSuccess = null, standalone = tr
     const [useDefaultVenue, setUseDefaultVenue] = useState(true);
     const [useDefaultBall, setUseDefaultBall] = useState(true);
     const [venueFee, setVenueFee] = useState(0);
+    const [venueFeeType, setVenueFeeType] = useState('per_person'); // 'per_person' or 'total'
     const [ballFee, setBallFee] = useState(0);
     const [tournamentPlayers, setTournamentPlayers] = useState([]);
     const [clubMembers, setClubMembers] = useState([]);
@@ -179,11 +181,18 @@ const AddTournamentCosts = ({ editDate = null, onSuccess = null, standalone = tr
             return;
         }
 
+        // Calculate venue fee per person if total venue fee is used
+        let computedVenueFee = venueFee;
+        if (!useDefaultVenue && venueFeeType === 'total') {
+            const nonClubMembers = tournamentPlayers.filter(p => !clubMembers.includes(p));
+            computedVenueFee = nonClubMembers.length > 0 ? (venueFee / nonClubMembers.length) : 0;
+        }
+
         const requestData = {
             tournament_date: tournamentDate,
             use_default_venue_fee: useDefaultVenue,
             use_default_ball_fee: useDefaultBall,
-            venue_fee_per_person: useDefaultVenue ? null : venueFee,
+            venue_fee_per_person: useDefaultVenue ? null : computedVenueFee,
             ball_fee_per_ball: useDefaultBall ? null : ballFee,
             tournament_players: tournamentPlayers,
             club_members: clubMembers,
@@ -210,11 +219,18 @@ const AddTournamentCosts = ({ editDate = null, onSuccess = null, standalone = tr
     };
 
     const handleSave = async () => {
+        // Calculate venue fee per person if total venue fee is used
+        let computedVenueFee = venueFee;
+        if (!useDefaultVenue && venueFeeType === 'total') {
+            const nonClubMembers = tournamentPlayers.filter(p => !clubMembers.includes(p));
+            computedVenueFee = nonClubMembers.length > 0 ? (venueFee / nonClubMembers.length) : 0;
+        }
+
         const requestData = {
             tournament_date: tournamentDate,
             use_default_venue_fee: useDefaultVenue,
             use_default_ball_fee: useDefaultBall,
-            venue_fee_per_person: useDefaultVenue ? null : venueFee,
+            venue_fee_per_person: useDefaultVenue ? null : computedVenueFee,
             ball_fee_per_ball: useDefaultBall ? null : ballFee,
             tournament_players: tournamentPlayers,
             club_members: clubMembers,
@@ -293,16 +309,27 @@ const AddTournamentCosts = ({ editDate = null, onSuccess = null, standalone = tr
                             label={`Use default venue fee (৳${settings?.default_venue_fee || 0})`}
                         />
                         {!useDefaultVenue && (
-                            <TextField
-                                fullWidth
-                                label="Venue Fee (per person)"
-                                type="number"
-                                value={venueFee}
-                                onChange={(e) => setVenueFee(parseFloat(e.target.value) || '')}
-                                InputProps={{
-                                    startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
-                                }}
-                            />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                <RadioGroup
+                                    row
+                                    value={venueFeeType}
+                                    onChange={(e) => setVenueFeeType(e.target.value)}
+                                    sx={{ mb: 1 }}
+                                >
+                                    <FormControlLabel value="per_person" control={<Radio size="small" />} label="Per Person" />
+                                    <FormControlLabel value="total" control={<Radio size="small" />} label="Total Fee" />
+                                </RadioGroup>
+                                <TextField
+                                    fullWidth
+                                    label={venueFeeType === 'total' ? "Total Venue Fee" : "Venue Fee (per person)"}
+                                    type="number"
+                                    value={venueFee}
+                                    onChange={(e) => setVenueFee(parseFloat(e.target.value) || '')}
+                                    InputProps={{
+                                        startAdornment: <span style={{ marginRight: '0.5rem' }}>৳</span>
+                                    }}
+                                />
+                            </div>
                         )}
                     </div>
 

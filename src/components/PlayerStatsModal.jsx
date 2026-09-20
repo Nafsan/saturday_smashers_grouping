@@ -577,16 +577,16 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                         {insightData.metrics && (
                                             <div className="metrics-pill-grid">
                                                 <div className="metric-pill">
-                                                    <span className="pill-label">Cup Win Rate</span>
-                                                    <span className="pill-value">{insightData.metrics.cup_win_rate}</span>
+                                                    <span className="pill-label">Cup Qual. Rate</span>
+                                                    <span className="pill-value highlight">{insightData.metrics.cup_qual_rate || insightData.metrics.cup_win_rate}</span>
                                                 </div>
                                                 <div className="metric-pill">
-                                                    <span className="pill-label">Podium Rate</span>
-                                                    <span className="pill-value">{insightData.metrics.podium_rate}</span>
+                                                    <span className="pill-label">Plate Relegation</span>
+                                                    <span className="pill-value warning">{insightData.metrics.relegation_rate || '0%'}</span>
                                                 </div>
                                                 <div className="metric-pill">
-                                                    <span className="pill-label">Top Final Rival</span>
-                                                    <span className="pill-value highlight">{insightData.metrics.top_rival || insightData.metrics.best_partner}</span>
+                                                    <span className="pill-label">Peer Competitor</span>
+                                                    <span className="pill-value">{insightData.metrics.peer_competitor || insightData.metrics.top_rival || 'N/A'}</span>
                                                 </div>
                                                 <div className="metric-pill">
                                                     <span className="pill-label">Total Played</span>
@@ -600,7 +600,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                             <div className="key-insights-grid">
                                                 {insightData.key_insights.map((item, idx) => {
                                                     let icon = <Trophy size={16} className="insight-cat-icon strength" />;
-                                                    if (item.category === 'rivalry' || item.category === 'synergy') icon = <Flame size={16} className="insight-cat-icon rivalry" />;
+                                                    if (item.category === 'form_trend' || item.category === 'rivalry') icon = <Activity size={16} className="insight-cat-icon form_trend" />;
                                                     if (item.category === 'growth') icon = <TrendingUp size={16} className="insight-cat-icon growth" />;
 
                                                     return (

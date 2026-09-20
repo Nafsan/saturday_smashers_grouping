@@ -830,6 +830,10 @@
                             &.highlight {
                                 color: #38bdf8;
                             }
+
+                            &.warning {
+                                color: #f59e0b;
+                            }
                         }
                     }
                 }
@@ -858,16 +862,20 @@
                             border-top: 3px solid #fbbf24;
                         }
 
-                        &.rivalry, &.synergy {
-                            border-top: 3px solid #ef4444;
+                        &.form_trend {
+                            border-top: 3px solid #38bdf8;
 
                             .insight-cat-icon {
-                                color: #ef4444;
+                                color: #38bdf8;
                             }
                         }
 
                         &.growth {
                             border-top: 3px solid #10b981;
+
+                            .insight-cat-icon {
+                                color: #10b981;
+                            }
                         }
 
                         .card-header {

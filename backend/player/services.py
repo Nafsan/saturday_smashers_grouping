@@ -155,7 +155,7 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
                 "performance_summary": "Play tournaments to see your performance summary."
             }
 
-        # Calculate rich deterministic analytics for SINGLES tournaments
+        # Calculate rich deterministic analytics for SINGLES Cup/Plate tournaments
         rating_titles = {
             1: "Cup Champion", 2: "Cup Runner Up", 3: "Cup Semi Finalist", 4: "Cup Quarter Finalist",
             5: "Plate Champion", 6: "Plate Runner Up", 7: "Plate Semi Finalist", 8: "Plate Quarter Finalist"
@@ -163,51 +163,47 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
         rating_values = {1: 95, 2: 85, 3: 75, 4: 65, 5: 50, 6: 40, 7: 30, 8: 20}
         
         all_ratings = []
-        rivals_map = {} # opponent_name -> {finals_against, finals_won, finals_lost, shared_tournaments}
+        same_tier_peers = {} # player -> {same_tier: count, shared: count}
         
         for t in tournaments:
             player_rating = None
-            other_ratings = {}
+            other_players_in_t = {}
             
             for r in t["ranks"]:
                 for p in r["players"]:
                     if p == player_name:
                         player_rating = r["rating"]
                     else:
-                        other_ratings[p] = r["rating"]
+                        other_players_in_t[p] = r["rating"]
             
             if player_rating is not None:
                 all_ratings.append(player_rating)
                 
-                for o_name, o_rating in other_ratings.items():
-                    if o_name not in rivals_map:
-                        rivals_map[o_name] = {"finals_against": 0, "finals_won": 0, "finals_lost": 0, "shared_tournaments": 0}
-                    rivals_map[o_name]["shared_tournaments"] += 1
-                    
-                    # Cup Final (1 vs 2) or Plate Final (5 vs 6)
-                    if (player_rating == 1 and o_rating == 2) or (player_rating == 2 and o_rating == 1):
-                        rivals_map[o_name]["finals_against"] += 1
-                        if player_rating == 1: rivals_map[o_name]["finals_won"] += 1
-                        else: rivals_map[o_name]["finals_lost"] += 1
-                    elif (player_rating == 5 and o_rating == 6) or (player_rating == 6 and o_rating == 5):
-                        rivals_map[o_name]["finals_against"] += 1
-                        if player_rating == 5: rivals_map[o_name]["finals_won"] += 1
-                        else: rivals_map[o_name]["finals_lost"] += 1
+                for o_name, o_rating in other_players_in_t.items():
+                    if o_name not in same_tier_peers:
+                        same_tier_peers[o_name] = {"same_tier": 0, "shared": 0}
+                    same_tier_peers[o_name]["shared"] += 1
+                    if o_rating == player_rating:
+                        same_tier_peers[o_name]["same_tier"] += 1
 
         total = len(all_ratings)
+        cup_appearances = sum(1 for r in all_ratings if r in [1, 2, 3, 4])
+        plate_appearances = sum(1 for r in all_ratings if r in [5, 6, 7, 8])
+
         cup_wins = sum(1 for r in all_ratings if r == 1)
         cup_finals = sum(1 for r in all_ratings if r in [1, 2])
-        cup_podiums = sum(1 for r in all_ratings if r in [1, 2, 3])
-        cup_appearances = sum(1 for r in all_ratings if r in [1, 2, 3, 4])
         plate_wins = sum(1 for r in all_ratings if r == 5)
-        plate_podiums = sum(1 for r in all_ratings if r in [5, 6, 7])
 
+        cup_qual_rate = round((cup_appearances / total) * 100)
+        relegation_rate = round((plate_appearances / total) * 100)
         cup_win_rate = round((cup_wins / total) * 100)
-        podium_rate = round(((cup_podiums + plate_podiums) / total) * 100)
 
         recent_5 = all_ratings[:5]
         recent_avg_val = sum(rating_values[r] for r in recent_5) / len(recent_5)
         form_score = max(15, min(99, int(round(recent_avg_val))))
+
+        recent_cup_rate = (sum(1 for r in recent_5 if r <= 4) / len(recent_5)) * 100
+        overall_cup_rate = (cup_appearances / total) * 100
 
         recent_avg_rank = sum(recent_5) / len(recent_5)
         overall_avg_rank = sum(all_ratings) / total
@@ -215,117 +211,64 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
         variance = sum((x - recent_avg_rank) ** 2 for x in recent_5) / len(recent_5)
         std_dev_recent = math.sqrt(variance)
 
-        if len(recent_5) >= 2 and recent_avg_rank < overall_avg_rank - 0.4:
+        if recent_cup_rate > overall_cup_rate + 10:
             momentum = "Heating Up"
-        elif recent_avg_rank <= 1.8:
+        elif recent_avg_rank <= 2.0:
             momentum = "Peak Form"
-        elif recent_avg_rank > overall_avg_rank + 0.6:
-            momentum = "Slumping"
+        elif sum(1 for r in recent_5 if r >= 5) >= 2:
+            momentum = "Relegation Risk"
         elif std_dev_recent >= 2.0:
             momentum = "Volatile"
         else:
             momentum = "Steady"
 
-        total_var = sum((x - overall_avg_rank) ** 2 for x in all_ratings) / total
-        std_dev_total = math.sqrt(total_var)
+        std_dev_total = math.sqrt(sum((x - overall_avg_rank) ** 2 for x in all_ratings) / total)
         if std_dev_total < 1.2:
             consistency = "Rock Solid"
         elif std_dev_total < 2.2:
             consistency = "Balanced"
         else:
-            consistency = "Streak-Based"
+            consistency = "Inconsistent"
 
-        top_rival_str = "N/A"
-        if rivals_map:
-            sorted_rivals = sorted(
-                rivals_map.items(),
-                key=lambda x: (x[1]["finals_against"], x[1]["shared_tournaments"]),
+        peer_competitor_str = "N/A"
+        if same_tier_peers:
+            sorted_peers = sorted(
+                same_tier_peers.items(),
+                key=lambda x: (x[1]["same_tier"], x[1]["shared"]),
                 reverse=True
             )
-            top_name, top_data = sorted_rivals[0]
-            if top_data["finals_against"] > 0:
-                top_rival_str = f"{top_name} ({top_data['finals_against']} Finals: {top_data['finals_won']}W-{top_data['finals_lost']}L)"
+            p_name, p_data = sorted_peers[0]
+            if p_data["same_tier"] > 0:
+                peer_competitor_str = f"{p_name} ({p_data['same_tier']} Shared Levels)"
             else:
-                top_rival_str = f"{top_name} ({top_data['shared_tournaments']} Tournaments)"
+                peer_competitor_str = f"{p_name} ({p_data['shared']} Shared Tournaments)"
 
-        if cup_win_rate >= 35:
-            archetype = "Elite Cup Champion"
-        elif (cup_finals / total) >= 0.5:
-            archetype = "Clutch Cup Finalist"
-        elif (cup_appearances / total) >= 0.65:
-            archetype = "Cup Division Mainstay"
-        elif plate_wins >= 2:
-            archetype = "Plate Division Powerhouse"
+        if cup_qual_rate >= 80 and cup_wins >= 1:
+            archetype = "Elite Cup Contender"
+        elif cup_qual_rate >= 70:
+            archetype = "Cup Division Regular"
+        elif relegation_rate >= 50 and plate_wins >= 1:
+            archetype = "Plate Division Fighter"
         elif total <= 3:
-            archetype = "Rising Contender"
+            archetype = "New Challenger"
         else:
-            archetype = "Resilient Competitor"
+            archetype = "Developing Player"
 
         # LLM Generation
         hf_token = os.getenv("HF_TOKEN")
         if hf_token:
             try:
-                client = InferenceClient(token=hf_token)
-                prompt = f"""<|system|>
-You are an expert sports performance analyst for a competitive table tennis club called 'Saturday Smashers' (Singles Tournaments).
-Generate a deep, structured performance analysis based on the verified player statistical metrics provided.
-
-STRICT REQUIREMENTS:
-1. Output MUST be ONLY a valid JSON object matching the format below.
-2. DO NOT wrap JSON in codeblocks or markdown.
-3. Be analytical, professional, concise, and specific to the player's data.
-4. NOTE: All tournaments are SINGLES tournaments. DO NOT mention doubles or partners.
-
-JSON SCHEMA:
-{{
-  "archetype": "{archetype}",
-  "headline": "A punchy, data-backed 1-sentence headline capturing current form.",
-  "key_insights": [
-    {{
-      "category": "strength",
-      "title": "Short Title (2-4 words)",
-      "text": "1-2 analytical sentences focusing on key strengths or conversion rate."
-    }},
-    {{
-      "category": "rivalry",
-      "title": "Short Title (2-4 words)",
-      "text": "1-2 analytical sentences focusing on head-to-head rivalries and finals matchups."
-    }},
-    {{
-      "category": "growth",
-      "title": "Short Title (2-4 words)",
-      "text": "1-2 analytical sentences highlighting area for growth or tactical refinement."
-    }}
-  ],
-  "tactical_summary": "2-sentence actionable tactical recommendation for upcoming tournaments."
-}}
-</s>
-<|user|>
-Player Performance Analytics for {player_name}:
-- Total Tournaments Played: {total} (Singles)
-- Cup Wins: {cup_wins} (Cup Win Rate: {cup_win_rate}%)
-- Cup Finals Appearances: {cup_finals}
-- Overall Podium Rate: {podium_rate}%
-- Calculated Form Rating: {form_score}/100
-- Momentum Trend: {momentum}
-- Consistency Profile: {consistency}
-- Top Final Rival / Competitor: {top_rival_str}
-
-RECENT FORM (LAST 5 TOURNAMENTS):
-{", ".join([f"Week {i+1}: {rating_titles[r]}" for i, r in enumerate(recent_5)])}
-
-CAREER BASELINE:
-- Career Best Finish: {rating_titles[min(all_ratings)]}
-- Total Cup Finals: {cup_finals}, Total Plate Wins: {plate_wins}
-</s>
-<|assistant|>"""
-
-                response = client.chat_completion(
-                    model=HF_MODEL,
-                    messages=[{"role": "user", "content": prompt}],
-                    max_tokens=450,
-                    temperature=0.3
-                )
+                def _do_llm_call():
+                    client = InferenceClient(token=hf_token, timeout=10)
+                    return client.chat_completion(
+                        model=HF_MODEL,
+                        messages=[{"role": "user", "content": prompt}],
+                        max_tokens=450,
+                        temperature=0.3
+                    )
+                
+                import asyncio
+                response = await asyncio.to_thread(_do_llm_call)
                 
                 content = response.choices[0].message.content.strip()
                 json_match = re.search(r'\{.*\}', content, re.DOTALL)
@@ -343,10 +286,10 @@ CAREER BASELINE:
                         "momentum": momentum,
                         "consistency": consistency,
                         "metrics": {
+                            "cup_qual_rate": f"{cup_qual_rate}%",
+                            "relegation_rate": f"{relegation_rate}%",
                             "cup_win_rate": f"{cup_win_rate}%",
-                            "podium_rate": f"{podium_rate}%",
-                            "best_partner": top_rival_str, # preserved key for compatibility
-                            "top_rival": top_rival_str,
+                            "peer_competitor": peer_competitor_str,
                             "total_tournaments": str(total)
                         },
                         "key_insights": key_insights,
@@ -360,37 +303,37 @@ CAREER BASELINE:
         # Deterministic fallback if LLM is unavailable
         return {
             "archetype": archetype,
-            "headline": f"{player_name} holds a {podium_rate}% podium rate across {total} singles tournaments.",
+            "headline": f"{player_name} holds a {cup_qual_rate}% Cup qualification rate across {total} tournaments.",
             "form_score": form_score,
             "momentum": momentum,
             "consistency": consistency,
             "metrics": {
+                "cup_qual_rate": f"{cup_qual_rate}%",
+                "relegation_rate": f"{relegation_rate}%",
                 "cup_win_rate": f"{cup_win_rate}%",
-                "podium_rate": f"{podium_rate}%",
-                "best_partner": top_rival_str,
-                "top_rival": top_rival_str,
+                "peer_competitor": peer_competitor_str,
                 "total_tournaments": str(total)
             },
             "key_insights": [
                 {
                     "category": "strength",
-                    "title": "Proven Competition Form",
-                    "text": f"Secured {cup_wins} Cup championships and {cup_finals} Cup final appearances."
+                    "title": "Cup Qualification Record",
+                    "text": f"Qualified for Cup division in {cup_appearances} of {total} tournaments ({cup_qual_rate}%)."
                 },
                 {
-                    "category": "rivalry",
-                    "title": "Key Rivalry",
-                    "text": f"Frequent final matchup competitor: {top_rival_str}."
+                    "category": "form_trend",
+                    "title": "Recent Form Trajectory",
+                    "text": f"Currently operating with a form score of {form_score}/100 and a {momentum.lower()} momentum rating."
                 },
                 {
                     "category": "growth",
-                    "title": "Consistency Refinement",
-                    "text": f"Currently maintaining a {consistency.lower()} performance trajectory with a {momentum.lower()} momentum rating."
+                    "title": "Group Stage Goal",
+                    "text": f"Relegated to Plate division in {plate_appearances} tournaments ({relegation_rate}%); improving group stage wins is key to staying in the Cup."
                 }
             ],
-            "tactical_summary": f"{player_name} should maintain serve-and-attack momentum to stay competitive in upcoming Saturday Smashers tournaments.",
-            "insight": f"{player_name} holds a {podium_rate}% podium rate across {total} singles tournaments.",
-            "performance_summary": f"Maintaining a {consistency.lower()} trajectory with {momentum.lower()} momentum."
+            "tactical_summary": f"{player_name} should sharpen group stage serve tactics to maximize Cup qualification and avoid Plate relegation.",
+            "insight": f"{player_name} holds a {cup_qual_rate}% Cup qualification rate across {total} tournaments.",
+            "performance_summary": f"Form score is {form_score}/100 with {momentum.lower()} momentum."
         }
 
     except Exception as e:

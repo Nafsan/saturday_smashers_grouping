@@ -144,13 +144,15 @@ async def youtube_search(q: str):
 async def youtube_playlist(list_id: str):
     """
     Scrapes the YouTube playlist page and extracts video metadata.
+    Supports both legacy playlistVideoRenderer and modern lockupViewModel formats,
+    with an RSS feed fallback.
     """
     playlist_url = f"https://www.youtube.com/playlist?list={list_id}"
     
     async with httpx.AsyncClient() as client:
         try:
             headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                 "Accept-Language": "en-US,en;q=0.9"
             }
             
@@ -158,43 +160,104 @@ async def youtube_playlist(list_id: str):
             response.raise_for_status()
             html = response.text
             
+            videos = []
+            
             # Find the ytInitialData JSON
             start_marker = 'var ytInitialData = '
             end_marker = ';</script>'
             start_idx = html.find(start_marker)
-            if start_idx == -1:
-                return {"videos": []}
-            
-            start_idx += len(start_marker)
-            end_idx = html.find(end_marker, start_idx)
-            if end_idx == -1:
-                return {"videos": []}
-            
-            data = json.loads(html[start_idx:end_idx])
-            
-            videos = []
-            try:
-                # Path for playlist videos in ytInitialData
-                sidebar = data.get('contents', {}).get('twoColumnBrowseResultsRenderer', {}).get('tabs', [{}])[0].get('tabRenderer', {}).get('content', {}).get('sectionListRenderer', {}).get('contents', [{}])[0].get('itemSectionRenderer', {}).get('contents', [{}])[0].get('playlistVideoListRenderer', {}).get('contents', [])
-                
-                if not sidebar:
-                    # Alternative path for some playlist layouts
-                    sidebar = data.get('contents', {}).get('twoColumnBrowseResultsRenderer', {}).get('tabs', [{}])[0].get('tabRenderer', {}).get('content', {}).get('sectionListRenderer', {}).get('contents', [{}])[0].get('itemSectionRenderer', {}).get('contents', [{}])[0].get('playlistVideoListRenderer', {}).get('contents', [])
+            if start_idx != -1:
+                start_idx += len(start_marker)
+                end_idx = html.find(end_marker, start_idx)
+                if end_idx != -1:
+                    try:
+                        data = json.loads(html[start_idx:end_idx])
+                        items = []
+                        try:
+                            contents = data.get('contents', {}).get('twoColumnBrowseResultsRenderer', {}).get('tabs', [{}])[0].get('tabRenderer', {}).get('content', {}).get('sectionListRenderer', {}).get('contents', [])
+                            for sec in contents:
+                                isr = sec.get('itemSectionRenderer', {}).get('contents', [])
+                                for item in isr:
+                                    if 'playlistVideoListRenderer' in item:
+                                        items.extend(item['playlistVideoListRenderer'].get('contents', []))
+                                    else:
+                                        items.append(item)
+                        except Exception as e:
+                            logger.warning(f"Traversal warning for ytInitialData ({list_id}): {e}")
+                        
+                        for item in items:
+                            if 'playlistVideoRenderer' in item:
+                                v = item['playlistVideoRenderer']
+                                videos.append({
+                                    'videoId': v.get('videoId'),
+                                    'title': v.get('title', {}).get('runs', [{}])[0].get('text'),
+                                    'thumbnail': v.get('thumbnail', {}).get('thumbnails', [{}])[0].get('url'),
+                                    'viewCount': v.get('videoInfo', {}).get('runs', [{}])[0].get('text') if v.get('videoInfo') else None,
+                                    'publishedTime': None,
+                                    'length': v.get('lengthText', {}).get('simpleText')
+                                })
+                            elif 'lockupViewModel' in item:
+                                v = item['lockupViewModel']
+                                content_id = v.get('contentId')
+                                meta = v.get('metadata', {}).get('lockupMetadataViewModel', {})
+                                title = meta.get('title', {}).get('content') if meta.get('title') else None
+                                
+                                content_img = v.get('contentImage', {}).get('thumbnailViewModel', {})
+                                sources = content_img.get('image', {}).get('sources', [])
+                                thumb = sources[-1].get('url') if sources else None
+                                
+                                length = None
+                                overlays = content_img.get('overlays', [])
+                                for ov in overlays:
+                                    badge = ov.get('thumbnailBadgeViewModel', {})
+                                    if badge:
+                                        for b_item in badge.get('badgeText', {}).get('runs', []):
+                                            length = b_item.get('text')
+                                            
+                                if content_id:
+                                    videos.append({
+                                        'videoId': content_id,
+                                        'title': title,
+                                        'thumbnail': thumb,
+                                        'viewCount': None,
+                                        'publishedTime': None,
+                                        'length': length
+                                    })
+                    except Exception as e:
+                        logger.error(f"Error parsing ytInitialData for {list_id}: {e}")
 
-                for item in sidebar:
-                    if 'playlistVideoRenderer' in item:
-                        v = item['playlistVideoRenderer']
-                        videos.append({
-                            'videoId': v.get('videoId'),
-                            'title': v.get('title', {}).get('runs', [{}])[0].get('text'),
-                            'thumbnail': v.get('thumbnail', {}).get('thumbnails', [{}])[0].get('url'),
-                            'viewCount': v.get('videoInfo', {}).get('runs', [{}])[0].get('text') if v.get('videoInfo') else None,
-                            'publishedTime': None, # Playlists don't always show relative time in this view
-                            'length': v.get('lengthText', {}).get('simpleText')
-                        })
-            except Exception as e:
-                logger.error(f"Error parsing playlist results for {list_id}: {e}")
-                
+            # RSS Fallback if html scraping yielded no videos
+            if not videos:
+                try:
+                    rss_url = f"https://www.youtube.com/feeds/videos.xml?playlist_id={list_id}"
+                    rss_res = await client.get(rss_url, timeout=10.0)
+                    if rss_res.status_code == 200:
+                        import xml.etree.ElementTree as ET
+                        root = ET.fromstring(rss_res.text)
+                        ns = {
+                            'feed': 'http://www.w3.org/2005/Atom',
+                            'yt': 'http://www.youtube.com/xml/schemas/2015',
+                            'media': 'http://search.yahoo.com/mrss/'
+                        }
+                        for entry in root.findall('feed:entry', ns):
+                            v_id_el = entry.find('yt:videoId', ns)
+                            title_el = entry.find('feed:title', ns)
+                            thumb_el = entry.find('media:group/media:thumbnail', ns)
+                            v_id = v_id_el.text if v_id_el is not None else None
+                            title = title_el.text if title_el is not None else None
+                            thumb = thumb_el.attrib.get('url') if thumb_el is not None else None
+                            if v_id:
+                                videos.append({
+                                    'videoId': v_id,
+                                    'title': title,
+                                    'thumbnail': thumb,
+                                    'viewCount': None,
+                                    'publishedTime': None,
+                                    'length': None
+                                })
+                except Exception as rss_err:
+                    logger.warning(f"RSS fallback error for {list_id}: {rss_err}")
+
             return {"videos": videos}
         except Exception as e:
             logger.error(f"YouTube playlist error: {str(e)}")

@@ -119,13 +119,10 @@ logger = logging.getLogger(__name__)
 HF_MODEL = "Qwen/Qwen2.5-72B-Instruct"
 
 async def generate_player_insight(player_id: int, database_session: AsyncSession):
-    """Generate an AI insight for a player using Hugging Face"""
-    # Get token inside function to ensure it's loaded from .env
-    hf_token = os.getenv("HF_TOKEN")
-    
-    if not hf_token:
-        logger.warning("HF_TOKEN not found in environment variables.")
-        return {"insight": "AI Insights are currently unavailable (HF_TOKEN not configured)."}
+    """Generate a rich, multi-dimensional AI performance insight for a player"""
+    import math
+    import json
+    import re
 
     try:
         # Get player statistics first
@@ -134,146 +131,279 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
         tournaments = stats["tournaments"]
         
         if not tournaments:
-            return {"insight": f"Welcome to the club, {player_name}! Play some tournaments to see your AI performance insight."}
+            return {
+                "archetype": "New Contender",
+                "headline": f"Welcome to Saturday Smashers, {player_name}!",
+                "form_score": 50,
+                "momentum": "Steady",
+                "consistency": "N/A",
+                "metrics": {
+                    "cup_win_rate": "0%",
+                    "podium_rate": "0%",
+                    "best_partner": "N/A",
+                    "total_tournaments": "0"
+                },
+                "key_insights": [
+                    {
+                        "category": "strength",
+                        "title": "Fresh Entry",
+                        "text": f"{player_name} is ready to make their debut in Saturday Smashers tournaments."
+                    }
+                ],
+                "tactical_summary": "Play tournaments to unlock personalized performance analytics and partner synergy insights.",
+                "insight": f"Welcome to the club, {player_name}! Play some tournaments to see your AI performance insight.",
+                "performance_summary": "Play tournaments to see your performance summary."
+            }
 
-        # Calculate summary stats for the prompt
-        total_tournaments = len(tournaments)
-        cup_wins = 0
-        plate_wins = 0
-        recent_ratings = []
-        
-        for t in tournaments:
-            for r in t["ranks"]:
-                if player_name in r["players"]:
-                    rating = r["rating"]
-                    if rating == 1: cup_wins += 1
-                    elif rating == 5: plate_wins += 1
-                    recent_ratings.append(rating)
-                    break
-        
-        recent_trend = recent_ratings
-        logging.info(f"recent trend : {recent_trend}")
-        
-        # Map numbers to titles for the prompt to reduce hallucination
+        # Calculate rich deterministic analytics for SINGLES tournaments
         rating_titles = {
             1: "Cup Champion", 2: "Cup Runner Up", 3: "Cup Semi Finalist", 4: "Cup Quarter Finalist",
             5: "Plate Champion", 6: "Plate Runner Up", 7: "Plate Semi Finalist", 8: "Plate Quarter Finalist"
         }
+        rating_values = {1: 95, 2: 85, 3: 75, 4: 65, 5: 50, 6: 40, 7: 30, 8: 20}
         
-        # Pre-calculate key milestones to prevent LLM hallucination
-        best_rating = min(recent_ratings) if recent_ratings else 8
-        best_title = rating_titles.get(best_rating, "N/A")
-        most_recent_title = rating_titles.get(recent_ratings[0], "N/A") if recent_ratings else "N/A"
-        last_5_titles = [rating_titles.get(r, "N/A") for r in recent_ratings[:5]]
+        all_ratings = []
+        rivals_map = {} # opponent_name -> {finals_against, finals_won, finals_lost, shared_tournaments}
         
-        # Create a more descriptive history string for the LLM
-        history_descriptions = []
-        for i, r in enumerate(recent_ratings):
-            title = rating_titles.get(r, f"Rank {r}")
-            pos = i + 1
-            if pos == 1: suffix = "st (MOST RECENT / THIS WEEK)"
-            elif pos == 2: suffix = "nd"
-            elif pos == 3: suffix = "rd"
-            else: suffix = "th"
+        for t in tournaments:
+            player_rating = None
+            other_ratings = {}
             
-            if i == len(recent_ratings) - 1 and i > 0:
-                suffix += " (OLDEST)"
+            for r in t["ranks"]:
+                for p in r["players"]:
+                    if p == player_name:
+                        player_rating = r["rating"]
+                    else:
+                        other_ratings[p] = r["rating"]
+            
+            if player_rating is not None:
+                all_ratings.append(player_rating)
                 
-            history_descriptions.append(f"- {pos}{suffix}: {title}")
-        
-        formatted_history = "\n".join(history_descriptions)
-        
-        logging.info(f"formatted history : {formatted_history}")
-        
-        # Initialize inference client
-        client = InferenceClient(token=hf_token)
-        
-        prompt = f"""<|system|>
-You are an honest and analytical sports commentator for a table tennis club called 'Saturday Smashers'. 
-Your goal is to provide a realistic "reality check" of a player's performance based on their data.
+                for o_name, o_rating in other_ratings.items():
+                    if o_name not in rivals_map:
+                        rivals_map[o_name] = {"finals_against": 0, "finals_won": 0, "finals_lost": 0, "shared_tournaments": 0}
+                    rivals_map[o_name]["shared_tournaments"] += 1
+                    
+                    # Cup Final (1 vs 2) or Plate Final (5 vs 6)
+                    if (player_rating == 1 and o_rating == 2) or (player_rating == 2 and o_rating == 1):
+                        rivals_map[o_name]["finals_against"] += 1
+                        if player_rating == 1: rivals_map[o_name]["finals_won"] += 1
+                        else: rivals_map[o_name]["finals_lost"] += 1
+                    elif (player_rating == 5 and o_rating == 6) or (player_rating == 6 and o_rating == 5):
+                        rivals_map[o_name]["finals_against"] += 1
+                        if player_rating == 5: rivals_map[o_name]["finals_won"] += 1
+                        else: rivals_map[o_name]["finals_lost"] += 1
 
-STRICT CONSTRAINTS:
-1. Return ONLY a JSON object with keys "comment" and "summary".
-2. DO NOT include ANY numeric ratings in parentheses in your text.
-3. Use the 'FACTUAL ANCHORS' below to verify your story. 
-4. 'RECENT' means the last 5 tournaments ONLY. 'HISTORIC' means the older tournaments. DO NOT confuse them.
-5. Tournaments happen WEEKLY. Focus on "recent weeks".
+        total = len(all_ratings)
+        cup_wins = sum(1 for r in all_ratings if r == 1)
+        cup_finals = sum(1 for r in all_ratings if r in [1, 2])
+        cup_podiums = sum(1 for r in all_ratings if r in [1, 2, 3])
+        cup_appearances = sum(1 for r in all_ratings if r in [1, 2, 3, 4])
+        plate_wins = sum(1 for r in all_ratings if r == 5)
+        plate_podiums = sum(1 for r in all_ratings if r in [5, 6, 7])
 
-Analytical Focus:
-- Narrative: Compare their 'RECENT' form (last 5) against their 'HISTORIC' best.
-- Reality Check: If they were once a Cup Champion but are now only reaching Quarter Finals, mention this specifically.
-- Spikes & Consistency: Identify if they have high potential (spikes) but lack recent consistency.
+        cup_win_rate = round((cup_wins / total) * 100)
+        podium_rate = round(((cup_podiums + plate_podiums) / total) * 100)
 
-Provide:
-1. A short, insightful 1-sentence analytical comment.
-2. A detailed 2-3 sentence performance summary.</s>
+        recent_5 = all_ratings[:5]
+        recent_avg_val = sum(rating_values[r] for r in recent_5) / len(recent_5)
+        form_score = max(15, min(99, int(round(recent_avg_val))))
+
+        recent_avg_rank = sum(recent_5) / len(recent_5)
+        overall_avg_rank = sum(all_ratings) / total
+
+        variance = sum((x - recent_avg_rank) ** 2 for x in recent_5) / len(recent_5)
+        std_dev_recent = math.sqrt(variance)
+
+        if len(recent_5) >= 2 and recent_avg_rank < overall_avg_rank - 0.4:
+            momentum = "Heating Up"
+        elif recent_avg_rank <= 1.8:
+            momentum = "Peak Form"
+        elif recent_avg_rank > overall_avg_rank + 0.6:
+            momentum = "Slumping"
+        elif std_dev_recent >= 2.0:
+            momentum = "Volatile"
+        else:
+            momentum = "Steady"
+
+        total_var = sum((x - overall_avg_rank) ** 2 for x in all_ratings) / total
+        std_dev_total = math.sqrt(total_var)
+        if std_dev_total < 1.2:
+            consistency = "Rock Solid"
+        elif std_dev_total < 2.2:
+            consistency = "Balanced"
+        else:
+            consistency = "Streak-Based"
+
+        top_rival_str = "N/A"
+        if rivals_map:
+            sorted_rivals = sorted(
+                rivals_map.items(),
+                key=lambda x: (x[1]["finals_against"], x[1]["shared_tournaments"]),
+                reverse=True
+            )
+            top_name, top_data = sorted_rivals[0]
+            if top_data["finals_against"] > 0:
+                top_rival_str = f"{top_name} ({top_data['finals_against']} Finals: {top_data['finals_won']}W-{top_data['finals_lost']}L)"
+            else:
+                top_rival_str = f"{top_name} ({top_data['shared_tournaments']} Tournaments)"
+
+        if cup_win_rate >= 35:
+            archetype = "Elite Cup Champion"
+        elif (cup_finals / total) >= 0.5:
+            archetype = "Clutch Cup Finalist"
+        elif (cup_appearances / total) >= 0.65:
+            archetype = "Cup Division Mainstay"
+        elif plate_wins >= 2:
+            archetype = "Plate Division Powerhouse"
+        elif total <= 3:
+            archetype = "Rising Contender"
+        else:
+            archetype = "Resilient Competitor"
+
+        # LLM Generation
+        hf_token = os.getenv("HF_TOKEN")
+        if hf_token:
+            try:
+                client = InferenceClient(token=hf_token)
+                prompt = f"""<|system|>
+You are an expert sports performance analyst for a competitive table tennis club called 'Saturday Smashers' (Singles Tournaments).
+Generate a deep, structured performance analysis based on the verified player statistical metrics provided.
+
+STRICT REQUIREMENTS:
+1. Output MUST be ONLY a valid JSON object matching the format below.
+2. DO NOT wrap JSON in codeblocks or markdown.
+3. Be analytical, professional, concise, and specific to the player's data.
+4. NOTE: All tournaments are SINGLES tournaments. DO NOT mention doubles or partners.
+
+JSON SCHEMA:
+{{
+  "archetype": "{archetype}",
+  "headline": "A punchy, data-backed 1-sentence headline capturing current form.",
+  "key_insights": [
+    {{
+      "category": "strength",
+      "title": "Short Title (2-4 words)",
+      "text": "1-2 analytical sentences focusing on key strengths or conversion rate."
+    }},
+    {{
+      "category": "rivalry",
+      "title": "Short Title (2-4 words)",
+      "text": "1-2 analytical sentences focusing on head-to-head rivalries and finals matchups."
+    }},
+    {{
+      "category": "growth",
+      "title": "Short Title (2-4 words)",
+      "text": "1-2 analytical sentences highlighting area for growth or tactical refinement."
+    }}
+  ],
+  "tactical_summary": "2-sentence actionable tactical recommendation for upcoming tournaments."
+}}
+</s>
 <|user|>
-Analyze these stats for {player_name}:
-- Total Tournaments: {total_tournaments} (Weekly frequency)
+Player Performance Analytics for {player_name}:
+- Total Tournaments Played: {total} (Singles)
+- Cup Wins: {cup_wins} (Cup Win Rate: {cup_win_rate}%)
+- Cup Finals Appearances: {cup_finals}
+- Overall Podium Rate: {podium_rate}%
+- Calculated Form Rating: {form_score}/100
+- Momentum Trend: {momentum}
+- Consistency Profile: {consistency}
+- Top Final Rival / Competitor: {top_rival_str}
 
-FACTUAL ANCHORS (Use these to stay accurate, but don't just repeat them):
-- Most Recent: {most_recent_title}
-- Best Ever: {best_title}
-- Last 5: {", ".join(last_5_titles)}
-- Total Cup Wins: {cup_wins}
-- Total Plate Wins: {plate_wins}
+RECENT FORM (LAST 5 TOURNAMENTS):
+{", ".join([f"Week {i+1}: {rating_titles[r]}" for i, r in enumerate(recent_5)])}
 
-PLAYER HISTORY (LATEST to OLDEST):
-{formatted_history}
-
-Important Context:
-- 'Cup' tiers (Champion to Quarter Finalist) are elite levels.
-- 'Plate' tiers are lower/relegated levels.
-- If 'Total Cup Wins' is 0, they have NEVER won the Cup. Be careful not to invent a Cup championship.
-
-Return the JSON object.</s>
+CAREER BASELINE:
+- Career Best Finish: {rating_titles[min(all_ratings)]}
+- Total Cup Finals: {cup_finals}, Total Plate Wins: {plate_wins}
+</s>
 <|assistant|>"""
 
-        logger.info(f"Generating dual AI insight for player {player_name}...")
-        
-        response = client.chat_completion(
-            model=HF_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=250,
-            temperature=0.4
-        )
-        
-        content = response.choices[0].message.content.strip()
-        
-        # Simple JSON parsing (the model might wrap it in markdown code blocks)
-        import json
-        import re
-        
-        try:
-            json_match = re.search(r'\{.*\}', content, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
-                insight = data.get("comment", "")
-                summary = data.get("summary", "")
-            else:
-                # Fallback if no JSON found
-                insight = content
-                summary = ""
-        except:
-            insight = content
-            summary = ""
-            
-        logger.info("AI insight and summary generated successfully.")
+                response = client.chat_completion(
+                    model=HF_MODEL,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=450,
+                    temperature=0.3
+                )
+                
+                content = response.choices[0].message.content.strip()
+                json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                if json_match:
+                    ai_data = json.loads(json_match.group())
+                    headline = ai_data.get("headline", f"{player_name} continues to compete actively in Saturday Smashers.")
+                    key_insights = ai_data.get("key_insights", [])
+                    tactical = ai_data.get("tactical_summary", "Focus on consistent serve execution and tactical placement.")
+                    archetype_res = ai_data.get("archetype", archetype)
+                    
+                    return {
+                        "archetype": archetype_res,
+                        "headline": headline,
+                        "form_score": form_score,
+                        "momentum": momentum,
+                        "consistency": consistency,
+                        "metrics": {
+                            "cup_win_rate": f"{cup_win_rate}%",
+                            "podium_rate": f"{podium_rate}%",
+                            "best_partner": top_rival_str, # preserved key for compatibility
+                            "top_rival": top_rival_str,
+                            "total_tournaments": str(total)
+                        },
+                        "key_insights": key_insights,
+                        "tactical_summary": tactical,
+                        "insight": headline,
+                        "performance_summary": tactical
+                    }
+            except Exception as llm_err:
+                logger.error(f"LLM generation warning: {llm_err}")
+
+        # Deterministic fallback if LLM is unavailable
         return {
-            "insight": insight,
-            "performance_summary": summary
+            "archetype": archetype,
+            "headline": f"{player_name} holds a {podium_rate}% podium rate across {total} singles tournaments.",
+            "form_score": form_score,
+            "momentum": momentum,
+            "consistency": consistency,
+            "metrics": {
+                "cup_win_rate": f"{cup_win_rate}%",
+                "podium_rate": f"{podium_rate}%",
+                "best_partner": top_rival_str,
+                "top_rival": top_rival_str,
+                "total_tournaments": str(total)
+            },
+            "key_insights": [
+                {
+                    "category": "strength",
+                    "title": "Proven Competition Form",
+                    "text": f"Secured {cup_wins} Cup championships and {cup_finals} Cup final appearances."
+                },
+                {
+                    "category": "rivalry",
+                    "title": "Key Rivalry",
+                    "text": f"Frequent final matchup competitor: {top_rival_str}."
+                },
+                {
+                    "category": "growth",
+                    "title": "Consistency Refinement",
+                    "text": f"Currently maintaining a {consistency.lower()} performance trajectory with a {momentum.lower()} momentum rating."
+                }
+            ],
+            "tactical_summary": f"{player_name} should maintain serve-and-attack momentum to stay competitive in upcoming Saturday Smashers tournaments.",
+            "insight": f"{player_name} holds a {podium_rate}% podium rate across {total} singles tournaments.",
+            "performance_summary": f"Maintaining a {consistency.lower()} trajectory with {momentum.lower()} momentum."
         }
 
     except Exception as e:
         logger.error(f"Error generating AI insight: {str(e)}", exc_info=True)
-        error_msg = str(e).lower()
-        if "loading" in error_msg:
-            return {
-                "insight": "The AI model is currently warming up.",
-                "performance_summary": "Please try again in a minute!"
-            }
-        
         return {
+            "archetype": "Player",
+            "headline": "AI Performance Analytics currently resting.",
+            "form_score": 50,
+            "momentum": "Steady",
+            "consistency": "N/A",
+            "metrics": {"cup_win_rate": "0%", "podium_rate": "0%", "best_partner": "N/A", "total_tournaments": "0"},
+            "key_insights": [],
+            "tactical_summary": "Please try again later!",
             "insight": "The AI is currently resting.",
             "performance_summary": "Please try again later!"
         }

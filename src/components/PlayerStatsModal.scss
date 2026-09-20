@@ -597,6 +597,342 @@
             }
         }
 
+        .ai-insight-section {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+            .insight-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.25rem;
+
+                .header-title-group {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    flex-wrap: wrap;
+
+                    h3 {
+                        margin: 0;
+                        font-size: 1.15rem;
+                        font-weight: 700;
+                        color: #f8fafc;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+
+                        .sparkle-icon {
+                            color: #38bdf8;
+                            animation: pulse 2s infinite ease-in-out;
+                        }
+                    }
+
+                    .archetype-badge {
+                        background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.3) 100%);
+                        border: 1px solid rgba(251, 191, 36, 0.4);
+                        color: #fbbf24;
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        padding: 0.25rem 0.65rem;
+                        border-radius: 20px;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.35rem;
+                    }
+                }
+
+                .generate-btn {
+                    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 0.5rem 1rem;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.4rem;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+
+                    &:hover:not(:disabled) {
+                        transform: translateY(-1px);
+                        box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4);
+                    }
+
+                    &:disabled {
+                        opacity: 0.6;
+                        cursor: not-allowed;
+                    }
+
+                    .spin {
+                        animation: spin 1s linear infinite;
+                    }
+                }
+            }
+
+            .insight-body {
+                display: flex;
+                flex-direction: column;
+                gap: 1.25rem;
+
+                .insight-top-bar {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: rgba(15, 23, 42, 0.6);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 12px;
+                    padding: 0.75rem 1rem;
+                    gap: 1rem;
+                    flex-wrap: wrap;
+
+                    .momentum-container {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.6rem;
+
+                        .label {
+                            font-size: 0.8rem;
+                            color: #94a3b8;
+                            font-weight: 500;
+                        }
+
+                        .momentum-tag {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 0.3rem;
+                            font-size: 0.8rem;
+                            font-weight: 700;
+                            padding: 0.25rem 0.6rem;
+                            border-radius: 6px;
+
+                            &.heating-up, &.peak-form {
+                                background: rgba(239, 68, 68, 0.2);
+                                border: 1px solid rgba(239, 68, 68, 0.4);
+                                color: #f87171;
+                            }
+
+                            &.steady {
+                                background: rgba(16, 185, 129, 0.2);
+                                border: 1px solid rgba(16, 185, 129, 0.4);
+                                color: #34d399;
+                            }
+
+                            &.slumping, &.volatile {
+                                background: rgba(245, 158, 11, 0.2);
+                                border: 1px solid rgba(245, 158, 11, 0.4);
+                                color: #fbbf24;
+                            }
+                        }
+
+                        .consistency-tag {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 0.3rem;
+                            font-size: 0.8rem;
+                            color: #cbd5e1;
+                            background: rgba(255, 255, 255, 0.05);
+                            padding: 0.25rem 0.6rem;
+                            border-radius: 6px;
+                            border: 1px solid rgba(255, 255, 255, 0.08);
+                        }
+                    }
+
+                    .form-gauge-box {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.75rem;
+
+                        .gauge-label {
+                            font-size: 0.8rem;
+                            color: #94a3b8;
+                            font-weight: 500;
+                        }
+
+                        .gauge-bar-wrapper {
+                            width: 100px;
+                            height: 8px;
+                            background: rgba(255, 255, 255, 0.1);
+                            border-radius: 4px;
+                            overflow: hidden;
+
+                            .gauge-bar-fill {
+                                height: 100%;
+                                background: linear-gradient(90deg, #38bdf8 0%, #3b82f6 100%);
+                                border-radius: 4px;
+                                transition: width 0.8s ease;
+                            }
+                        }
+
+                        .gauge-value {
+                            font-size: 1.1rem;
+                            font-weight: 800;
+                            color: #38bdf8;
+
+                            sub {
+                                font-size: 0.7rem;
+                                color: #64748b;
+                                font-weight: 400;
+                            }
+                        }
+                    }
+                }
+
+                .headline-hero-banner {
+                    background: rgba(56, 189, 248, 0.06);
+                    border-left: 4px solid #38bdf8;
+                    border-radius: 0 10px 10px 0;
+                    padding: 0.85rem 1.1rem;
+
+                    .headline-text {
+                        margin: 0;
+                        font-size: 0.98rem;
+                        font-style: italic;
+                        color: #f1f5f9;
+                        line-height: 1.5;
+                    }
+                }
+
+                .metrics-pill-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+                    gap: 0.75rem;
+
+                    .metric-pill {
+                        background: rgba(15, 23, 42, 0.5);
+                        border: 1px solid rgba(255, 255, 255, 0.06);
+                        border-radius: 10px;
+                        padding: 0.65rem 0.85rem;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.2rem;
+
+                        .pill-label {
+                            font-size: 0.72rem;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            color: #64748b;
+                            font-weight: 600;
+                        }
+
+                        .pill-value {
+                            font-size: 0.95rem;
+                            font-weight: 700;
+                            color: #f8fafc;
+
+                            &.highlight {
+                                color: #38bdf8;
+                            }
+                        }
+                    }
+                }
+
+                .key-insights-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                    gap: 0.85rem;
+
+                    .insight-card {
+                        background: rgba(15, 23, 42, 0.7);
+                        border: 1px solid rgba(255, 255, 255, 0.08);
+                        border-radius: 12px;
+                        padding: 1rem;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.5rem;
+                        transition: transform 0.2s ease, border-color 0.2s ease;
+
+                        &:hover {
+                            transform: translateY(-2px);
+                            border-color: rgba(56, 189, 248, 0.3);
+                        }
+
+                        &.strength {
+                            border-top: 3px solid #fbbf24;
+                        }
+
+                        &.rivalry, &.synergy {
+                            border-top: 3px solid #ef4444;
+
+                            .insight-cat-icon {
+                                color: #ef4444;
+                            }
+                        }
+
+                        &.growth {
+                            border-top: 3px solid #10b981;
+                        }
+
+                        .card-header {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+
+                            .card-title {
+                                font-size: 0.88rem;
+                                font-weight: 700;
+                                color: #f1f5f9;
+                            }
+                        }
+
+                        .card-text {
+                            margin: 0;
+                            font-size: 0.84rem;
+                            color: #94a3b8;
+                            line-height: 1.45;
+                        }
+                    }
+                }
+
+                .tactical-summary-box {
+                    background: rgba(15, 23, 42, 0.8);
+                    border: 1px solid rgba(147, 51, 234, 0.3);
+                    border-radius: 12px;
+                    padding: 1rem 1.1rem;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.4rem;
+
+                    .tactical-header {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        color: #c084fc;
+                        font-size: 0.85rem;
+                        font-weight: 700;
+                    }
+
+                    .tactical-text {
+                        margin: 0;
+                        font-size: 0.88rem;
+                        color: #e2e8f0;
+                        line-height: 1.5;
+                    }
+                }
+            }
+
+            .insight-placeholder, .insight-error {
+                margin: 0;
+                font-size: 0.9rem;
+                color: #94a3b8;
+                padding: 0.5rem 0;
+            }
+
+            .insight-error {
+                color: #f87171;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+            }
+        }
+
         .achievements-section {
             margin-bottom: 2rem;
 

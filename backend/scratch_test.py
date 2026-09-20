@@ -1,116 +1,82 @@
-import httpx
 import json
-import asyncio
-import xml.etree.ElementTree as ET
 
-async def test_playlist(list_id):
-    playlist_url = f"https://www.youtube.com/playlist?list={list_id}"
+# Sample tournament data representing singles tournaments
+tournaments = [
+    {
+        "id": "t1", "date": "2026-03-01",
+        "ranks": [
+            {"rating": 1, "players": ["Abdullah"]}, # Cup Champion
+            {"rating": 2, "players": ["Showmik"]},  # Cup Runner Up
+            {"rating": 3, "players": ["Dipro", "Fahim"]}, # Semi Finalists
+        ]
+    },
+    {
+        "id": "t2", "date": "2026-02-22",
+        "ranks": [
+            {"rating": 1, "players": ["Abdullah"]},
+            {"rating": 2, "players": ["Dipro"]},
+            {"rating": 3, "players": ["Showmik", "Fahim"]},
+        ]
+    },
+    {
+        "id": "t3", "date": "2026-02-15",
+        "ranks": [
+            {"rating": 1, "players": ["Showmik"]},
+            {"rating": 2, "players": ["Abdullah"]},
+            {"rating": 3, "players": ["Dipro", "Fahim"]},
+        ]
+    }
+]
+
+def analyze_singles_rivalries(player_name, tournaments):
+    rivals = {} # name -> {finals_against: 0, shared_tournaments: 0, wins_against_in_finals: 0}
     
-    async with httpx.AsyncClient() as client:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept-Language": "en-US,en;q=0.9"
-        }
+    for t in tournaments:
+        player_rating = None
+        other_ratings = {}
         
-        response = await client.get(playlist_url, headers=headers, timeout=15.0)
-        response.raise_for_status()
-        html = response.text
-        
-        videos = []
-        start_marker = 'var ytInitialData = '
-        end_marker = ';</script>'
-        start_idx = html.find(start_marker)
-        if start_idx != -1:
-            start_idx += len(start_marker)
-            end_idx = html.find(end_marker, start_idx)
-            if end_idx != -1:
-                try:
-                    data = json.loads(html[start_idx:end_idx])
-                    items = []
-                    try:
-                        contents = data.get('contents', {}).get('twoColumnBrowseResultsRenderer', {}).get('tabs', [{}])[0].get('tabRenderer', {}).get('content', {}).get('sectionListRenderer', {}).get('contents', [])
-                        for sec in contents:
-                            isr = sec.get('itemSectionRenderer', {}).get('contents', [])
-                            for item in isr:
-                                if 'playlistVideoListRenderer' in item:
-                                    items.extend(item['playlistVideoListRenderer'].get('contents', []))
-                                else:
-                                    items.append(item)
-                    except Exception as e:
-                        print(f"Traversal warn: {e}")
+        for r in t["ranks"]:
+            for p in r["players"]:
+                if p == player_name:
+                    player_rating = r["rating"]
+                else:
+                    other_ratings[p] = r["rating"]
                     
-                    for item in items:
-                        if 'playlistVideoRenderer' in item:
-                            v = item['playlistVideoRenderer']
-                            videos.append({
-                                'videoId': v.get('videoId'),
-                                'title': v.get('title', {}).get('runs', [{}])[0].get('text'),
-                                'thumbnail': v.get('thumbnail', {}).get('thumbnails', [{}])[0].get('url'),
-                                'viewCount': v.get('videoInfo', {}).get('runs', [{}])[0].get('text') if v.get('videoInfo') else None,
-                                'publishedTime': None,
-                                'length': v.get('lengthText', {}).get('simpleText')
-                            })
-                        elif 'lockupViewModel' in item:
-                            v = item['lockupViewModel']
-                            content_id = v.get('contentId')
-                            meta = v.get('metadata', {}).get('lockupMetadataViewModel', {})
-                            title = meta.get('title', {}).get('content') if meta.get('title') else None
-                            
-                            content_img = v.get('contentImage', {}).get('thumbnailViewModel', {})
-                            sources = content_img.get('image', {}).get('sources', [])
-                            thumb = sources[-1].get('url') if sources else None
-                            
-                            length = None
-                            overlays = content_img.get('overlays', [])
-                            for ov in overlays:
-                                badge = ov.get('thumbnailBadgeViewModel', {})
-                                if badge:
-                                    for b_item in badge.get('badgeText', {}).get('runs', []):
-                                        length = b_item.get('text')
-                                        
-                            if content_id:
-                                videos.append({
-                                    'videoId': content_id,
-                                    'title': title,
-                                    'thumbnail': thumb,
-                                    'viewCount': None,
-                                    'publishedTime': None,
-                                    'length': length
-                                })
-                except Exception as e:
-                    print(f"JSON parse error: {e}")
-
-        if not videos:
-            print("Fallback to RSS...")
-            try:
-                rss_url = f"https://www.youtube.com/feeds/videos.xml?playlist_id={list_id}"
-                rss_res = await client.get(rss_url, timeout=10.0)
-                if rss_res.status_code == 200:
-                    root = ET.fromstring(rss_res.text)
-                    ns = {
-                        'feed': 'http://www.w3.org/2005/Atom',
-                        'yt': 'http://www.youtube.com/xml/schemas/2015',
-                        'media': 'http://search.yahoo.com/mrss/'
-                    }
-                    for entry in root.findall('feed:entry', ns):
-                        v_id_el = entry.find('yt:videoId', ns)
-                        title_el = entry.find('feed:title', ns)
-                        thumb_el = entry.find('media:group/media:thumbnail', ns)
-                        v_id = v_id_el.text if v_id_el is not None else None
-                        title = title_el.text if title_el is not None else None
-                        thumb = thumb_el.attrib.get('url') if thumb_el is not None else None
-                        if v_id:
-                            videos.append({
-                                'videoId': v_id,
-                                'title': title,
-                                'thumbnail': thumb,
-                                'viewCount': None,
-                                'publishedTime': None,
-                                'length': None
-                            })
-            except Exception as rss_err:
-                print(f"RSS error: {rss_err}")
+        if player_rating is None:
+            continue
             
-        return {"videos": videos}
+        for o_name, o_rating in other_ratings.items():
+            if o_name not in rivals:
+                rivals[o_name] = {"finals_against": 0, "shared_tournaments": 0, "finals_won": 0, "finals_lost": 0}
+            rivals[o_name]["shared_tournaments"] += 1
+            
+            # Check if faced in Cup Final (ratings 1 and 2) or Plate Final (ratings 5 and 6)
+            if (player_rating == 1 and o_rating == 2) or (player_rating == 2 and o_rating == 1):
+                rivals[o_name]["finals_against"] += 1
+                if player_rating == 1:
+                    rivals[o_name]["finals_won"] += 1
+                else:
+                    rivals[o_name]["finals_lost"] += 1
+            elif (player_rating == 5 and o_rating == 6) or (player_rating == 6 and o_rating == 5):
+                rivals[o_name]["finals_against"] += 1
+                if player_rating == 5:
+                    rivals[o_name]["finals_won"] += 1
+                else:
+                    rivals[o_name]["finals_lost"] += 1
 
-print(asyncio.run(test_playlist("PLRLUVIeAar_BEU7YPphESo7ndk_YXQU0g")))
+    # Sort rivals by finals_against desc, then shared_tournaments desc
+    sorted_rivals = sorted(
+        rivals.items(),
+        key=lambda x: (x[1]["finals_against"], x[1]["shared_tournaments"]),
+        reverse=True
+    )
+    
+    if sorted_rivals:
+        top_name, top_data = sorted_rivals[0]
+        if top_data["finals_against"] > 0:
+            return f"{top_name} ({top_data['finals_against']} Final Matchups: {top_data['finals_won']}W-{top_data['finals_lost']}L)"
+        else:
+            return f"{top_name} ({top_data['shared_tournaments']} Shared Tournaments)"
+    return "N/A"
+
+print(analyze_singles_rivalries("Abdullah", tournaments))

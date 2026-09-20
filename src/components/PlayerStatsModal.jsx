@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { X, Trophy, TrendingUp, Award, Target, Youtube, FileText } from 'lucide-react';
+import { X, Trophy, TrendingUp, Award, Target, Youtube, FileText, Sparkles, RefreshCw, AlertCircle, Users, Zap, ShieldAlert, Activity, Flame } from 'lucide-react';
 import Select from 'react-select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { fetchPlayerStatistics, fetchYouTubeSearch, fetchPlayerInsights } from '../api/client';
-import { Sparkles, RefreshCw, AlertCircle } from 'lucide-react';
 import { extractVideoId, getYouTubeThumbnail, getVideoUrl, getYouTubeMetadata } from '../utils/youtubeUtils';
 import VideoGrid from './VideoGrid';
 import VideoPlayer from './VideoPlayer';
@@ -47,6 +46,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
     const [currentEmbedUrl, setCurrentEmbedUrl] = useState('');
     const [aiInsight, setAiInsight] = useState('');
     const [performanceSummary, setPerformanceSummary] = useState('');
+    const [insightData, setInsightData] = useState(null);
     const [loadingInsight, setLoadingInsight] = useState(false);
     const [insightError, setInsightError] = useState(null);
 
@@ -69,6 +69,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
             setCurrentEmbedUrl('');
             setAiInsight('');
             setPerformanceSummary('');
+            setInsightData(null);
             setLoadingInsight(false);
             setInsightError(null);
         }
@@ -143,6 +144,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
         setError(null);
         setAiInsight('');
         setPerformanceSummary('');
+        setInsightData(null);
         setInsightError(null);
 
         try {
@@ -173,8 +175,9 @@ const PlayerStatsModal = ({ open, onClose }) => {
         try {
             const playerId = selectedPlayer.isLegacy ? null : selectedPlayer.value;
             const data = await fetchPlayerInsights(playerId);
-            setAiInsight(data.insight);
-            setPerformanceSummary(data.performance_summary);
+            setInsightData(data);
+            setAiInsight(data.headline || data.insight);
+            setPerformanceSummary(data.tactical_summary || data.performance_summary);
         } catch (err) {
             setInsightError('Failed to generate AI insight. Please try again.');
             console.error(err);
@@ -519,14 +522,19 @@ const PlayerStatsModal = ({ open, onClose }) => {
                             {/* AI Performance Insight Section */}
                             <div className="ai-insight-section">
                                 <div className="insight-header">
-                                    <h3><Sparkles size={18} /> AI Performance Insight</h3>
+                                    <div className="header-title-group">
+                                        <h3><Sparkles size={18} className="sparkle-icon" /> AI Performance Intelligence</h3>
+                                        {insightData?.archetype && (
+                                            <span className="archetype-badge"><Award size={13} /> {insightData.archetype}</span>
+                                        )}
+                                    </div>
                                     <button 
                                         className="generate-btn" 
                                         onClick={handleGenerateInsight}
                                         disabled={loadingInsight}
                                     >
                                         {loadingInsight ? (
-                                            <><RefreshCw size={14} className="spin" /> Generating...</>
+                                            <><RefreshCw size={14} className="spin" /> Analyzing...</>
                                         ) : aiInsight ? (
                                             <><RefreshCw size={14} /> Regenerate</>
                                         ) : (
@@ -535,7 +543,90 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                     </button>
                                 </div>
                                 
-                                {aiInsight ? (
+                                {insightData ? (
+                                    <div className="insight-body">
+                                        {/* Top Bar: Momentum & Form Score */}
+                                        <div className="insight-top-bar">
+                                            <div className="momentum-container">
+                                                <span className="label">Momentum:</span>
+                                                <span className={`momentum-tag ${insightData.momentum?.toLowerCase().replace(/\s+/g, '-') || 'steady'}`}>
+                                                    <Zap size={13} /> {insightData.momentum || 'Steady'}
+                                                </span>
+                                                <span className="consistency-tag">
+                                                    <Activity size={13} /> {insightData.consistency || 'Balanced'}
+                                                </span>
+                                            </div>
+                                            
+                                            {insightData.form_score !== undefined && (
+                                                <div className="form-gauge-box">
+                                                    <span className="gauge-label">Form Rating</span>
+                                                    <div className="gauge-bar-wrapper">
+                                                        <div className="gauge-bar-fill" style={{ width: `${insightData.form_score}%` }}></div>
+                                                    </div>
+                                                    <span className="gauge-value">{insightData.form_score}<sub>/100</sub></span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Headline Banner */}
+                                        <div className="headline-hero-banner">
+                                            <p className="headline-text">"{insightData.headline || aiInsight}"</p>
+                                        </div>
+
+                                        {/* Quick Metrics Bar */}
+                                        {insightData.metrics && (
+                                            <div className="metrics-pill-grid">
+                                                <div className="metric-pill">
+                                                    <span className="pill-label">Cup Win Rate</span>
+                                                    <span className="pill-value">{insightData.metrics.cup_win_rate}</span>
+                                                </div>
+                                                <div className="metric-pill">
+                                                    <span className="pill-label">Podium Rate</span>
+                                                    <span className="pill-value">{insightData.metrics.podium_rate}</span>
+                                                </div>
+                                                <div className="metric-pill">
+                                                    <span className="pill-label">Top Final Rival</span>
+                                                    <span className="pill-value highlight">{insightData.metrics.top_rival || insightData.metrics.best_partner}</span>
+                                                </div>
+                                                <div className="metric-pill">
+                                                    <span className="pill-label">Total Played</span>
+                                                    <span className="pill-value">{insightData.metrics.total_tournaments}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* 3 Key Insights Cards Grid */}
+                                        {insightData.key_insights && insightData.key_insights.length > 0 && (
+                                            <div className="key-insights-grid">
+                                                {insightData.key_insights.map((item, idx) => {
+                                                    let icon = <Trophy size={16} className="insight-cat-icon strength" />;
+                                                    if (item.category === 'rivalry' || item.category === 'synergy') icon = <Flame size={16} className="insight-cat-icon rivalry" />;
+                                                    if (item.category === 'growth') icon = <TrendingUp size={16} className="insight-cat-icon growth" />;
+
+                                                    return (
+                                                        <div key={idx} className={`insight-card ${item.category}`}>
+                                                            <div className="card-header">
+                                                                {icon}
+                                                                <span className="card-title">{item.title}</span>
+                                                            </div>
+                                                            <p className="card-text">{item.text}</p>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {/* Tactical Summary Box */}
+                                        {insightData.tactical_summary && (
+                                            <div className="tactical-summary-box">
+                                                <div className="tactical-header">
+                                                    <ShieldAlert size={16} /> <span>Tactical Recommendation</span>
+                                                </div>
+                                                <p className="tactical-text">{insightData.tactical_summary}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : aiInsight ? (
                                     <div className="insight-body">
                                         <p className="insight-content">"{aiInsight}"</p>
                                         {performanceSummary && (

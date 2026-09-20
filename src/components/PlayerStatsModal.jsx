@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { X, Trophy, TrendingUp, Award, Target, Youtube, FileText, Sparkles, RefreshCw, AlertCircle, Users, Zap, ShieldAlert, Activity, Flame } from 'lucide-react';
+import { X, Trophy, TrendingUp, Award, Target, Youtube, FileText, Sparkles, RefreshCw, AlertCircle, Users, Zap, Activity, Flame } from 'lucide-react';
 import Select from 'react-select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { fetchPlayerStatistics, fetchYouTubeSearch, fetchPlayerInsights } from '../api/client';
@@ -177,7 +177,7 @@ const PlayerStatsModal = ({ open, onClose }) => {
             const data = await fetchPlayerInsights(playerId);
             setInsightData(data);
             setAiInsight(data.headline || data.insight);
-            setPerformanceSummary(data.tactical_summary || data.performance_summary);
+            setPerformanceSummary(data.performance_summary || null);
         } catch (err) {
             setInsightError('Failed to generate AI insight. Please try again.');
             console.error(err);
@@ -616,15 +616,6 @@ const PlayerStatsModal = ({ open, onClose }) => {
                                             </div>
                                         )}
 
-                                        {/* Tactical Summary Box */}
-                                        {insightData.tactical_summary && (
-                                            <div className="tactical-summary-box">
-                                                <div className="tactical-header">
-                                                    <ShieldAlert size={16} /> <span>Tactical Recommendation</span>
-                                                </div>
-                                                <p className="tactical-text">{insightData.tactical_summary}</p>
-                                            </div>
-                                        )}
                                     </div>
                                 ) : aiInsight ? (
                                     <div className="insight-body">

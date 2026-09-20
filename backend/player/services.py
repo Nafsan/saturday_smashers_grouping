@@ -138,9 +138,10 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
                 "momentum": "Steady",
                 "consistency": "N/A",
                 "metrics": {
+                    "cup_qual_rate": "0%",
+                    "relegation_rate": "0%",
                     "cup_win_rate": "0%",
-                    "podium_rate": "0%",
-                    "best_partner": "N/A",
+                    "peer_competitor": "N/A",
                     "total_tournaments": "0"
                 },
                 "key_insights": [
@@ -150,7 +151,6 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
                         "text": f"{player_name} is ready to make their debut in Saturday Smashers tournaments."
                     }
                 ],
-                "tactical_summary": "Play tournaments to unlock personalized performance analytics and partner synergy insights.",
                 "insight": f"Welcome to the club, {player_name}! Play some tournaments to see your AI performance insight.",
                 "performance_summary": "Play tournaments to see your performance summary."
             }
@@ -162,8 +162,21 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
         }
         rating_values = {1: 95, 2: 85, 3: 75, 4: 65, 5: 50, 6: 40, 7: 30, 8: 20}
         
+        # Tier groupings: Finals opponents are natural peers (Champion & Runner Up face each other).
+        # Group: Cup Final (1,2), Cup Semi (3), Cup Quarter (4),
+        #        Plate Final (5,6), Plate Semi (7), Plate Quarter (8)
+        def _peer_tier(rating):
+            """Return a tier group id so that finals opponents map to the same tier."""
+            if rating in (1, 2):   return 'cup_final'
+            if rating in (5, 6):   return 'plate_final'
+            if rating == 3:        return 'cup_semi'
+            if rating == 4:        return 'cup_quarter'
+            if rating == 7:        return 'plate_semi'
+            if rating == 8:        return 'plate_quarter'
+            return f'unknown_{rating}'
+
         all_ratings = []
-        same_tier_peers = {} # player -> {same_tier: count, shared: count}
+        same_tier_peers = {}  # player -> {same_tier: count, shared: count}
         
         for t in tournaments:
             player_rating = None
@@ -178,12 +191,13 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
             
             if player_rating is not None:
                 all_ratings.append(player_rating)
+                player_tier = _peer_tier(player_rating)
                 
                 for o_name, o_rating in other_players_in_t.items():
                     if o_name not in same_tier_peers:
                         same_tier_peers[o_name] = {"same_tier": 0, "shared": 0}
                     same_tier_peers[o_name]["shared"] += 1
-                    if o_rating == player_rating:
+                    if _peer_tier(o_rating) == player_tier:
                         same_tier_peers[o_name]["same_tier"] += 1
 
         total = len(all_ratings)
@@ -276,7 +290,6 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
                     ai_data = json.loads(json_match.group())
                     headline = ai_data.get("headline", f"{player_name} continues to compete actively in Saturday Smashers.")
                     key_insights = ai_data.get("key_insights", [])
-                    tactical = ai_data.get("tactical_summary", "Focus on consistent serve execution and tactical placement.")
                     archetype_res = ai_data.get("archetype", archetype)
                     
                     return {
@@ -293,9 +306,8 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
                             "total_tournaments": str(total)
                         },
                         "key_insights": key_insights,
-                        "tactical_summary": tactical,
                         "insight": headline,
-                        "performance_summary": tactical
+                        "performance_summary": f"Form score is {form_score}/100 with {momentum.lower()} momentum."
                     }
             except Exception as llm_err:
                 logger.error(f"LLM generation warning: {llm_err}")
@@ -331,7 +343,6 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
                     "text": f"Relegated to Plate division in {plate_appearances} tournaments ({relegation_rate}%); improving group stage wins is key to staying in the Cup."
                 }
             ],
-            "tactical_summary": f"{player_name} should sharpen group stage serve tactics to maximize Cup qualification and avoid Plate relegation.",
             "insight": f"{player_name} holds a {cup_qual_rate}% Cup qualification rate across {total} tournaments.",
             "performance_summary": f"Form score is {form_score}/100 with {momentum.lower()} momentum."
         }
@@ -344,9 +355,14 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
             "form_score": 50,
             "momentum": "Steady",
             "consistency": "N/A",
-            "metrics": {"cup_win_rate": "0%", "podium_rate": "0%", "best_partner": "N/A", "total_tournaments": "0"},
+            "metrics": {
+                "cup_qual_rate": "0%",
+                "relegation_rate": "0%",
+                "cup_win_rate": "0%",
+                "peer_competitor": "N/A",
+                "total_tournaments": "0"
+            },
             "key_insights": [],
-            "tactical_summary": "Please try again later!",
             "insight": "The AI is currently resting.",
             "performance_summary": "Please try again later!"
         }

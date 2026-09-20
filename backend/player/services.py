@@ -116,7 +116,7 @@ from huggingface_hub import InferenceClient
 logger = logging.getLogger(__name__)
 
 # Model configuration
-HF_MODEL = "Qwen/Qwen2.5-7B-Instruct"
+HF_MODEL = "Qwen/Qwen2.5-72B-Instruct"
 
 async def generate_player_insight(player_id: int, database_session: AsyncSession):
     """Generate an AI insight for a player using Hugging Face"""

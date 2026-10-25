@@ -8,12 +8,15 @@ from unittest.mock import AsyncMock, MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import httpx
+import pytest
 from fastapi import FastAPI, HTTPException
 from database import ADMIN_PASSWORD, get_db
 import models
 import schemas
 from tournament.api import router
 from tournament.services import validate_tournament_rules
+
+pytestmark = pytest.mark.api
 
 
 class UnofficialTournamentDetailsTests(unittest.IsolatedAsyncioTestCase):

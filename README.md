@@ -85,6 +85,24 @@ _(Note: If you want to build locally for development instead, use `docker compos
 
 4. Open your browser and navigate to `http://localhost:5173`.
 
+## Backend tests
+
+From the repository root, install the development requirements and run pytest:
+
+```bash
+python -m pip install -r backend/requirements-dev.txt
+python -m pytest
+```
+
+For quick runs without coverage, use `python -m pytest -q --no-cov` or
+`npm run test:backend` with your Python virtual environment activated.
+Use `npm run test:backend:coverage` for the full coverage check.
+
+Tests run offline with mocked database and external-service dependencies. The
+suite includes coverage reporting and an 80% coverage minimum. See
+[the backend testing guide](backend/TESTING.md) for setup, focused runs, CI, and
+the test-first development workflow.
+
 ## 🚀 Deployment
 
 ### Backend (Render)

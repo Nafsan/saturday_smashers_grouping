@@ -146,6 +146,7 @@ class BulkTournamentEntry(BaseModel):
     announcement: Optional[str] = None
     total_players: Optional[int] = 0
     online_link: Optional[str] = None
+    whatsapp_link_label: Optional[str] = None
     # Result fields (optional, for past tournaments)
     champion: Optional[str] = None
     runner_up: Optional[str] = None

@@ -7,11 +7,14 @@ from unittest.mock import AsyncMock, MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import httpx
+import pytest
 from fastapi import FastAPI
 from sqlalchemy.exc import IntegrityError
 from database import ADMIN_PASSWORD, get_db
 import models
 from player.api import router
+
+pytestmark = pytest.mark.api
 
 
 class PlayerUpdateTests(unittest.IsolatedAsyncioTestCase):

@@ -1,0 +1,22 @@
+[run]
+branch = True
+source =
+    backend/player
+    backend/tournament
+    backend/fund
+    backend/club_tournament
+    backend/ranking
+    main
+    database
+    models
+    schemas
+    fund_models
+    fund_schemas
+omit =
+    */tests/*
+
+[report]
+show_missing = True
+skip_covered = True
+exclude_also =
+    if __name__ == .__main__.:

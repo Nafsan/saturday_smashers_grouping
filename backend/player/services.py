@@ -297,6 +297,24 @@ async def generate_player_insight(player_id: int, database_session: AsyncSession
         hf_token = os.getenv("HF_TOKEN")
         if hf_token:
             try:
+                prompt = (
+                    "Write a concise table tennis performance insight using only the supplied statistics. "
+                    "Return a JSON object with headline, archetype, and key_insights. "
+                    "Each key_insights item must contain category, title, and text. "
+                    "Do not invent match results. Statistics: "
+                    + json.dumps({
+                        "player_name": player_name,
+                        "archetype": archetype,
+                        "ratings_newest_first": all_ratings,
+                        "form_score": form_score,
+                        "momentum": momentum,
+                        "consistency": consistency,
+                        "cup_qual_rate": cup_qual_rate,
+                        "relegation_rate": relegation_rate,
+                        "cup_win_rate": cup_win_rate,
+                        "peer_competitor": peer_competitor_str,
+                    })
+                )
                 def _do_llm_call():
                     client = InferenceClient(token=hf_token, timeout=10)
                     return client.chat_completion(

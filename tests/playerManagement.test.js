@@ -1,16 +1,5 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
-import { createServer } from 'vite';
-
-// Use the app's existing Vite loader for its browser module imports.
-const server = await createServer({ configFile: false, server: { middlewareMode: true } });
-let playerModule;
-try {
-    playerModule = await server.ssrLoadModule('/src/store/appSlice.js');
-} finally {
-    await server.close();
-}
-const { default: reducer, fetchPlayersAsync, updatePlayerAsync } = playerModule;
+import reducer, { fetchPlayersAsync, updatePlayerAsync } from '../src/store/appSlice';
 
 test('player fetching works independently from the home page loading state', () => {
     const initial = reducer(undefined, { type: 'init' });

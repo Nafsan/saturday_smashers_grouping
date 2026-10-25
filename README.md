@@ -85,6 +85,47 @@ _(Note: If you want to build locally for development instead, use `docker compos
 
 4. Open your browser and navigate to `http://localhost:5173`.
 
+## Frontend tests
+
+Use Node.js 22. Run these commands from the repository root
+(`D:\pet_project\saturday_smashers_grouping` on Windows). Tests use Jest and React
+Testing Library with mocked network boundaries; no backend server or Python
+virtual environment is needed for frontend tests.
+
+```bash
+# Install the exact dependencies from the lockfile (first setup / dependency changes)
+npm ci
+
+# Run all frontend tests quickly, without coverage
+npm test
+
+# Run tests for one changed file and the modules that depend on it
+npm run test:frontend:related -- src/components/ManagePlayers.jsx
+
+# Run related tests for all uncommitted frontend changes
+npm run test:frontend:changed
+
+# Before committing: require companion tests and per-file coverage
+npm run test:frontend:check
+
+# Run the full suite with coverage, including established baseline requirements
+npm run test:frontend:coverage
+
+# Optional: rerun tests interactively while editing
+npm run test:frontend:watch
+```
+
+To check committed branch changes too, use
+`npm run test:frontend:check -- origin/main` (or another Git base ref). The default
+changed-file commands compare against `HEAD`; after committing with a clean
+working tree they have no uncommitted files to check. `npm test` always runs the
+full suite. The HTML coverage report is `coverage/frontend/index.html`.
+
+Every changed application module needs its own colocated test; changed-file checks
+run its related tests and enforce per-file coverage. See
+[the frontend testing plan](docs/frontend-testing.md) and [agent rules](AGENTS.md)
+for the test-first workflow, CI and the remaining legacy-screen rollout.
+
 ## Backend tests
 
 From the repository root, install the development requirements and run pytest:

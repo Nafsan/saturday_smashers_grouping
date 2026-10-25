@@ -1,0 +1,40 @@
+name: Frontend tests
+
+on:
+  push:
+    paths: ['src/**', 'tests/**', 'scripts/**', 'package.json', 'package-lock.json', 'jest.config.cjs', 'babel.config.cjs', 'vite.config.js', 'AGENTS.md', '.github/workflows/frontend-tests.yml']
+  pull_request:
+    paths: ['src/**', 'tests/**', 'scripts/**', 'package.json', 'package-lock.json', 'jest.config.cjs', 'babel.config.cjs', 'vite.config.js', 'AGENTS.md', '.github/workflows/frontend-tests.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  jest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Full Jest suite and baseline coverage
+        run: npm run test:frontend:coverage
+      - name: Companion tests and coverage for changed modules
+        env:
+          TEST_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [[ -z "$TEST_BASE" || "$TEST_BASE" =~ ^0+$ ]]; then TEST_BASE=HEAD^; fi
+          npm run test:frontend:check -- "$TEST_BASE"
+      - name: Verify production build
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: coverage/frontend/
+          if-no-files-found: ignore

@@ -39,6 +39,7 @@ async def get_all_tournaments(database_session: AsyncSession):
             "playlist_url": tournament.playlist_url,
             "embed_url": tournament.embed_url,
             "is_official": tournament.is_official,
+            "description": tournament.description,
             "ranks": rank_groups_list
         })
         
@@ -237,6 +238,30 @@ async def update_tournament(tournament_id: str, tournament: schemas.TournamentCr
 
     await database_session.commit()
     return {"message": "Tournament updated successfully"}
+
+
+async def update_unofficial_tournament_details(
+    tournament_id: str,
+    details: schemas.UnofficialTournamentDetailsUpdate,
+    database_session: AsyncSession,
+):
+    """Update notes and playlist without changing ranking or attendance data."""
+    result = await database_session.execute(
+        select(models.Tournament).where(models.Tournament.id == tournament_id)
+    )
+    tournament = result.scalar()
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    if tournament.is_official is not False:
+        raise HTTPException(status_code=400, detail="Only unofficial tournaments can use this editor")
+
+    for field in details.model_fields_set:
+        setattr(tournament, field, getattr(details, field))
+    await database_session.commit()
+    return {
+        "playlist_url": tournament.playlist_url,
+        "description": tournament.description,
+    }
 
 
 async def delete_tournament(tournament_id: str, database_session: AsyncSession):

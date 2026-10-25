@@ -165,12 +165,34 @@
             }
 
             .history-content {
+                min-width: 0;
                 padding: 1rem;
                 flex-grow: 1;
                 display: flex;
                 flex-direction: column;
                 gap: 0.5rem;
                 justify-content: center;
+            }
+
+            .history-description {
+                color: var(--text-primary);
+                font-size: 0.9rem;
+                line-height: 1.6;
+                overflow-wrap: anywhere;
+
+                > :first-child { margin-top: 0; }
+                > :last-child { margin-bottom: 0; }
+                p, ul, ol, blockquote, pre { margin: 0.5rem 0; }
+                h1, h2, h3, h4, h5, h6 { margin: 0.75rem 0 0.25rem; font-size: 1rem; }
+                ul, ol { padding-left: 1.5rem; }
+                a { color: var(--accent-primary); }
+                img { max-width: 100%; height: auto; }
+                pre { overflow-x: auto; }
+                blockquote {
+                    padding-left: 0.75rem;
+                    border-left: 3px solid var(--accent-primary);
+                    color: var(--text-secondary);
+                }
             }
 
             .date {

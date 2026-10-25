@@ -17,6 +17,7 @@ class Tournament(Base):
     date = Column(Date, unique=True, nullable=False)
     playlist_url = Column(String(500), nullable=True)
     embed_url = Column(Text, nullable=True)
+    description = Column(Text, nullable=True)
     is_official = Column(Boolean, default=True, nullable=False)
 
     rank_groups = relationship("RankGroup", back_populates="tournament", cascade="all, delete-orphan")

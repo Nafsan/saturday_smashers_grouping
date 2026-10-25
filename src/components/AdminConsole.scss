@@ -1,4 +1,6 @@
 .admin-console {
+    min-width: 0;
+    width: 100%;
     min-height: 100vh;
     background: var(--bg-primary);
     padding-bottom: 3rem;
@@ -60,6 +62,8 @@
     }
 
     .admin-content {
+        min-width: 0;
+        width: 100%;
         max-width: 1400px;
         margin: 0 auto;
         padding: 0 2rem;
@@ -70,6 +74,7 @@
     }
 
     .tab-content {
+        min-width: 0;
         background: var(--bg-card);
         border: 1px solid var(--border-color);
         border-radius: 16px;

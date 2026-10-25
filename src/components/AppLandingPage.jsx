@@ -6,6 +6,7 @@ import HeroSection from './HeroSection';
 import StatsOverview from './StatsOverview';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import RankSubmission from './RankSubmission';
+import UnofficialTournamentDialog from './UnofficialTournamentDialog';
 import GlobalRanking from './GlobalRanking';
 import TournamentFixtureModal from './TournamentFixtureModal';
 import AddPlayer from './AddPlayer';
@@ -41,6 +42,11 @@ const AppLandingPage = () => {
     const handleOpenSubmit = () => {
         setEditingTournament(null);
         setIsRankModalOpen(true);
+    };
+
+    const handleCloseTournamentDetails = () => {
+        setIsRankModalOpen(false);
+        setEditingTournament(null);
     };
 
     const handleGenerateGroups = (numGroups) => {
@@ -92,14 +98,20 @@ const AppLandingPage = () => {
                 onGenerate={handleGenerateGroups}
             />
 
-            <RankSubmission
-                open={isRankModalOpen}
-                onClose={() => {
-                    setIsRankModalOpen(false);
-                    setEditingTournament(null);
-                }}
-                initialData={editingTournament}
-            />
+            {editingTournament?.is_official === false ? (
+                <UnofficialTournamentDialog
+                    key={editingTournament.id}
+                    open={isRankModalOpen}
+                    tournament={editingTournament}
+                    onClose={handleCloseTournamentDetails}
+                />
+            ) : (
+                <RankSubmission
+                    open={isRankModalOpen}
+                    onClose={handleCloseTournamentDetails}
+                    initialData={editingTournament}
+                />
+            )}
 
             {showGlobalRanking && (
                 <GlobalRanking onClose={() => setShowGlobalRanking(false)} />

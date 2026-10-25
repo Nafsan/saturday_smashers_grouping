@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { User, ShieldCheck, UserX, Search } from 'lucide-react';
+import { ShieldCheck, UserX, Search, Edit2 } from 'lucide-react';
 import { 
     Table, 
     TableBody, 
@@ -11,9 +11,17 @@ import {
     Paper, 
     Switch, 
     TextField, 
-    InputAdornment 
+    InputAdornment,
+    Alert,
+    Button,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    IconButton,
 } from '@mui/material';
-import { updatePlayerAsync } from '../store/appSlice';
+import { fetchPlayersAsync, updatePlayerAsync } from '../store/appSlice';
 import { getAdminAuthCookie } from '../utils/cookieUtils';
 import { useToast } from '../context/ToastContext';
 import './ManagePlayers.scss';
@@ -21,11 +29,59 @@ import './ManagePlayers.scss';
 const ManagePlayers = () => {
     const dispatch = useDispatch();
     const allPlayers = useSelector(state => state.app.allPlayers);
+    const { playersStatus, playersError } = useSelector(state => state.app);
     const [searchTerm, setSearchTerm] = useState('');
+    const [editingPlayer, setEditingPlayer] = useState(null);
+    const [playerName, setPlayerName] = useState('');
+    const [nameError, setNameError] = useState('');
+    const [savingName, setSavingName] = useState(false);
+    const [updatingPlayerId, setUpdatingPlayerId] = useState(null);
     const { successNotification, errorNotification } = useToast();
+    const loading = playersStatus === 'idle' || playersStatus === 'loading';
+
+    useEffect(() => {
+        dispatch(fetchPlayersAsync());
+    }, [dispatch]);
+
+    const handleEditName = (player) => {
+        setEditingPlayer(player);
+        setPlayerName(player.name);
+        setNameError('');
+    };
+
+    const handleSaveName = async (event) => {
+        event.preventDefault();
+        if (!editingPlayer || savingName) return;
+        const name = playerName.trim();
+        if (!name) {
+            setNameError('Player name cannot be empty.');
+            return;
+        }
+        if (allPlayers.some(player => player.id !== editingPlayer.id && player.name.toLowerCase() === name.toLowerCase())) {
+            setNameError('A player with this name already exists.');
+            return;
+        }
+        if (name === editingPlayer.name) {
+            setEditingPlayer(null);
+            return;
+        }
+        setSavingName(true);
+        try {
+            await dispatch(updatePlayerAsync({
+                playerId: editingPlayer.id, name, password: getAdminAuthCookie(),
+            })).unwrap();
+            setEditingPlayer(null);
+            successNotification(`Player renamed to ${name}`);
+        } catch (error) {
+            setNameError(error.message || 'Failed to save the player name. Please try again.');
+        } finally {
+            setSavingName(false);
+        }
+    };
 
     const handleToggleGuest = async (player, currentStatus) => {
         const password = getAdminAuthCookie();
+        setUpdatingPlayerId(player.id);
         try {
             await dispatch(updatePlayerAsync({ 
                 playerId: player.id, 
@@ -36,6 +92,8 @@ const ManagePlayers = () => {
         } catch (error) {
             console.error('Failed to update player:', error);
             errorNotification(`Failed to update player: ${error.message || 'Unknown error'}`);
+        } finally {
+            setUpdatingPlayerId(null);
         }
     };
 
@@ -48,7 +106,7 @@ const ManagePlayers = () => {
             <div className="section-header">
                 <div className="header-info">
                     <h3>Manage Players</h3>
-                    <p>Set player roles and manage guest status</p>
+                    <p>Edit player names and manage guest status</p>
                 </div>
                 <div className="header-search">
                     <TextField
@@ -75,20 +133,33 @@ const ManagePlayers = () => {
                 </div>
             </div>
 
-            <TableContainer component={Paper} className="players-table-container">
+            {playersStatus === 'failed' && (
+                <Alert severity="error" sx={{ mb: 2 }} action={<Button color="inherit" onClick={() => dispatch(fetchPlayersAsync())}>Retry</Button>}>
+                    Could not load players. {playersError}
+                </Alert>
+            )}
+
+            <TableContainer component={Paper} className="players-table-container" aria-busy={loading}>
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow>
                             <TableCell>Player Name</TableCell>
                             <TableCell align="center">Status</TableCell>
                             <TableCell align="center">Guest Player</TableCell>
+                            <TableCell align="right">Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {filteredPlayers.length === 0 ? (
+                        {loading ? (
                             <TableRow>
-                                <TableCell colSpan={3} align="center" className="empty-cell">
-                                    No players found matching your search
+                                <TableCell colSpan={4} align="center" className="empty-cell">
+                                    <span role="status"><CircularProgress size={20} sx={{ mr: 1, verticalAlign: 'middle' }} />Loading players...</span>
+                                </TableCell>
+                            </TableRow>
+                        ) : filteredPlayers.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={4} align="center" className="empty-cell">
+                                    {playersStatus === 'failed' ? 'Players could not be loaded.' : searchTerm ? 'No players found matching your search' : 'No players available yet.'}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -112,7 +183,20 @@ const ManagePlayers = () => {
                                             checked={player.is_guest}
                                             onChange={() => handleToggleGuest(player, player.is_guest)}
                                             color="warning"
+                                            disabled={updatingPlayerId !== null || savingName}
+                                            slotProps={{ input: { role: 'switch', 'aria-label': `Guest status for ${player.name}` } }}
                                         />
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <IconButton
+                                            aria-label={`Edit name for ${player.name}`}
+                                            title="Edit player name"
+                                            onClick={() => handleEditName(player)}
+                                            disabled={updatingPlayerId !== null || savingName}
+                                            sx={{ color: 'var(--accent-primary)' }}
+                                        >
+                                            <Edit2 size={18} />
+                                        </IconButton>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -120,6 +204,30 @@ const ManagePlayers = () => {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <Dialog open={Boolean(editingPlayer)} onClose={savingName ? undefined : () => setEditingPlayer(null)} maxWidth="sm" fullWidth aria-labelledby="edit-player-name-title">
+                <form onSubmit={handleSaveName}>
+                    <DialogTitle id="edit-player-name-title">Edit player name</DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            autoFocus
+                            fullWidth
+                            margin="dense"
+                            label="Player name"
+                            value={playerName}
+                            onChange={(event) => { setPlayerName(event.target.value); setNameError(''); }}
+                            error={Boolean(nameError)}
+                            helperText={nameError || 'Tournament history and fund records stay linked to this player.'}
+                            disabled={savingName}
+                        />
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 2 }}>
+                        <Button onClick={() => setEditingPlayer(null)} disabled={savingName}>Cancel</Button>
+                        <Button type="submit" variant="contained" disabled={savingName} startIcon={savingName ? <CircularProgress size={18} color="inherit" /> : undefined}>
+                            {savingName ? 'Saving...' : 'Save name'}
+                        </Button>
+                    </DialogActions>
+                </form>
+            </Dialog>
         </div>
     );
 };

@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, MoreHorizontal, FileText, Youtube, Share2 } from 'lucide-react';
 import Select from 'react-select';
+import ReactMarkdown from 'react-markdown';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, useMediaQuery } from '@mui/material';
 import { selectAllPlayerNames } from '../store/appSlice';
 import { useToast } from '../context/ToastContext';
@@ -415,8 +416,14 @@ const AnalyticsDashboard = ({ onEdit }) => {
                             <div 
                                 key={t.id} 
                                 className={`history-item ${t.playlist_url || t.embed_url ? 'has-video' : ''}`}
-                                onClick={() => (t.playlist_url || t.embed_url) ? handleYouTubeClick(t) : null}
-                                style={{ cursor: (t.playlist_url || t.embed_url) ? 'pointer' : 'default' }}
+                                onClick={() => {
+                                    if (t.playlist_url || t.embed_url) {
+                                        handleYouTubeClick(t);
+                                    } else if (t.is_official === false && onEdit) {
+                                        onEdit(t);
+                                    }
+                                }}
+                                style={{ cursor: (t.is_official === false && onEdit) || t.playlist_url || t.embed_url ? 'pointer' : 'default' }}
                             >
                                 {t.playlist_url && (
                                     <div className="history-thumbnail-minimal">
@@ -427,7 +434,7 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                     <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                                     <div className="date">{t.date}</div>
                                     <div className="actions" style={{ display: 'flex', gap: '8px' }}>
-                                        {onEdit && isLoggedIn && (
+                                        {onEdit && (isLoggedIn || t.is_official === false) && (
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -437,6 +444,19 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                                 title="View Tournament Details"
                                             >
                                                 <FileText size={20} />
+                                            </button>
+                                        )}
+                                        {t.is_official === false && (t.playlist_url || t.embed_url) && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleYouTubeClick(t);
+                                                }}
+                                                style={{ background: 'none', border: 'none', color: '#FF0000', cursor: 'pointer', padding: '4px' }}
+                                                title="Watch tournament videos"
+                                                aria-label="Watch tournament videos"
+                                            >
+                                                <Youtube size={20} />
                                             </button>
                                         )}
                                         {t.is_official !== false && (
@@ -499,6 +519,22 @@ const AnalyticsDashboard = ({ onEdit }) => {
                                         </>
                                     )}
                                 </div>
+                                {t.is_official === false && t.description?.trim() && (
+                                    <div className="history-description">
+                                        <ReactMarkdown
+                                            skipHtml
+                                            components={{
+                                                a: ({ href, title, children }) => (
+                                                    <a href={href} title={title} target="_blank" rel="noopener noreferrer" onClick={event => event.stopPropagation()}>
+                                                        {children}
+                                                    </a>
+                                                ),
+                                            }}
+                                        >
+                                            {t.description}
+                                        </ReactMarkdown>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     );

@@ -1,0 +1,22 @@
+.unofficial-tournament-dialog {
+    .MuiDialog-paper {
+        background: var(--bg-card);
+        color: var(--text-primary);
+        border: 1px solid var(--border-main);
+    }
+
+    .tournament-description {
+        line-height: 1.7;
+        overflow-wrap: anywhere;
+
+        > :first-child { margin-top: 0; }
+        > :last-child { margin-bottom: 0; }
+        a { color: var(--accent-primary); }
+        blockquote {
+            margin-left: 0;
+            padding-left: 1rem;
+            border-left: 3px solid var(--accent-primary);
+            color: var(--text-secondary);
+        }
+    }
+}

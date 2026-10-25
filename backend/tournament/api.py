@@ -43,6 +43,18 @@ async def update_tournament(
     return await services.update_tournament(tournament_id, tournament, database_session)
 
 
+@router.patch("/{tournament_id}/unofficial-details")
+async def update_unofficial_tournament_details(
+    tournament_id: str,
+    details: schemas.UnofficialTournamentDetailsUpdate,
+    password: str,
+    database_session: AsyncSession = Depends(get_db),
+):
+    if password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=403, detail="Invalid password")
+    return await services.update_unofficial_tournament_details(tournament_id, details, database_session)
+
+
 @router.delete("/{tournament_id}")
 async def delete_tournament(
     tournament_id: str,

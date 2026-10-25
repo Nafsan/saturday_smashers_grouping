@@ -35,6 +35,8 @@ async def startup():
     logger.info("Starting up and initializing database...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Existing databases need the optional tournament notes column too.
+        await conn.execute(text("ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS description TEXT"))
         
         # Automatically enable Row Level Security (RLS) on all public tables to fix/prevent Supabase security advisor errors
         logger.info("Enabling Row Level Security (RLS) on all public tables...")

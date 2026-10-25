@@ -26,6 +26,17 @@ export const extractPlaylistId = (url) => {
     return match ? match[1] : null;
 };
 
+export const isYouTubePlaylistUrl = (value) => {
+    try {
+        const url = new URL(value);
+        return value.length <= 500 && ['http:', 'https:'].includes(url.protocol)
+            && ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'].includes(url.hostname)
+            && Boolean(url.searchParams.get('list')?.trim());
+    } catch {
+        return false;
+    }
+};
+
 /**
  * Fetches oEmbed data for a YouTube URL
  * @param {string} url - YouTube video URL

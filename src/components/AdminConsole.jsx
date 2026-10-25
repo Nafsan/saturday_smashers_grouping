@@ -73,8 +73,14 @@ const AdminConsole = () => {
                         onChange={(e, newValue) => setActiveTab(newValue)}
                         variant="scrollable"
                         scrollButtons="auto"
+                        allowScrollButtonsMobile
+                        aria-label="Admin console sections"
                         sx={{
+                            minWidth: 0,
+                            maxWidth: '100%',
                             '& .MuiTab-root': {
+                                flexShrink: 0,
+                                whiteSpace: 'nowrap',
                                 color: '#94a3b8',
                                 fontWeight: 600,
                                 fontSize: '0.9rem',

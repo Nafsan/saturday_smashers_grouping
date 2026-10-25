@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func, case
+from sqlalchemy.exc import IntegrityError
 import models
 
 
@@ -38,8 +39,13 @@ async def get_all_players(database_session: AsyncSession):
     return [{"id": player.id, "name": player.name, "is_guest": player.is_guest} for player in players]
 
 
-async def update_player_guest_status(player_id: int, is_guest: bool, database_session: AsyncSession):
-    """Update a player's guest status"""
+async def update_player(
+    player_id: int, database_session: AsyncSession, *, name=None, is_guest=None
+):
+    """Update the existing player so all tournament and fund links are preserved."""
+    if name is None and is_guest is None:
+        raise HTTPException(status_code=400, detail="Provide a player name or guest status")
+
     player_query = await database_session.execute(
         select(models.Player).where(models.Player.id == player_id)
     )
@@ -48,8 +54,27 @@ async def update_player_guest_status(player_id: int, is_guest: bool, database_se
     if not player:
         raise HTTPException(status_code=404, detail=f"Player with ID {player_id} not found")
     
-    player.is_guest = is_guest
-    await database_session.commit()
+    if name is not None:
+        name = name.strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="Player name cannot be empty")
+        existing = await database_session.execute(
+            select(models.Player).where(
+                func.lower(models.Player.name) == name.lower(),
+                models.Player.id != player_id,
+            )
+        )
+        if existing.scalar():
+            raise HTTPException(status_code=409, detail=f"Player '{name}' already exists")
+        player.name = name
+
+    if is_guest is not None:
+        player.is_guest = is_guest
+    try:
+        await database_session.commit()
+    except IntegrityError:
+        await database_session.rollback()
+        raise HTTPException(status_code=409, detail="A player with that name already exists")
     await database_session.refresh(player)
     
     return {"id": player.id, "name": player.name, "is_guest": player.is_guest}

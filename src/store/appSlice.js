@@ -4,7 +4,8 @@ import { generateGroups } from '../logic/grouping';
 import { 
     fetchHistory, 
     addTournament, 
-    updateTournament, 
+    updateTournament,
+    updateUnofficialTournamentDetails,
     deleteTournament, 
     fetchPlayers,
     fetchFundSettings,
@@ -46,6 +47,14 @@ export const updateRankingAsync = createAsyncThunk(
     }
 );
 
+export const updateUnofficialTournamentAsync = createAsyncThunk(
+    'app/updateUnofficialTournament',
+    async ({ id, details, password }) => {
+        const savedDetails = await updateUnofficialTournamentDetails(id, details, password);
+        return { id, details: savedDetails };
+    }
+);
+
 export const deleteRankingAsync = createAsyncThunk(
     'app/deleteRanking',
     async ({ id, password }, { dispatch }) => {
@@ -65,10 +74,17 @@ export const addPlayerAsync = createAsyncThunk(
 
 export const updatePlayerAsync = createAsyncThunk(
     'app/updatePlayer',
-    async ({ playerId, isGuest, password }) => {
+    async ({ playerId, name, isGuest, password }) => {
         const { updatePlayer } = await import('../api/client');
-        const player = await updatePlayer(playerId, { is_guest: isGuest }, password);
-        return player;
+        const changes = {};
+        if (name !== undefined) changes.name = name;
+        if (isGuest !== undefined) changes.is_guest = isGuest;
+        try {
+            return await updatePlayer(playerId, changes, password);
+        } catch (error) {
+            const detail = error.response?.data?.detail;
+            throw new Error(typeof detail === 'string' ? detail : error.message);
+        }
     }
 );
 
@@ -100,6 +116,8 @@ export const fetchTrophyLeaderboardAsync = createAsyncThunk(
 const initialState = {
     history: [],
     allPlayers: [],
+    playersStatus: 'idle',
+    playersError: null,
     selectedPlayers: [],
     rankedPlayers: [],
     groups: { groupA: [], groupB: [] },
@@ -202,14 +220,16 @@ export const appSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchPlayersAsync.pending, (state) => {
-                state.status = 'loading';
+                state.playersStatus = 'loading';
+                state.playersError = null;
             })
             .addCase(fetchPlayersAsync.fulfilled, (state, action) => {
                 state.allPlayers = action.payload;
+                state.playersStatus = 'succeeded';
             })
             .addCase(fetchPlayersAsync.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.error.message;
+                state.playersStatus = 'failed';
+                state.playersError = action.error.message;
             })
             .addCase(fetchHistoryAsync.pending, (state) => {
                 state.status = 'loading';
@@ -235,6 +255,13 @@ export const appSlice = createSlice({
                 }
                 state.rankedPlayers = [];
             })
+            .addCase(updateUnofficialTournamentAsync.fulfilled, (state, action) => {
+                const tournament = state.history.find(t => t.id === action.payload.id);
+                if (tournament) {
+                    tournament.playlist_url = action.payload.details.playlist_url;
+                    tournament.description = action.payload.details.description;
+                }
+            })
             .addCase(deleteRankingAsync.fulfilled, (state, action) => {
                 const id = action.payload;
                 state.history = state.history.filter(t => t.id !== id);
@@ -251,7 +278,24 @@ export const appSlice = createSlice({
                 const updatedPlayer = action.payload;
                 const index = state.allPlayers.findIndex(p => p.id === updatedPlayer.id);
                 if (index !== -1) {
+                    const oldName = state.allPlayers[index].name;
                     state.allPlayers[index] = updatedPlayer;
+                    state.allPlayers.sort((a, b) => a.name.localeCompare(b.name));
+                    if (oldName !== updatedPlayer.name) {
+                        const rename = name => name === oldName ? updatedPlayer.name : name;
+                        // API history and fixture selections store names rather than IDs.
+                        state.history.forEach(tournament => tournament.ranks.forEach(rank => {
+                            rank.players = rank.players.map(rename);
+                        }));
+                        state.selectedPlayers = state.selectedPlayers.map(rename);
+                        state.customPlayers = state.customPlayers.map(rename);
+                        [...state.temporaryPlayers, ...state.rankedPlayers,
+                            ...Object.values(state.groups).flat(), ...state.trophyLeaderboard,
+                        ].forEach(player => { player.name = rename(player.name); });
+                        state.daysPlayedData.forEach(player => {
+                            player.player_name = rename(player.player_name);
+                        });
+                    }
                 }
             })
             .addCase(fetchFundSettingsAsync.pending, (state) => {

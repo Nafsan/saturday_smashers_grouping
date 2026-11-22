@@ -10,7 +10,8 @@ import httpx
 import pytest
 from fastapi import FastAPI
 from sqlalchemy.exc import IntegrityError
-from database import ADMIN_PASSWORD, get_db
+from database import get_db
+from admin_auth import require_admin
 import models
 from player.api import router
 
@@ -36,13 +37,15 @@ class PlayerUpdateTests(unittest.IsolatedAsyncioTestCase):
             yield self.session
 
         app.dependency_overrides[get_db] = override_db
+        app.dependency_overrides[require_admin] = lambda: object()
+        self.app = app
         self.client = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://test')
 
     async def asyncTearDown(self):
         await self.client.aclose()
 
-    async def update(self, payload, password=ADMIN_PASSWORD):
-        return await self.client.put('/players/1', params={'password': password}, json=payload)
+    async def update(self, payload, password=None):
+        return await self.client.put('/players/1', json=payload)
 
     async def test_rename_preserves_identity_funds_history_and_guest_status(self):
         fund = self.player.fund
@@ -98,7 +101,8 @@ class PlayerUpdateTests(unittest.IsolatedAsyncioTestCase):
         self.session.commit.assert_not_awaited()
 
     async def test_requires_admin_password(self):
-        self.assertEqual((await self.update({'name': 'Zara'}, password='wrong')).status_code, 403)
+        self.app.dependency_overrides.pop(require_admin)
+        self.assertEqual((await self.update({'name': 'Zara'}, password='wrong')).status_code, 401)
         self.session.execute.assert_not_awaited()
 
     async def test_missing_player_returns_not_found(self):

@@ -8,7 +8,6 @@ import {
 import { fetchPlayers, fetchFundSettings, fetchTournamentPlayersByDate, calculateTournamentCosts, saveTournamentCosts, createUnofficialTournament, fetchTournamentCostInput } from '../api/client';
 import { Plus, Calculator, Save, Sparkles, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getAdminAuthCookie, setAdminAuthCookie, isAdminAuthenticated } from '../utils/cookieUtils';
 
 const AddTournamentCosts = ({ editDate = null, onSuccess = null, standalone = true }) => {
     const navigate = useNavigate();
@@ -44,11 +43,6 @@ const AddTournamentCosts = ({ editDate = null, onSuccess = null, standalone = tr
     useEffect(() => {
         loadData();
 
-        // Check for stored admin password
-        const storedPassword = getAdminAuthCookie();
-        if (storedPassword) {
-            // Password will be used automatically in API calls
-        }
     }, []);
 
     const loadData = async () => {
@@ -129,14 +123,10 @@ const AddTournamentCosts = ({ editDate = null, onSuccess = null, standalone = tr
 
         try {
             setCreatingUnofficial(true);
-            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
             await createUnofficialTournament(
-                { date: tournamentDate, tournament_players: tournamentPlayers },
-                adminPassword
+                { date: tournamentDate, tournament_players: tournamentPlayers }
             );
 
-            // Store password in cookie after successful authentication
-            setAdminAuthCookie(adminPassword);
 
             setUnofficialTournamentCreated(true);
             setMessage({ type: 'success', text: 'Unofficial tournament created successfully! You can now calculate and save costs.' });
@@ -204,11 +194,8 @@ const AddTournamentCosts = ({ editDate = null, onSuccess = null, standalone = tr
 
         try {
             setMessage(null);
-            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-            const result = await calculateTournamentCosts(requestData, adminPassword);
+            const result = await calculateTournamentCosts(requestData);
 
-            // Store password in cookie after successful authentication
-            setAdminAuthCookie(adminPassword);
 
             setCalculation(result);
             setShowPreview(true);
@@ -244,11 +231,8 @@ const AddTournamentCosts = ({ editDate = null, onSuccess = null, standalone = tr
             setSaving(true);
 
             // Unofficial tournament should already be created by now
-            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-            await saveTournamentCosts(requestData, adminPassword);
+            await saveTournamentCosts(requestData);
 
-            // Store password in cookie after successful authentication
-            setAdminAuthCookie(adminPassword);
 
             setMessage({ type: 'success', text: 'Tournament costs saved and balances updated successfully!' });
             setShowPreview(false);

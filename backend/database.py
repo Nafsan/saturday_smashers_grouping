@@ -43,7 +43,6 @@ if DATABASE_URL:
 # Enable SQL logging separately from DEBUG
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 SQL_ECHO = os.getenv("SQL_ECHO", "False").lower() == "true"
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "ss_admin_panel")
 
 import logging
 if not SQL_ECHO:

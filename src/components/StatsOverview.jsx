@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Trophy, Users, Calendar, CalendarClock, Edit2 } from 'lucide-react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 import { updateNextTournamentDate } from '../api/client';
-import { isAdminAuthenticated, getAdminAuthCookie } from '../utils/cookieUtils';
+import { isAdminAuthenticated } from '../utils/cookieUtils';
 import PasswordDialog from './PasswordDialog';
 import { useToast } from '../context/ToastContext';
 
@@ -78,16 +78,16 @@ const StatsOverview = () => {
         setIsEditDialogOpen(true);
     };
 
-    const performUpdate = async (password) => {
+    const performUpdate = async () => {
         setLoading(true);
         try {
-            await updateNextTournamentDate(newDate, password);
+            await updateNextTournamentDate(newDate);
             setNextTournamentDate(newDate);
             setIsPasswordDialogOpen(false);
             successNotification('Next tournament date updated successfully!');
         } catch (error) {
             console.error('Failed to update next tournament date:', error);
-            alert('Failed to update date. Please check your password and try again.');
+            alert('Failed to update date. Please sign in and try again.');
         } finally {
             setLoading(false);
         }
@@ -96,14 +96,14 @@ const StatsOverview = () => {
     const handleSaveClick = () => {
         setIsEditDialogOpen(false);
         if (isAdminAuthenticated()) {
-            performUpdate(getAdminAuthCookie());
+            performUpdate();
         } else {
             setIsPasswordDialogOpen(true);
         }
     };
 
-    const handlePasswordSubmit = (password) => {
-        performUpdate(password);
+    const handlePasswordSubmit = () => {
+        return performUpdate();
     };
 
     const formatDisplayDate = (dateStr) => {
@@ -219,10 +219,10 @@ const StatsOverview = () => {
             {/* Password Dialog */}
             <PasswordDialog
                 open={isPasswordDialogOpen}
-                onClose={() => setIsPasswordDialogOpen(false)}
-                onSubmit={handlePasswordSubmit}
+                onCancel={() => setIsPasswordDialogOpen(false)}
+                onSuccess={handlePasswordSubmit}
                 title="Admin Authentication Required"
-                message="Please enter the admin password to update the next tournament date."
+                description="Sign in with an approved Google account to update the next tournament date."
                 loading={loading}
             />
         </>

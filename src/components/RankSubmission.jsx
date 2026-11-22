@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { Upload, X, Lock, Trash2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
-import { setAdminAuthCookie, getAdminAuthCookie, isAdminAuthenticated } from '../utils/cookieUtils';
+import { isAdminAuthenticated } from '../utils/cookieUtils';
 import { extractVideoId, extractPlaylistId, fetchYouTubeOEmbed } from '../utils/youtubeUtils';
 import PasswordDialog from './PasswordDialog';
 import './RankSubmission.scss';
@@ -137,10 +137,10 @@ const RankSubmission = ({ open, onClose, initialData }) => {
             return;
         }
         if (isAdminAuthenticated()) {
-            // Auto-submit with stored password without showing dialog
-            confirmUpload(getAdminAuthCookie());
+            // Submit with the verified session
+            confirmUpload().catch(() => {});
         } else {
-            // Show password dialog
+            // Ask the user to sign in
             setShowPasswordModal(true);
         }
     };
@@ -245,21 +245,15 @@ const RankSubmission = ({ open, onClose, initialData }) => {
         }
     };
 
-    const confirmUpload = async (password) => {
-        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-        if (password !== adminPassword) {
-            errorNotification("Incorrect Password!");
-            throw new Error("Incorrect Password"); // Throw error to be caught by PasswordDialog
-        }
-
+    const confirmUpload = async () => {
         setIsSubmitting(true);
         try {
             const data = buildTournamentData();
             if (initialData) {
-                await dispatch(updateRankingAsync({ id: initialData.id, tournamentData: data, password })).unwrap();
+                await dispatch(updateRankingAsync({ id: initialData.id, tournamentData: data })).unwrap();
                 successNotification("Ranking Updated Successfully! 🔄");
             } else {
-                await dispatch(uploadRankingAsync({ tournamentData: data, password })).unwrap();
+                await dispatch(uploadRankingAsync({ tournamentData: data })).unwrap();
                 successNotification("Ranking Uploaded Successfully! 🏆");
             }
 
@@ -273,25 +267,15 @@ const RankSubmission = ({ open, onClose, initialData }) => {
         }
     };
 
-    const handleLoginSuccess = (password) => {
-        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-        if (password === adminPassword) {
-            setAdminAuthCookie(password);
-            setIsAdmin(true);
-            setShowLoginModal(false);
-            successNotification("Logged in as Admin");
-        } else {
-            errorNotification("Incorrect Password");
-        }
+    const handleLoginSuccess = () => {
+        setIsAdmin(isAdminAuthenticated());
+        setShowLoginModal(false);
     };
 
-    const handleDelete = async (password) => {
-        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-        const effectivePassword = password || adminPassword;
-
+    const handleDelete = async () => {
         setIsDeleting(true);
         try {
-            await dispatch(deleteRankingAsync({ id: initialData.id, password: effectivePassword })).unwrap();
+            await dispatch(deleteRankingAsync({ id: initialData.id })).unwrap();
             successNotification("Tournament Deleted Successfully!");
             setShowDeleteConfirm(false);
             if (onClose) onClose();
@@ -358,12 +342,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 value={cupChampion}
                                 onChange={(e, newValue) => setCupChampion(newValue)}
                                 size={isMobile ? "small" : "medium"}
-                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
-                                isOptionEqualToValue={(option, value) => {
-                                    const optionName = typeof option === 'string' ? option : option.name;
-                                    const valueName = typeof value === 'string' ? value : value?.name;
-                                    return optionName === valueName;
-                                }}
+                                getOptionLabel={(option) => option}
+                                isOptionEqualToValue={(option, value) => option === value}
                                 renderInput={(params) => <TextField {...params} label="Cup Champion" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 disabled={!isAdmin}
                                 readOnly={!isAdmin}
@@ -376,12 +356,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 value={cupRunnerUp}
                                 onChange={(e, newValue) => setCupRunnerUp(newValue)}
                                 size={isMobile ? "small" : "medium"}
-                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
-                                isOptionEqualToValue={(option, value) => {
-                                    const optionName = typeof option === 'string' ? option : option.name;
-                                    const valueName = typeof value === 'string' ? value : value?.name;
-                                    return optionName === valueName;
-                                }}
+                                getOptionLabel={(option) => option}
+                                isOptionEqualToValue={(option, value) => option === value}
                                 renderInput={(params) => <TextField {...params} label="Cup Runner Up" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 disabled={!isAdmin}
                                 readOnly={!isAdmin}
@@ -395,16 +371,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 value={cupSemis}
                                 onChange={(e, newValue) => setCupSemis(newValue)}
                                 size={isMobile ? "small" : "medium"}
-                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
-                                isOptionEqualToValue={(option, value) => {
-                                    const optionName = typeof option === 'string' ? option : option.name;
-                                    const valueName = typeof value === 'string' ? value : value?.name;
-                                    return optionName === valueName;
-                                }}
+                                getOptionLabel={(option) => option}
+                                isOptionEqualToValue={(option, value) => option === value}
                                 renderInput={(params) => <TextField {...params} label="Cup Semi Finalists (2 players)" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 renderTags={(value, getTagProps) =>
                                     value.map((option, index) => {
-                                        const playerName = typeof option === 'string' ? option : (option.name || String(option));
+                                        const playerName = option;
                                         return <Chip key={index} variant="outlined" label={playerName} size={isMobile ? "small" : "medium"} {...getTagProps({ index })} />;
                                     })
                                 }
@@ -420,16 +392,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 value={cupQuarters}
                                 onChange={(e, newValue) => setCupQuarters(newValue)}
                                 size={isMobile ? "small" : "medium"}
-                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
-                                isOptionEqualToValue={(option, value) => {
-                                    const optionName = typeof option === 'string' ? option : option.name;
-                                    const valueName = typeof value === 'string' ? value : value?.name;
-                                    return optionName === valueName;
-                                }}
+                                getOptionLabel={(option) => option}
+                                isOptionEqualToValue={(option, value) => option === value}
                                 renderInput={(params) => <TextField {...params} label="Cup Quarter Finalists" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 renderTags={(value, getTagProps) =>
                                     value.map((option, index) => {
-                                        const playerName = typeof option === 'string' ? option : (option.name || String(option));
+                                        const playerName = option;
                                         return <Chip key={index} variant="outlined" label={playerName} size={isMobile ? "small" : "medium"} {...getTagProps({ index })} />;
                                     })
                                 }
@@ -448,12 +416,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 value={plateChampion}
                                 onChange={(e, newValue) => setPlateChampion(newValue)}
                                 size={isMobile ? "small" : "medium"}
-                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
-                                isOptionEqualToValue={(option, value) => {
-                                    const optionName = typeof option === 'string' ? option : option.name;
-                                    const valueName = typeof value === 'string' ? value : value?.name;
-                                    return optionName === valueName;
-                                }}
+                                getOptionLabel={(option) => option}
+                                isOptionEqualToValue={(option, value) => option === value}
                                 renderInput={(params) => <TextField {...params} label="Plate Champion" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 disabled={!isAdmin}
                                 readOnly={!isAdmin}
@@ -466,12 +430,8 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 value={plateRunnerUp}
                                 onChange={(e, newValue) => setPlateRunnerUp(newValue)}
                                 size={isMobile ? "small" : "medium"}
-                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
-                                isOptionEqualToValue={(option, value) => {
-                                    const optionName = typeof option === 'string' ? option : option.name;
-                                    const valueName = typeof value === 'string' ? value : value?.name;
-                                    return optionName === valueName;
-                                }}
+                                getOptionLabel={(option) => option}
+                                isOptionEqualToValue={(option, value) => option === value}
                                 renderInput={(params) => <TextField {...params} label="Plate Runner Up" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 disabled={!isAdmin}
                                 readOnly={!isAdmin}
@@ -485,16 +445,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 value={plateSemis}
                                 onChange={(e, newValue) => setPlateSemis(newValue)}
                                 size={isMobile ? "small" : "medium"}
-                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
-                                isOptionEqualToValue={(option, value) => {
-                                    const optionName = typeof option === 'string' ? option : option.name;
-                                    const valueName = typeof value === 'string' ? value : value?.name;
-                                    return optionName === valueName;
-                                }}
+                                getOptionLabel={(option) => option}
+                                isOptionEqualToValue={(option, value) => option === value}
                                 renderInput={(params) => <TextField {...params} label="Plate Semi Finalists" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 renderTags={(value, getTagProps) =>
                                     value.map((option, index) => {
-                                        const playerName = typeof option === 'string' ? option : (option.name || String(option));
+                                        const playerName = option;
                                         return <Chip key={index} variant="outlined" label={playerName} size={isMobile ? "small" : "medium"} {...getTagProps({ index })} />;
                                     })
                                 }
@@ -510,16 +466,12 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                                 value={plateQuarters}
                                 onChange={(e, newValue) => setPlateQuarters(newValue)}
                                 size={isMobile ? "small" : "medium"}
-                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.name || String(option))}
-                                isOptionEqualToValue={(option, value) => {
-                                    const optionName = typeof option === 'string' ? option : option.name;
-                                    const valueName = typeof value === 'string' ? value : value?.name;
-                                    return optionName === valueName;
-                                }}
+                                getOptionLabel={(option) => option}
+                                isOptionEqualToValue={(option, value) => option === value}
                                 renderInput={(params) => <TextField {...params} label="Plate Quarter Finalists" variant="outlined" InputLabelProps={{ shrink: true }} />}
                                 renderTags={(value, getTagProps) =>
                                     value.map((option, index) => {
-                                        const playerName = typeof option === 'string' ? option : (option.name || String(option));
+                                        const playerName = option;
                                         return <Chip key={index} variant="outlined" label={playerName} size={isMobile ? "small" : "medium"} {...getTagProps({ index })} />;
                                     })
                                 }
@@ -590,6 +542,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                     {isAdmin && initialData && (
                         <Button
                             onClick={() => setShowDeleteConfirm(true)}
+                            aria-label="Delete tournament"
                             color="error"
                             startIcon={<Trash2 size={18} />}
                             sx={{ marginRight: 'auto' }}
@@ -619,7 +572,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                 onSuccess={handleLoginSuccess}
                 onCancel={() => setShowLoginModal(false)}
                 title="Admin Login"
-                description="Enter admin password to edit details."
+                description="Sign in with an approved Google account to edit details."
             />
 
             {/* Upload/Update Authentication (Only if not already admin authenticated via cookie) */}
@@ -628,7 +581,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                 onSuccess={confirmUpload}
                 onCancel={() => setShowPasswordModal(false)}
                 title="Admin Authentication"
-                description="Please enter the admin password to submit tournament results."
+                description="Sign in with an approved Google account to submit tournament results."
             />
 
             {/* Simple Delete Confirmation Dialog */}
@@ -652,7 +605,7 @@ const RankSubmission = ({ open, onClose, initialData }) => {
                 <DialogActions>
                     <Button onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
                     <Button
-                        onClick={() => handleDelete(getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || "ss_admin_panel")}
+                        onClick={() => handleDelete()}
                         color="error"
                         variant="contained"
                         disabled={isDeleting}

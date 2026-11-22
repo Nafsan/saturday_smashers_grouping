@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Alert, Autocomplete } from '@mui/material';
 import { fetchPlayers, seedInitialData, fetchFundBalances } from '../api/client';
-import { getAdminAuthCookie } from '../utils/cookieUtils';
 import { Plus, Trash2, Save, Edit } from 'lucide-react';
 
 const SeedInitialData = () => {
@@ -82,8 +81,7 @@ const SeedInitialData = () => {
         try {
             setSaving(true);
             setMessage(null);
-            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-            await seedInitialData({ players: playerData }, adminPassword);
+            await seedInitialData({ players: playerData });
             setMessage({ type: 'success', text: 'Data saved successfully!' });
             setPlayerData([]);
             const balances = await fetchFundBalances();

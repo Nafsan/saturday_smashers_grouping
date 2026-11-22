@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { parseRankText } from '../logic/parser';
 import { uploadRankingAsync } from '../store/appSlice';
-import { Copy, Check, Upload, AlertTriangle, Lock } from 'lucide-react';
+import { Copy, Check, Upload, AlertTriangle } from 'lucide-react';
+import { isAdminAuthenticated } from '../utils/cookieUtils';
+import PasswordDialog from './PasswordDialog';
 import './RankParser.scss';
 
 // Simple Levenshtein distance for typo checking
@@ -40,7 +42,6 @@ const RankParser = () => {
 
     // Upload State
     const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const [password, setPassword] = useState('');
     const [typoWarnings, setTypoWarnings] = useState([]);
     const [showTypoConfirm, setShowTypoConfirm] = useState(false);
 
@@ -97,33 +98,27 @@ const RankParser = () => {
     };
 
     const initiateUpload = () => {
-        setShowPasswordModal(true);
+        if (isAdminAuthenticated()) confirmUpload();
+        else setShowPasswordModal(true);
     };
 
     const confirmUpload = async () => {
-        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-        if (password !== adminPassword) {
-            alert("Incorrect Password!");
-            return;
-        }
-
         // Check for typos first
         const warnings = validatePlayers();
         if (warnings.length > 0 && !showTypoConfirm) {
             setTypoWarnings(warnings);
             setShowTypoConfirm(true);
-            setShowPasswordModal(false); // Close password modal to show typo warning
+            setShowPasswordModal(false); // Close the sign-in prompt before showing the warning
             return;
         }
 
         // Proceed with upload
         try {
-            await dispatch(uploadRankingAsync({ tournamentData: parsedData, password })).unwrap();
+            await dispatch(uploadRankingAsync({ tournamentData: parsedData })).unwrap();
             alert("Ranking Uploaded Successfully to Database! 🚀");
 
             setShowPasswordModal(false);
             setShowTypoConfirm(false);
-            setPassword('');
             setInput('');
             setParsedData(null);
         } catch (err) {
@@ -154,25 +149,7 @@ const RankParser = () => {
                 )}
             </div>
 
-            {/* Password Modal */}
-            {showPasswordModal && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <h4><Lock size={18} /> Admin Access</h4>
-                        <p>Enter password to upload ranking:</p>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            autoFocus
-                        />
-                        <div className="modal-actions">
-                            <button onClick={() => setShowPasswordModal(false)}>Cancel</button>
-                            <button className="confirm-btn" onClick={confirmUpload}>Confirm</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <PasswordDialog open={showPasswordModal} onCancel={() => setShowPasswordModal(false)} onSuccess={confirmUpload} />
 
             {/* Typo Confirmation Modal */}
             {showTypoConfirm && (
@@ -188,7 +165,7 @@ const RankParser = () => {
                             <button className="confirm-btn" onClick={async () => {
                                 // Re-trigger upload logic skipping typo check
                                 try {
-                                    await dispatch(uploadRankingAsync({ tournamentData: parsedData, password })).unwrap();
+                                    await dispatch(uploadRankingAsync({ tournamentData: parsedData })).unwrap();
                                     alert("Ranking Uploaded Successfully to Database! 🚀");
                                     setShowTypoConfirm(false);
                                     setInput('');

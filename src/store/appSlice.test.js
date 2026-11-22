@@ -88,16 +88,16 @@ test.each([[app.fetchPlayersAsync, 'fetchPlayers', 'playersError'], [app.fetchHi
 test('create/update/delete tournament thunks update cached history and invalidate ranks', async () => {
     const store = makeStore({ history, rankedPlayers: [{ name: 'Alice' }] });
     const added = { id: 'next', date: '2026-10-31', ranks: [] };
-    await store.dispatch(app.uploadRankingAsync({ tournamentData: added, password: 'pw' })).unwrap();
-    expect(api.addTournament).toHaveBeenCalledWith(added, 'pw');
+    await store.dispatch(app.uploadRankingAsync({ tournamentData: added })).unwrap();
+    expect(api.addTournament).toHaveBeenCalledWith(added);
     expect(store.getState().app.history.map(t => t.id)).toEqual(['next', 'cup']);
     const updated = { ...added, date: '2026-11-01' };
-    await store.dispatch(app.updateRankingAsync({ id: 'next', tournamentData: updated, password: 'pw' })).unwrap();
+    await store.dispatch(app.updateRankingAsync({ id: 'next', tournamentData: updated })).unwrap();
     expect(store.getState().app.history[0].date).toBe('2026-11-01');
-    await store.dispatch(app.updateRankingAsync({ id: 'missing', tournamentData: updated, password: 'pw' })).unwrap();
+    await store.dispatch(app.updateRankingAsync({ id: 'missing', tournamentData: updated })).unwrap();
     expect(store.getState().app.history).toHaveLength(2);
-    await store.dispatch(app.deleteRankingAsync({ id: 'next', password: 'pw' })).unwrap();
-    expect(api.deleteTournament).toHaveBeenCalledWith('next', 'pw');
+    await store.dispatch(app.deleteRankingAsync({ id: 'next' })).unwrap();
+    expect(api.deleteTournament).toHaveBeenCalledWith('next');
     expect(store.getState().app.history).toEqual(history);
     expect(store.getState().app.rankedPlayers).toEqual([]);
 });
@@ -105,17 +105,17 @@ test('create/update/delete tournament thunks update cached history and invalidat
 test('unofficial detail updates preserve official flags and ranking records', async () => {
     const store = makeStore({ history });
     api.updateUnofficialTournamentDetails.mockResolvedValue({ playlist_url: 'playlist', description: 'Notes' });
-    await store.dispatch(app.updateUnofficialTournamentAsync({ id: 'cup', details: {}, password: 'pw' })).unwrap();
+    await store.dispatch(app.updateUnofficialTournamentAsync({ id: 'cup', details: {} })).unwrap();
     expect(store.getState().app.history[0]).toMatchObject({ description: 'Notes', ranks: history[0].ranks });
-    await store.dispatch(app.updateUnofficialTournamentAsync({ id: 'missing', details: {}, password: 'pw' })).unwrap();
+    await store.dispatch(app.updateUnofficialTournamentAsync({ id: 'missing', details: {} })).unwrap();
     expect(store.getState().app.history).toHaveLength(1);
 });
 
 test('add-player thunk deduplicates IDs and sorts the roster', async () => {
     api.addPlayer.mockResolvedValue({ id: 1, name: 'Alice' });
     const store = makeStore({ allPlayers: [{ id: 2, name: 'Bob' }] });
-    await store.dispatch(app.addPlayerAsync({ playerName: 'Alice', password: 'pw' })).unwrap();
-    await store.dispatch(app.addPlayerAsync({ playerName: 'Alice', password: 'pw' })).unwrap();
+    await store.dispatch(app.addPlayerAsync({ playerName: 'Alice' })).unwrap();
+    await store.dispatch(app.addPlayerAsync({ playerName: 'Alice' })).unwrap();
     expect(store.getState().app.allPlayers.map(p => p.name)).toEqual(['Alice', 'Bob']);
 });
 
@@ -123,11 +123,11 @@ test.each([{ name: 'Zara' }, { isGuest: true }, { name: 'Zara', isGuest: false }
     const saved = { id: 1, name: changes.name || 'Alice', is_guest: changes.isGuest ?? false };
     api.updatePlayer.mockResolvedValue(saved);
     const store = makeStore({ allPlayers: [{ id: 1, name: 'Alice' }] });
-    await store.dispatch(app.updatePlayerAsync({ playerId: 1, password: 'pw', ...changes })).unwrap();
+    await store.dispatch(app.updatePlayerAsync({ playerId: 1, ...changes })).unwrap();
     const payload = {};
     if ('name' in changes) payload.name = changes.name;
     if ('isGuest' in changes) payload.is_guest = changes.isGuest;
-    expect(api.updatePlayer).toHaveBeenCalledWith(1, payload, 'pw');
+    expect(api.updatePlayer).toHaveBeenCalledWith(1, payload);
     expect(store.getState().app.allPlayers[0]).toEqual(saved);
 });
 
@@ -136,7 +136,7 @@ test.each([
     [{ response: { data: { detail: [] } }, message: 'Offline' }, 'Offline'],
 ])('update-player surfaces API error details', async (error, message) => {
     api.updatePlayer.mockRejectedValue(error);
-    await expect(makeStore().dispatch(app.updatePlayerAsync({ playerId: 1, password: 'pw' })).unwrap()).rejects.toMatchObject({ message });
+    await expect(makeStore().dispatch(app.updatePlayerAsync({ playerId: 1 })).unwrap()).rejects.toMatchObject({ message });
 });
 
 test('an update for an absent cached player does not corrupt another record', () => {

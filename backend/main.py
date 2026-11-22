@@ -6,9 +6,11 @@ from player.api import router as player_router
 from fund.api import router as fund_router
 from ranking.api import router as ranking_router
 from club_tournament.api import router as club_tournament_router
+from admin_auth import router as auth_router
 from datetime import datetime
 from sqlalchemy import text
 import time
+import os
 import logging
 
 # Configure logging
@@ -20,10 +22,20 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+
+@app.middleware("http")
+async def redact_oauth_callback_query(request, call_next):
+    """Remove one-time OAuth credentials before the server writes its access log."""
+    try:
+        return await call_next(request)
+    finally:
+        if request.url.path == "/auth/google/callback":
+            request.scope["query_string"] = b""
+
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all for now, restrict in production
+    allow_origins=[origin] if (origin := os.getenv("FRONTEND_ORIGIN", "").strip().rstrip("/")) else [],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -100,6 +112,7 @@ async def database_health_check():
         }
 
 # Include routers
+app.include_router(auth_router)
 app.include_router(tournament_router)
 app.include_router(player_router)
 app.include_router(fund_router)

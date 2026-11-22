@@ -10,7 +10,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import httpx
 import pytest
 from fastapi import FastAPI, HTTPException
-from database import ADMIN_PASSWORD, get_db
+from database import get_db
+from admin_auth import require_admin
 import models
 import schemas
 from tournament.api import router
@@ -38,14 +39,16 @@ class UnofficialTournamentDetailsTests(unittest.IsolatedAsyncioTestCase):
             yield self.session
 
         app.dependency_overrides[get_db] = override_db
+        app.dependency_overrides[require_admin] = lambda: object()
+        self.app = app
         self.client = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://test')
         self.url = f'/history/{self.tournament.id}/unofficial-details'
 
     async def asyncTearDown(self):
         await self.client.aclose()
 
-    async def patch(self, payload, password=ADMIN_PASSWORD):
-        return await self.client.patch(self.url, params={'password': password}, json=payload)
+    async def patch(self, payload, password=None):
+        return await self.client.patch(self.url, json=payload)
 
     async def test_save_and_read_notes_without_results_or_ranking_changes(self):
         notes = '## Round robin\n\n**Winner:** Alice\n\n1. Alice\n2. Bob'
@@ -64,7 +67,8 @@ class UnofficialTournamentDetailsTests(unittest.IsolatedAsyncioTestCase):
         self.session.add.assert_not_called()
 
     async def test_requires_admin_password(self):
-        self.assertEqual((await self.patch({'description': 'notes'}, password='wrong')).status_code, 403)
+        self.app.dependency_overrides.pop(require_admin)
+        self.assertEqual((await self.patch({'description': 'notes'}, password='wrong')).status_code, 401)
         self.session.execute.assert_not_awaited()
 
     async def test_rejects_official_tournaments(self):

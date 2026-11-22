@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from datetime import date
-from database import get_db, ADMIN_PASSWORD
+from database import get_db
+from admin_auth import require_admin
 from fund import services
 import fund_schemas
 
@@ -20,12 +21,10 @@ async def get_fund_settings(db: AsyncSession = Depends(get_db)):
 @router.post("/settings", response_model=fund_schemas.FundSettingsResponse)
 async def update_fund_settings(
     settings: fund_schemas.FundSettingsCreate,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     """Update fund settings (password protected)"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     
     updated_settings = await services.update_fund_settings(settings, db)
     return updated_settings
@@ -34,12 +33,10 @@ async def update_fund_settings(
 @router.post("/settings/next-tournament")
 async def update_next_tournament_date(
     next_date: Optional[date],
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     """Update next tournament date (password protected)"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     
     updated_settings = await services.update_next_tournament_date(next_date, db)
     return {"next_tournament_date": updated_settings.next_tournament_date}
@@ -49,12 +46,10 @@ async def update_next_tournament_date(
 @router.post("/seed")
 async def seed_initial_data(
     seed_data: fund_schemas.SeedInitialDataRequest,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     """Seed initial player fund data (password protected)"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.seed_initial_player_data(seed_data, db)
 
@@ -74,12 +69,10 @@ async def get_player_balances(
 @router.post("/tournament-costs/calculate", response_model=fund_schemas.TournamentCostCalculationResponse)
 async def calculate_tournament_costs(
     cost_request: fund_schemas.AddTournamentCostRequest,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     """Calculate tournament costs without saving (password protected)"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.calculate_tournament_costs(cost_request, db)
 
@@ -87,12 +80,10 @@ async def calculate_tournament_costs(
 @router.post("/tournament-costs/save")
 async def save_tournament_costs(
     cost_request: fund_schemas.AddTournamentCostRequest,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     """Save tournament costs and update player balances (password protected)"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.save_tournament_costs_and_update_balances(cost_request, db)
 
@@ -132,12 +123,10 @@ async def get_player_attendance(db: AsyncSession = Depends(get_db)):
 @router.post("/record-payment")
 async def record_payment(
     payment_data: fund_schemas.RecordPaymentRequest,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     """Record a payment made by a player (password protected)"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.record_player_payment(payment_data, db)
 
@@ -157,12 +146,10 @@ async def get_payment_history(
 async def update_player_payment(
     payment_id: int,
     payment_data: fund_schemas.UpdatePaymentRequest,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     """Update a payment record (password protected)"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.update_player_payment(payment_id, payment_data, db)
 
@@ -170,12 +157,10 @@ async def update_player_payment(
 @router.delete("/payments/{payment_id}")
 async def delete_player_payment(
     payment_id: int,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     """Delete a payment record (password protected)"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.delete_player_payment(payment_id, db)
 
@@ -193,12 +178,10 @@ async def get_days_played_comparison(db: AsyncSession = Depends(get_db)):
 @router.post("/player-misc-cost")
 async def add_player_misc_cost(
     cost_data: fund_schemas.AddPlayerMiscCostRequest,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
 ):
     """Add miscellaneous cost for players (password protected)"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     
     
     return await services.add_player_misc_cost(cost_data, db)

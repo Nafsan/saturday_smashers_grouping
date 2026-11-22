@@ -18,7 +18,7 @@ import {
 import { Plus, MapPin, Trophy, Calendar, Users, Share2, Edit2, Trash2, Swords, Clock, ExternalLink, Upload, ArrowLeft, Search, ClipboardList } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
-import { isAdminAuthenticated, getAdminAuthCookie } from '../utils/cookieUtils';
+import { isAdminAuthenticated } from '../utils/cookieUtils';
 import { fetchClubTournaments, fetchClubVenues, deleteClubTournament } from '../api/client';
 import { useToast } from '../context/ToastContext';
 import {
@@ -176,8 +176,7 @@ const ClubTournaments = () => {
     const handleDelete = async (tournament) => {
         if (!window.confirm(`Delete tournament "${tournament.category}" at ${tournament.venue.name}?`)) return;
         try {
-            const password = getAdminAuthCookie();
-            await deleteClubTournament(tournament.id, password);
+            await deleteClubTournament(tournament.id);
             successNotification(TOURNAMENT_DELETED_MESSAGE);
             loadTournaments();
         } catch (err) {

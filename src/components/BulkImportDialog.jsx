@@ -15,7 +15,6 @@ import {
     Alert,
 } from '@mui/material';
 import { X, Upload, Plus, Trash2, Calendar } from 'lucide-react';
-import { getAdminAuthCookie } from '../utils/cookieUtils';
 import {
     fetchClubVenues,
     bulkImportClubTournaments,
@@ -122,7 +121,6 @@ const BulkImportDialog = ({ open, onClose }) => {
 
         setLoading(true);
         try {
-            const password = getAdminAuthCookie();
             const payload = {
                 tournaments: rows.map(r => ({
                     venue_id: r.venue.id,
@@ -143,7 +141,7 @@ const BulkImportDialog = ({ open, onClose }) => {
                 })),
             };
 
-            const result = await bulkImportClubTournaments(payload, password);
+            const result = await bulkImportClubTournaments(payload);
             setImportResult(result);
 
             if (result.errors.length === 0) {

@@ -3,7 +3,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import UnofficialTournamentDialog from './UnofficialTournamentDialog';
 import { renderWithProviders } from '../../tests/frontend/renderWithProviders';
-import { setAdminAuthCookie } from '../utils/cookieUtils';
+import { refreshAdminSession } from '../utils/cookieUtils';
 import * as api from '../api/client';
 
 jest.mock('../api/client');
@@ -32,23 +32,17 @@ test('empty notes have a helpful visitor state', () => {
     expect(screen.getByText('No tournament description yet.')).toBeInTheDocument();
 });
 
-test('visitors can cancel login or authenticate to unlock the editor', async () => {
-    const close = jest.fn();
-    renderWithProviders(<UnofficialTournamentDialog open onClose={close} tournament={tournament} />);
+test('visitors can start Google sign-in or cancel', async () => {
+    renderWithProviders(<UnofficialTournamentDialog open onClose={jest.fn()} tournament={tournament} />);
     await userEvent.click(screen.getByRole('button', { name: 'Login as Admin' }));
+    expect(screen.getByRole('link', { name: /sign in with google/i })).toHaveAttribute('href', expect.stringContaining('/auth/google/login'));
+    expect(screen.getByText(/Sign in with an approved Google account/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    await waitFor(() => expect(screen.queryByLabelText('Enter Admin Password')).not.toBeInTheDocument());
-    await userEvent.click(screen.getByRole('button', { name: 'Login as Admin' }));
-    await userEvent.type(screen.getByLabelText('Enter Admin Password'), 'test-admin-only');
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    expect(await screen.findByRole('textbox', { name: 'Tournament description' })).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByLabelText('Enter Admin Password')).not.toBeInTheDocument());
-    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(close).toHaveBeenCalledTimes(1);
 });
 
 test('admin edits trim values and preserve tournament ranking records', async () => {
-    setAdminAuthCookie('test-admin-only');
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ authenticated: true }) });
+    await refreshAdminSession();
     const close = jest.fn();
     api.updateUnofficialTournamentDetails.mockResolvedValue({ playlist_url: null, description: 'Updated notes' });
     const { store } = renderWithProviders(<UnofficialTournamentDialog open onClose={close} tournament={tournament} />, { state: { history: [tournament] } });
@@ -58,12 +52,13 @@ test('admin edits trim values and preserve tournament ranking records', async ()
     await userEvent.clear(screen.getByLabelText('YouTube Playlist URL (optional)'));
     await userEvent.click(screen.getByRole('button', { name: 'Save details' }));
     await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
-    expect(api.updateUnofficialTournamentDetails).toHaveBeenCalledWith('friendly', { playlist_url: null, description: 'Updated notes' }, 'test-admin-only');
+    expect(api.updateUnofficialTournamentDetails).toHaveBeenCalledWith('friendly', { playlist_url: null, description: 'Updated notes' });
     expect(store.getState().app.history[0]).toMatchObject({ is_official: false, ranks: [], description: 'Updated notes' });
 });
 
 test('invalid playlist URLs stop submission', async () => {
-    setAdminAuthCookie('test-admin-only');
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ authenticated: true }) });
+    await refreshAdminSession();
     renderWithProviders(<UnofficialTournamentDialog open onClose={jest.fn()} tournament={tournament} />);
     const url = screen.getByLabelText('YouTube Playlist URL (optional)');
     await userEvent.clear(url);
@@ -74,7 +69,8 @@ test('invalid playlist URLs stop submission', async () => {
 });
 
 test('save errors stay visible and permit another attempt', async () => {
-    setAdminAuthCookie('test-admin-only');
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ authenticated: true }) });
+    await refreshAdminSession();
     api.updateUnofficialTournamentDetails.mockRejectedValue(new Error('Offline'));
     const close = jest.fn();
     renderWithProviders(<UnofficialTournamentDialog open onClose={close} tournament={tournament} />);
@@ -86,7 +82,8 @@ test('save errors stay visible and permit another attempt', async () => {
 });
 
 test('preview toggles between notes and the editor', async () => {
-    setAdminAuthCookie('test-admin-only');
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ authenticated: true }) });
+    await refreshAdminSession();
     renderWithProviders(<UnofficialTournamentDialog open onClose={jest.fn()} tournament={tournament} />);
     await userEvent.click(screen.getByRole('button', { name: 'Preview' }));
     expect(screen.queryByRole('textbox', { name: 'Tournament description' })).not.toBeInTheDocument();

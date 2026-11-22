@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, DollarSign, UserPlus, ChevronDown, Trophy, LogIn, LogOut } from 'lucide-react';
-import { isAdminAuthenticated, clearAdminAuthCookie } from '../utils/cookieUtils';
+import { isAdminAuthenticated, refreshAdminSession, logoutAdmin } from '../utils/cookieUtils';
 import ThemeToggle from './ThemeToggle';
 import LoginDialog from './LoginDialog';
 import './NavigationBar.scss';
@@ -13,15 +13,18 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
     const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
 
     useEffect(() => {
-        // Check login status on mount and when cookie changes
-        const checkAuthStatus = () => {
-            setIsLoggedIn(isAdminAuthenticated());
+        const checkAuthStatus = () => setIsLoggedIn(isAdminAuthenticated());
+        const refreshWhenVisible = () => {
+            if (document.visibilityState === 'visible') refreshAdminSession();
         };
 
-        // Check periodically (in case cookie expires)
-        const interval = setInterval(checkAuthStatus, 5000);
-
-        return () => clearInterval(interval);
+        refreshAdminSession();
+        window.addEventListener('authStatusChanged', checkAuthStatus);
+        document.addEventListener('visibilitychange', refreshWhenVisible);
+        return () => {
+            window.removeEventListener('authStatusChanged', checkAuthStatus);
+            document.removeEventListener('visibilitychange', refreshWhenVisible);
+        };
     }, []);
 
     const handleLogin = () => {
@@ -36,8 +39,8 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
         window.dispatchEvent(new Event('authStatusChanged'));
     };
 
-    const handleLogout = () => {
-        clearAdminAuthCookie();
+    const handleLogout = async () => {
+        try { await logoutAdmin(); } catch { window.alert("Could not sign out. Please try again."); return; }
         setIsLoggedIn(false);
         setAdminMenuOpen(false);
         setMobileMenuOpen(false);

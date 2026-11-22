@@ -8,7 +8,7 @@ import {
 import { X, Search, Edit2, Trash2 } from 'lucide-react';
 import { fetchPaymentHistory, updatePayment, deletePayment, fetchPlayers } from '../api/client';
 import LoadingSpinner from './LoadingSpinner';
-import { getAdminAuthCookie, isAdminAuthenticated } from '../utils/cookieUtils';
+import { isAdminAuthenticated } from '../utils/cookieUtils';
 import { Autocomplete } from '@mui/material';
 
 const PaymentHistoryModal = ({ open, onClose }) => {
@@ -75,13 +75,12 @@ const PaymentHistoryModal = ({ open, onClose }) => {
         
         try {
             isProcessingRef.current = true;
-            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
             await updatePayment(editingTransaction.id, {
                 player_name: editingTransaction.player_name,
                 amount: parseFloat(editingTransaction.amount),
                 payment_date: editingTransaction.payment_date,
                 notes: editingTransaction.notes
-            }, adminPassword);
+            });
             
             setEditDialogOpen(false);
             loadHistory();
@@ -105,8 +104,7 @@ const PaymentHistoryModal = ({ open, onClose }) => {
         try {
             isProcessingRef.current = true;
             setDeleting(true);
-            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-            await deletePayment(transactionToDelete.id, adminPassword);
+            await deletePayment(transactionToDelete.id);
             setDeleteConfirmOpen(false);
             setTransactionToDelete(null);
             await loadHistory();
@@ -190,6 +188,7 @@ const PaymentHistoryModal = ({ open, onClose }) => {
                                                         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                                                             <IconButton 
                                                                 size="small" 
+                                                                aria-label={`Edit payment for ${t.player_name}`}
                                                                 onClick={() => handleEditClick(t)}
                                                                 color="primary"
                                                                 disabled={deleting}
@@ -198,6 +197,7 @@ const PaymentHistoryModal = ({ open, onClose }) => {
                                                             </IconButton>
                                                             <IconButton 
                                                                 size="small" 
+                                                                aria-label={`Delete payment for ${t.player_name}`}
                                                                 onClick={() => handleDeleteClick(t)}
                                                                 color="error"
                                                                 disabled={deleting}

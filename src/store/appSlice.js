@@ -33,54 +33,54 @@ export const fetchHistoryAsync = createAsyncThunk(
 
 export const uploadRankingAsync = createAsyncThunk(
     'app/uploadRanking',
-    async ({ tournamentData, password }, { dispatch }) => {
-        await addTournament(tournamentData, password);
+    async ({ tournamentData }, { dispatch }) => {
+        await addTournament(tournamentData);
         return tournamentData; // Return data to update state optimistically or just trigger refetch
     }
 );
 
 export const updateRankingAsync = createAsyncThunk(
     'app/updateRanking',
-    async ({ id, tournamentData, password }, { dispatch }) => {
-        await updateTournament(id, tournamentData, password);
+    async ({ id, tournamentData }, { dispatch }) => {
+        await updateTournament(id, tournamentData);
         return { id, tournamentData };
     }
 );
 
 export const updateUnofficialTournamentAsync = createAsyncThunk(
     'app/updateUnofficialTournament',
-    async ({ id, details, password }) => {
-        const savedDetails = await updateUnofficialTournamentDetails(id, details, password);
+    async ({ id, details }) => {
+        const savedDetails = await updateUnofficialTournamentDetails(id, details);
         return { id, details: savedDetails };
     }
 );
 
 export const deleteRankingAsync = createAsyncThunk(
     'app/deleteRanking',
-    async ({ id, password }, { dispatch }) => {
-        await deleteTournament(id, password);
+    async ({ id }, { dispatch }) => {
+        await deleteTournament(id);
         return id;
     }
 );
 
 export const addPlayerAsync = createAsyncThunk(
     'app/addPlayer',
-    async ({ playerName, password }) => {
+    async ({ playerName }) => {
         const { addPlayer } = await import('../api/client');
-        const player = await addPlayer(playerName, password);
+        const player = await addPlayer(playerName);
         return player; // Return full player object
     }
 );
 
 export const updatePlayerAsync = createAsyncThunk(
     'app/updatePlayer',
-    async ({ playerId, name, isGuest, password }) => {
+    async ({ playerId, name, isGuest }) => {
         const { updatePlayer } = await import('../api/client');
         const changes = {};
         if (name !== undefined) changes.name = name;
         if (isGuest !== undefined) changes.is_guest = isGuest;
         try {
-            return await updatePlayer(playerId, changes, password);
+            return await updatePlayer(playerId, changes);
         } catch (error) {
             const detail = error.response?.data?.detail;
             throw new Error(typeof detail === 'string' ? detail : error.message);

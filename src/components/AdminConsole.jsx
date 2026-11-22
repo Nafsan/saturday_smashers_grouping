@@ -9,29 +9,26 @@ import RecordPayment from './RecordPayment';
 import AddPlayerMiscCost from './AddPlayerMiscCost';
 import ManagePlayers from './ManagePlayers';
 import PasswordDialog from './PasswordDialog';
-import { getAdminAuthCookie } from '../utils/cookieUtils';
+import { isAdminAuthenticated } from '../utils/cookieUtils';
 import './AdminConsole.scss';
 
 const AdminConsole = () => {
     const navigate = useNavigate();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(isAdminAuthenticated);
+    const [showPasswordDialog, setShowPasswordDialog] = useState(() => !isAdminAuthenticated());
     const [activeTab, setActiveTab] = useState(0);
 
-    // Check for stored password on mount
     useEffect(() => {
-        const storedPassword = getAdminAuthCookie();
-        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-        if (storedPassword && storedPassword === adminPassword) {
-            // Auto-authenticate if valid cookie exists
-            setIsAuthenticated(true);
-        } else {
-            // Show password dialog
-            setShowPasswordDialog(true);
-        }
+        const syncSession = () => {
+            const authenticated = isAdminAuthenticated();
+            setIsAuthenticated(authenticated);
+            setShowPasswordDialog(!authenticated);
+        };
+        window.addEventListener('authStatusChanged', syncSession);
+        return () => window.removeEventListener('authStatusChanged', syncSession);
     }, []);
 
-    const handleAuthSuccess = async (password) => {
+    const handleAuthSuccess = async () => {
         setIsAuthenticated(true);
         setShowPasswordDialog(false);
     };
@@ -40,7 +37,7 @@ const AdminConsole = () => {
         navigate('/fund');
     };
 
-    // Show password dialog if not authenticated
+    // Prompt for sign-in if not authenticated
     if (!isAuthenticated) {
         return (
             <PasswordDialog
@@ -48,7 +45,7 @@ const AdminConsole = () => {
                 onSuccess={handleAuthSuccess}
                 onCancel={handleAuthCancel}
                 title="Admin Authentication Required"
-                description="Please enter the admin password to access the admin console."
+                description="Sign in with an approved Google account to access the admin console."
             />
         );
     }

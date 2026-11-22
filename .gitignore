@@ -16,3 +16,6 @@ htmlcov/
 junit.xml
 .claude/
 coverage/
+
+test-results/
+playwright-report/

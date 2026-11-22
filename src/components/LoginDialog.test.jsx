@@ -2,31 +2,26 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import LoginDialog from './LoginDialog';
-import { getAdminAuthCookie } from '../utils/cookieUtils';
 
-test('validates blank and incorrect credentials', async () => {
-    const success = jest.fn();
-    render(<LoginDialog open onClose={jest.fn()} onLoginSuccess={success} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Login' }));
-    expect(screen.getByText('Please enter a password')).toBeInTheDocument();
-    await userEvent.type(screen.getByLabelText('Admin Password'), 'wrong');
-    await userEvent.click(screen.getByRole('button', { name: 'Login' }));
-    expect(screen.getByText('Incorrect password')).toBeInTheDocument();
-    expect(success).not.toHaveBeenCalled();
+test('offers Google sign-in rather than requesting the shared password', () => {
+    render(<LoginDialog open onClose={jest.fn()} />);
+    expect(screen.getByRole('link', { name: /sign in with google/i })).toHaveAttribute('href', expect.stringContaining('/auth/google/login'));
+    expect(screen.queryByLabelText('Admin Password')).not.toBeInTheDocument();
 });
-test('successful login stores credentials and notifies/ closes the parent', async () => {
-    const success = jest.fn(), close = jest.fn();
-    render(<LoginDialog open onClose={close} onLoginSuccess={success} />);
-    await userEvent.type(screen.getByLabelText('Admin Password'), 'test-admin-only{Enter}');
-    expect(success).toHaveBeenCalledTimes(1);
-    expect(close).toHaveBeenCalledTimes(1);
-    expect(getAdminAuthCookie()).toBe('test-admin-only');
-});
-test('cancel clears input and closes the dialog', async () => {
+test('cancel closes the dialog', async () => {
     const close = jest.fn();
-    render(<LoginDialog open onClose={close} onLoginSuccess={jest.fn()} />);
-    await userEvent.type(screen.getByLabelText('Admin Password'), 'partial');
+    render(<LoginDialog open onClose={close} />);
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(close).toHaveBeenCalled();
-    expect(screen.getByLabelText('Admin Password')).toHaveValue('');
+});
+
+test('uses the same-origin proxy when no API override is set', () => {
+    const previous = process.env.VITE_API_URL;
+    delete process.env.VITE_API_URL;
+    try {
+        render(<LoginDialog open onClose={jest.fn()} />);
+        expect(screen.getByRole('link', { name: /sign in with google/i })).toHaveAttribute('href', '/api/auth/google/login');
+    } finally {
+        process.env.VITE_API_URL = previous;
+    }
 });

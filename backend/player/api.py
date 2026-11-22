@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, validator
 from typing import List, Optional
-from database import get_db, ADMIN_PASSWORD
+from database import get_db
+from admin_auth import require_admin
 from player import services
 
 router = APIRouter(prefix="/players", tags=["players"])
@@ -41,12 +42,10 @@ class PlayerResponse(BaseModel):
 @router.post("", response_model=PlayerResponse, status_code=201)
 async def add_player(
     player: PlayerCreate,
-    password: str,
+    admin = Depends(require_admin),
     database_session: AsyncSession = Depends(get_db)
 ):
     """Add a new player"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     return await services.create_player(player.name, database_session)
 
 
@@ -54,12 +53,10 @@ async def add_player(
 async def update_player(
     player_id: int,
     player_update: PlayerUpdate,
-    password: str,
+    admin = Depends(require_admin),
     database_session: AsyncSession = Depends(get_db)
 ):
     """Update a player's name and/or guest status while retaining their ID."""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     return await services.update_player(
         player_id, database_session, name=player_update.name, is_guest=player_update.is_guest
     )

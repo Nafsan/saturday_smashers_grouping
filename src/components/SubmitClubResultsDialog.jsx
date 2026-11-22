@@ -13,7 +13,6 @@ import {
     Divider,
 } from '@mui/material';
 import { X, Trophy } from 'lucide-react';
-import { getAdminAuthCookie } from '../utils/cookieUtils';
 import {
     submitClubTournamentResults,
     updateClubTournamentResults,
@@ -92,7 +91,6 @@ const SubmitClubResultsDialog = ({ open, onClose, tournament }) => {
 
         setLoading(true);
         try {
-            const password = getAdminAuthCookie();
             const payload = {
                 total_players: totalPlayers || 0,
                 champion: champion.trim(),
@@ -107,10 +105,10 @@ const SubmitClubResultsDialog = ({ open, onClose, tournament }) => {
             };
 
             if (isEditing) {
-                await updateClubTournamentResults(tournament.id, payload, password);
+                await updateClubTournamentResults(tournament.id, payload);
                 successNotification(RESULTS_UPDATED_MESSAGE);
             } else {
-                await submitClubTournamentResults(tournament.id, payload, password);
+                await submitClubTournamentResults(tournament.id, payload);
                 successNotification(RESULTS_SUBMITTED_MESSAGE);
             }
             onClose(true);

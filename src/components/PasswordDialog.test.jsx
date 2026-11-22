@@ -2,44 +2,30 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PasswordDialog from './PasswordDialog';
-import { getAdminAuthCookie, setAdminAuthCookie } from '../utils/cookieUtils';
+import { isAdminAuthenticated } from '../utils/cookieUtils';
+jest.mock('../utils/cookieUtils', () => ({ isAdminAuthenticated: jest.fn() }));
 
-test('rejects empty and incorrect passwords before invoking the callback', async () => {
+beforeEach(() => isAdminAuthenticated.mockReturnValue(false));
+test('offers Google sign-in when a session is required', () => {
+    render(<PasswordDialog open onSuccess={jest.fn()} onCancel={jest.fn()} />);
+    expect(screen.getByRole('link', { name: /sign in with google/i })).toHaveAttribute('href', expect.stringContaining('/auth/google/login'));
+    expect(screen.queryByLabelText('Enter Admin Password')).not.toBeInTheDocument();
+});
+test('continues an action when a server session is present', async () => {
+    isAdminAuthenticated.mockReturnValue(true);
     const success = jest.fn();
     render(<PasswordDialog open onSuccess={success} onCancel={jest.fn()} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    expect(screen.getByText('Please enter a password')).toBeInTheDocument();
-    await userEvent.type(screen.getByLabelText('Enter Admin Password'), 'wrong');
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    expect(screen.getByText('Incorrect password')).toBeInTheDocument();
-    expect(success).not.toHaveBeenCalled();
+    await waitFor(() => expect(success).toHaveBeenCalledTimes(1));
 });
-test('Enter submits a valid password and stores it', async () => {
-    const success = jest.fn().mockResolvedValue(undefined);
-    render(<PasswordDialog open onSuccess={success} onCancel={jest.fn()} />);
-    await userEvent.type(screen.getByLabelText('Enter Admin Password'), 'test-admin-only{Enter}');
-    await waitFor(() => expect(success).toHaveBeenCalledWith('test-admin-only'));
-    expect(getAdminAuthCookie()).toBe('test-admin-only');
-});
-test('a stored credential is submitted automatically on opening', async () => {
-    setAdminAuthCookie('test-admin-only');
-    const success = jest.fn().mockResolvedValue(undefined);
-    render(<PasswordDialog open onSuccess={success} onCancel={jest.fn()} />);
-    await waitFor(() => expect(success).toHaveBeenCalledWith('test-admin-only'));
-});
-test('callback failure is displayed and permits retry', async () => {
-    const success = jest.fn().mockRejectedValue(new Error('Action failed'));
-    render(<PasswordDialog open onSuccess={success} onCancel={jest.fn()} />);
-    await userEvent.type(screen.getByLabelText('Enter Admin Password'), 'test-admin-only');
-    await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
-    expect(await screen.findByText('Action failed')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
-});
-test('cancel calls the parent and a closed dialog is hidden', async () => {
+test('cancel calls the parent', async () => {
     const cancel = jest.fn();
-    const { rerender } = render(<PasswordDialog open onCancel={cancel} />);
+    render(<PasswordDialog open onCancel={cancel} />);
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(cancel).toHaveBeenCalledTimes(1);
-    rerender(<PasswordDialog open={false} onCancel={cancel} />);
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+});
+
+test('shows an error when an authorized action fails', async () => {
+    isAdminAuthenticated.mockReturnValue(true);
+    render(<PasswordDialog open onSuccess={() => Promise.reject(new Error('Action failed'))} onCancel={jest.fn()} />);
+    expect(await screen.findByRole('alert')).toHaveTextContent('Action failed');
 });

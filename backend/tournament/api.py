@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 import schemas
-from database import get_db, ADMIN_PASSWORD
+from database import get_db
+from admin_auth import require_admin
 from tournament import services
 
 router = APIRouter(prefix="/history", tags=["tournaments"])
@@ -17,12 +18,10 @@ async def get_history(database_session: AsyncSession = Depends(get_db)):
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def add_tournament(
     tournament: schemas.TournamentCreate, 
-    password: str,
+    admin = Depends(require_admin),
     database_session: AsyncSession = Depends(get_db)
 ):
     """Create a new tournament"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
 
     services.validate_tournament_rules(tournament)
     return await services.create_tournament(tournament, database_session)
@@ -32,12 +31,10 @@ async def add_tournament(
 async def update_tournament(
     tournament_id: str,
     tournament: schemas.TournamentCreate,
-    password: str,
+    admin = Depends(require_admin),
     database_session: AsyncSession = Depends(get_db)
 ):
     """Update an existing tournament"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
 
     services.validate_tournament_rules(tournament)
     return await services.update_tournament(tournament_id, tournament, database_session)
@@ -47,23 +44,19 @@ async def update_tournament(
 async def update_unofficial_tournament_details(
     tournament_id: str,
     details: schemas.UnofficialTournamentDetailsUpdate,
-    password: str,
+    admin = Depends(require_admin),
     database_session: AsyncSession = Depends(get_db),
 ):
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     return await services.update_unofficial_tournament_details(tournament_id, details, database_session)
 
 
 @router.delete("/{tournament_id}")
 async def delete_tournament(
     tournament_id: str,
-    password: str,
+    admin = Depends(require_admin),
     database_session: AsyncSession = Depends(get_db)
 ):
     """Delete a tournament"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
 
     return await services.delete_tournament(tournament_id, database_session)
 
@@ -86,11 +79,9 @@ async def get_tournament_players_by_date(
 @router.post("/create-unofficial", status_code=status.HTTP_201_CREATED)
 async def create_unofficial_tournament(
     request: schemas.CreateUnofficialTournamentRequest,
-    password: str,
+    admin = Depends(require_admin),
     database_session: AsyncSession = Depends(get_db)
 ):
     """Create an unofficial tournament entry for cost tracking"""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=403, detail="Invalid password")
     
     return await services.create_unofficial_tournament(request, database_session)

@@ -5,10 +5,17 @@ from urllib.parse import parse_qsl, urlsplit
 
 import pytest
 
-from database import ADMIN_PASSWORD
+from admin_auth import require_admin
 from club_tournament.cache import club_cache
 
 pytestmark = pytest.mark.api
+
+@pytest.fixture(autouse=True)
+def authorized_api_tests(request, app):
+    if request.node.name.startswith(('test_write_endpoints_require_admin', 'test_all_write_routes_have_auth_cases')):
+        return
+    app.dependency_overrides[require_admin] = lambda: object()
+
 DAY = "2026-10-24"
 COST = {"tournament_date": DAY, "use_default_venue_fee": True, "use_default_ball_fee": True,
         "tournament_players": ["Alice"], "num_balls_purchased": 1}
@@ -45,7 +52,7 @@ WRITES = [
 
 
 @pytest.mark.parametrize("method,path,payload", WRITES)
-@pytest.mark.parametrize("password,status", [("wrong", 403), (None, 422)])
+@pytest.mark.parametrize("password,status", [("wrong", 401), (None, 401)])
 async def test_write_endpoints_require_admin(method, path, payload, password, status, client, db_session):
     url = urlsplit(path)
     params = dict(parse_qsl(url.query))
@@ -61,6 +68,8 @@ async def test_all_write_routes_have_auth_cases(app):
     covered = {(method, path.split("?")[0]) for method, path, _ in WRITES}
     for route in app.routes:
         for method in getattr(route, "methods", set()) & {"POST", "PUT", "PATCH", "DELETE"}:
+            if route.path == "/auth/logout":
+                continue
             # Replace concrete IDs with the route parameter names for comparison.
             assert any(method == m and route.path == p.replace("/players/1", "/players/{player_id}")
                        .replace("/history/cup", "/history/{tournament_id}")
@@ -98,7 +107,7 @@ async def test_authorized_fund_writes_delegate(method, path, payload, service, c
     from fund import services
     action = AsyncMock(return_value={"message": "Saved"})
     monkeypatch.setattr(services, service, action)
-    response = await client.request(method, path, params={"password": ADMIN_PASSWORD}, json=payload)
+    response = await client.request(method, path, json=payload)
     assert response.status_code == 200
     assert response.json() == {"message": "Saved"}
     assert action.await_args.args[-1] is db_session
@@ -109,10 +118,10 @@ async def test_fund_settings_endpoints(client, db_session, result_factory):
     settings = FundSettings(id=1, default_venue_fee=100, default_ball_fee=20, updated_at=datetime(2026, 10, 24))
     db_session.execute.return_value = result_factory(settings)
     assert (await client.get("/fund/settings")).json()["default_venue_fee"] == 100
-    response = await client.post("/fund/settings", params={"password": ADMIN_PASSWORD}, json={"default_venue_fee": 150, "default_ball_fee": 30})
+    response = await client.post("/fund/settings", json={"default_venue_fee": 150, "default_ball_fee": 30})
     assert response.status_code == 200
     assert response.json()["default_ball_fee"] == 30
-    response = await client.post("/fund/settings/next-tournament", params={"password": ADMIN_PASSWORD, "next_date": DAY})
+    response = await client.post("/fund/settings/next-tournament", params={"next_date": DAY})
     assert response.json() == {"next_tournament_date": DAY}
 
 
@@ -122,14 +131,14 @@ async def test_tournament_create_and_update_validate_before_saving(client, tourn
     update = AsyncMock(return_value={"message": "Updated"})
     monkeypatch.setattr(services, "create_tournament", create)
     monkeypatch.setattr(services, "update_tournament", update)
-    response = await client.post("/history", params={"password": ADMIN_PASSWORD}, json=tournament_data.model_dump(mode="json"))
+    response = await client.post("/history", json=tournament_data.model_dump(mode="json"))
     assert response.status_code == 201
     create.assert_awaited_once()
-    response = await client.put("/history/cup", params={"password": ADMIN_PASSWORD}, json=tournament_data.model_dump(mode="json"))
+    response = await client.put("/history/cup", json=tournament_data.model_dump(mode="json"))
     assert response.status_code == 200
     update.assert_awaited_once()
     tournament_data.ranks = []
-    response = await client.post("/history", params={"password": ADMIN_PASSWORD}, json=tournament_data.model_dump(mode="json"))
+    response = await client.post("/history", json=tournament_data.model_dump(mode="json"))
     assert response.status_code == 400
     assert create.await_count == 1
 
@@ -145,15 +154,15 @@ async def test_history_extra_write_and_lookup_routes(client, monkeypatch):
     from tournament import services
     for name, result in [("delete_tournament", {"message": "Deleted"}), ("create_unofficial_tournament", {"tournament_id": "friendly"}), ("get_tournament_players_by_date", {"players": ["Alice"]})]:
         monkeypatch.setattr(services, name, AsyncMock(return_value=result))
-    assert (await client.delete("/history/cup", params={"password": ADMIN_PASSWORD})).json() == {"message": "Deleted"}
-    assert (await client.post("/history/create-unofficial", params={"password": ADMIN_PASSWORD}, json={"date": DAY, "tournament_players": ["Alice"]})).status_code == 201
+    assert (await client.delete("/history/cup")).json() == {"message": "Deleted"}
+    assert (await client.post("/history/create-unofficial", json={"date": DAY, "tournament_players": ["Alice"]})).status_code == 201
     assert (await client.get("/history/players-by-date", params={"date": DAY})).json() == {"players": ["Alice"]}
 
 
 async def test_player_read_and_create_contracts(client, monkeypatch):
     from player import services
     monkeypatch.setattr(services, "create_player", AsyncMock(return_value={"id": 1, "name": "Alice", "is_guest": False}))
-    response = await client.post("/players", params={"password": ADMIN_PASSWORD}, json={"name": "Alice"})
+    response = await client.post("/players", json={"name": "Alice"})
     assert response.status_code == 201
     assert response.json()["id"] == 1
     for path, service, result in [
@@ -181,7 +190,7 @@ async def test_club_writes_invalidate_cache(method, path, payload, service, stat
     action = AsyncMock(return_value={"message": "Saved"})
     monkeypatch.setattr(services, service, action)
     club_cache.set("existing", [1])
-    response = await client.request(method, path, params={"password": ADMIN_PASSWORD}, json=payload)
+    response = await client.request(method, path, json=payload)
     assert response.status_code == status, response.text
     assert club_cache.get("existing") is None
     action.assert_awaited_once()
@@ -193,7 +202,7 @@ async def test_venue_write_contract(method, path, client, monkeypatch):
     venue = {"id": 1, "name": "Arena", "created_at": "2026-10-24T12:00:00", "whatsapp_links": []}
     monkeypatch.setattr(services, "create_venue" if method == "POST" else "update_venue", AsyncMock(return_value=venue))
     club_cache.set("existing", [1])
-    response = await client.request(method, path, params={"password": ADMIN_PASSWORD}, json={"name": "Arena"})
+    response = await client.request(method, path, json={"name": "Arena"})
     assert response.status_code == (201 if method == "POST" else 200)
     assert response.json()["name"] == "Arena"
     assert club_cache.get("existing") is None
@@ -217,11 +226,14 @@ async def test_club_lists_cache_by_query(client, monkeypatch):
 
 async def test_api_validation_does_not_touch_database(client, db_session):
     for path, payload in [("/players", {}), ("/fund/record-payment", {"amount": "invalid"}), ("/club-tournaments", {**CLUB, "tournament_datetime": "invalid"})]:
-        assert (await client.post(path, params={"password": ADMIN_PASSWORD}, json=payload)).status_code == 422
+        assert (await client.post(path, json=payload)).status_code == 422
     db_session.execute.assert_not_awaited()
 
 
 async def test_cors_preflight(client):
     response = await client.options("/players", headers={"Origin": "https://example.test", "Access-Control-Request-Method": "GET"})
     assert response.status_code == 200
-    assert response.headers["access-control-allow-origin"] == "*"
+    assert response.headers["access-control-allow-origin"] == "https://example.test"
+    denied = await client.options("/players", headers={"Origin": "https://evil.test", "Access-Control-Request-Method": "GET"})
+    assert denied.status_code == 400
+    assert "access-control-allow-origin" not in denied.headers

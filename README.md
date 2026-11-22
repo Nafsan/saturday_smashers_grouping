@@ -85,6 +85,12 @@ _(Note: If you want to build locally for development instead, use `docker compos
 
 4. Open your browser and navigate to `http://localhost:5173`.
 
+The Vite development server proxies `/api/*` to `http://127.0.0.1:8000` by
+removing the `/api` prefix. Start the backend as shown above. If it listens
+elsewhere, set `BACKEND_PROXY_TARGET` before starting Vite. Restart Vite after
+changing the proxy setting. A 401 from `/api/auth/session` means no admin session
+is active; a connection error means Vite cannot reach the backend.
+
 ## Frontend tests
 
 Use Node.js 22. Run these commands from the repository root

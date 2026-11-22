@@ -7,7 +7,7 @@ jest.mock('axios', () => ({ create: jest.fn(() => ({
 
 const data = { value: 'payload' };
 const password = 'test-password';
-const auth = { params: { password } };
+const auth = {};
 const cases = [
     ['fetchHistory', [], 'get', ['/history']],
     ['addTournament', [data, password], 'post', ['/history', data, auth]],
@@ -40,7 +40,7 @@ const cases = [
     ['createUnofficialTournament', [data, password], 'post', ['/history/create-unofficial', data, auth]],
     ['fetchPlayerTournamentCosts', [7], 'get', ['/fund/players/7/tournament-costs', { params: { page: 1, page_size: 10 } }]],
     ['fetchPlayerMiscCosts', [7], 'get', ['/fund/players/7/misc-costs', { params: { page: 1, page_size: 10 } }]],
-    ['updateNextTournamentDate', ['2026-10-24', password], 'post', ['/fund/settings/next-tournament', null, { params: { next_date: '2026-10-24', password } }]],
+    ['updateNextTournamentDate', ['2026-10-24', password], 'post', ['/fund/settings/next-tournament', null, { params: { next_date: '2026-10-24' } }]],
     ['fetchRankingProxy', ['url'], 'get', ['/ranking/proxy', { params: { url: 'url', force_refresh: false } }]],
     ['fetchYouTubeSearch', ['Alice'], 'get', ['/ranking/youtube-search', { params: { q: 'Alice' } }]],
     ['fetchYouTubePlaylist', ['PL1'], 'get', ['/ranking/youtube-playlist', { params: { list_id: 'PL1' } }]],
@@ -97,7 +97,9 @@ test('passes optional filters and custom pagination without losing values', asyn
     expect(client.get).toHaveBeenLastCalledWith('/ranking/proxy', { params: { url: 'url', force_refresh: true } });
 });
 
-test('player creation leaves encoding of password characters to Axios', async () => {
-    await api.addPlayer('Alice', 'p&ss?=word');
-    expect(client.post).toHaveBeenLastCalledWith('/players', { name: 'Alice' }, { params: { password: 'p&ss?=word' } });
+
+test('write requests never put the old password into the URL', async () => {
+    await api.addPlayer('Alice', 'legacy-secret');
+    const config = client.post.mock.calls.at(-1)[2];
+    expect(config?.params?.password).toBeUndefined();
 });

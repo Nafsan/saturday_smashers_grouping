@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Alert, Autocomplete } from '@mui/material';
 import { fetchPlayers, addPlayerMiscCost } from '../api/client';
-import { getAdminAuthCookie } from '../utils/cookieUtils';
 import { Receipt, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -53,13 +52,12 @@ const AddPlayerMiscCost = () => {
         try {
             setSaving(true);
             setMessage(null);
-            const adminPassword = getAdminAuthCookie() || import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
             const result = await addPlayerMiscCost({
                 player_names: selectedPlayers,
                 cost_amount: costAmount,
                 cost_description: costDescription,
                 cost_date: costDate
-            }, adminPassword);
+            });
 
             setMessage({
                 type: 'success',

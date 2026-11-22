@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 # Set before importing any application module: load_dotenv does not override these.
 os.environ["DATABASE_URL"] = "postgresql+asyncpg://test:test@127.0.0.1:1/test"
-os.environ["ADMIN_PASSWORD"] = "pytest-admin-only"
+os.environ["FRONTEND_ORIGIN"] = "https://example.test"
 os.environ["HF_TOKEN"] = ""
 os.environ["SQL_ECHO"] = "false"
 

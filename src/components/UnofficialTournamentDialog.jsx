@@ -9,7 +9,7 @@ import MDEditor, { commands } from '@uiw/react-md-editor';
 import ReactMarkdown from 'react-markdown';
 import { updateUnofficialTournamentAsync } from '../store/appSlice';
 import { useToast } from '../context/ToastContext';
-import { getAdminAuthCookie, isAdminAuthenticated, setAdminAuthCookie } from '../utils/cookieUtils';
+import { isAdminAuthenticated } from '../utils/cookieUtils';
 import { isYouTubePlaylistUrl } from '../utils/youtubeUtils';
 import PasswordDialog from './PasswordDialog';
 import './UnofficialTournamentDialog.scss';
@@ -50,7 +50,6 @@ const UnofficialTournamentDialog = ({ open, onClose, tournament }) => {
             await dispatch(updateUnofficialTournamentAsync({
                 id: tournament.id,
                 details: { playlist_url: url || null, description: description.trim() || null },
-                password: getAdminAuthCookie(),
             })).unwrap();
             successNotification('Unofficial tournament details saved');
             onClose();
@@ -61,13 +60,8 @@ const UnofficialTournamentDialog = ({ open, onClose, tournament }) => {
         }
     };
 
-    const handleLogin = (password) => {
-        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'ss_admin_panel';
-        if (password !== adminPassword) {
-            throw new Error('Incorrect password');
-        }
-        setAdminAuthCookie(password);
-        window.dispatchEvent(new Event('authStatusChanged'));
+    const handleLogin = () => {
+        setIsAdmin(isAdminAuthenticated());
         setShowLogin(false);
     };
 
@@ -161,7 +155,7 @@ const UnofficialTournamentDialog = ({ open, onClose, tournament }) => {
                     )}
                 </DialogActions>
             </Dialog>
-            <PasswordDialog open={showLogin} onSuccess={handleLogin} onCancel={() => setShowLogin(false)} title="Admin Login" description="Enter the admin password to edit tournament details." />
+            <PasswordDialog open={showLogin} onSuccess={handleLogin} onCancel={() => setShowLogin(false)} title="Admin Login" description="Sign in with an approved Google account to edit tournament details." />
         </>
     );
 };

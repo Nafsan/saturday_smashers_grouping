@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Default to localhost for dev, can be configured via env var
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const client = axios.create({
     baseURL: API_URL,
@@ -20,37 +20,37 @@ export const fetchHistory = async () => {
     }
 };
 
-export const addTournament = async (tournamentData, password) => {
+export const addTournament = async (tournamentData) => {
     const response = await client.post('/history', tournamentData, {
-        params: { password } // Sending password as query param for simplicity as per main.py
+
     });
     return response.data;
 };
 
-export const updateTournament = async (id, tournamentData, password) => {
+export const updateTournament = async (id, tournamentData) => {
     const response = await client.put(`/history/${id}`, tournamentData, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const updateUnofficialTournamentDetails = async (id, details, password) => {
+export const updateUnofficialTournamentDetails = async (id, details) => {
     const response = await client.patch(`/history/${id}/unofficial-details`, details, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const deleteTournament = async (id, password) => {
+export const deleteTournament = async (id) => {
     const response = await client.delete(`/history/${id}`, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const addPlayer = async (playerName, password) => {
+export const addPlayer = async (playerName) => {
     const response = await client.post('/players', { name: playerName }, {
-        params: { password }
+
     });
     return response.data;
 };
@@ -60,9 +60,9 @@ export const fetchPlayers = async () => {
     return response.data;
 };
 
-export const updatePlayer = async (playerId, data, password) => {
+export const updatePlayer = async (playerId, data) => {
     const response = await client.put(`/players/${playerId}`, data, {
-        params: { password }
+
     });
     return response.data;
 };
@@ -89,16 +89,16 @@ export const fetchFundSettings = async () => {
     return response.data;
 };
 
-export const updateFundSettings = async (settings, password) => {
+export const updateFundSettings = async (settings) => {
     const response = await client.post('/fund/settings', settings, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const seedInitialData = async (data, password) => {
+export const seedInitialData = async (data) => {
     const response = await client.post('/fund/seed', data, {
-        params: { password }
+
     });
     return response.data;
 };
@@ -112,16 +112,16 @@ export const fetchFundBalances = async (search = null, filter = null) => {
     return response.data;
 };
 
-export const calculateTournamentCosts = async (data, password) => {
+export const calculateTournamentCosts = async (data) => {
     const response = await client.post('/fund/tournament-costs/calculate', data, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const saveTournamentCosts = async (data, password) => {
+export const saveTournamentCosts = async (data) => {
     const response = await client.post('/fund/tournament-costs/save', data, {
-        params: { password }
+
     });
     return response.data;
 };
@@ -138,9 +138,9 @@ export const fetchTournamentPlayersByDate = async (date) => {
     return response.data;
 };
 
-export const recordPayment = async (data, password) => {
+export const recordPayment = async (data) => {
     const response = await client.post('/fund/record-payment', data, {
-        params: { password }
+
     });
     return response.data;
 };
@@ -153,16 +153,16 @@ export const fetchPaymentHistory = async (page = 1, pageSize = 20, playerName = 
     return response.data;
 };
 
-export const updatePayment = async (id, data, password) => {
+export const updatePayment = async (id, data) => {
     const response = await client.put(`/fund/payments/${id}`, data, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const deletePayment = async (id, password) => {
+export const deletePayment = async (id) => {
     const response = await client.delete(`/fund/payments/${id}`, {
-        params: { password }
+
     });
     return response.data;
 };
@@ -189,16 +189,16 @@ export const fetchTournamentCostInput = async (date) => {
     return response.data;
 };
 
-export const addPlayerMiscCost = async (data, password) => {
+export const addPlayerMiscCost = async (data) => {
     const response = await client.post('/fund/player-misc-cost', data, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const createUnofficialTournament = async (data, password) => {
+export const createUnofficialTournament = async (data) => {
     const response = await client.post('/history/create-unofficial', data, {
-        params: { password }
+
     });
     return response.data;
 };
@@ -217,9 +217,9 @@ export const fetchPlayerMiscCosts = async (playerId, page = 1, pageSize = 10) =>
     return response.data;
 };
 
-export const updateNextTournamentDate = async (date, password) => {
+export const updateNextTournamentDate = async (date) => {
     const response = await client.post('/fund/settings/next-tournament', null, {
-        params: { next_date: date, password }
+        params: { next_date: date }
     });
     return response.data;
 };
@@ -272,37 +272,37 @@ export const fetchClubTournaments = async (params = {}) => {
     return response.data;
 };
 
-export const createClubTournament = async (data, password) => {
+export const createClubTournament = async (data) => {
     const response = await client.post('/club-tournaments', data, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const updateClubTournament = async (id, data, password) => {
+export const updateClubTournament = async (id, data) => {
     const response = await client.put(`/club-tournaments/${id}`, data, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const deleteClubTournament = async (id, password) => {
+export const deleteClubTournament = async (id) => {
     const response = await client.delete(`/club-tournaments/${id}`, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const submitClubTournamentResults = async (tournamentId, data, password) => {
+export const submitClubTournamentResults = async (tournamentId, data) => {
     const response = await client.post(`/club-tournaments/${tournamentId}/results`, data, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const updateClubTournamentResults = async (tournamentId, data, password) => {
+export const updateClubTournamentResults = async (tournamentId, data) => {
     const response = await client.put(`/club-tournaments/${tournamentId}/results`, data, {
-        params: { password }
+
     });
     return response.data;
 };
@@ -312,30 +312,30 @@ export const fetchClubVenues = async () => {
     return response.data;
 };
 
-export const createClubVenue = async (data, password) => {
+export const createClubVenue = async (data) => {
     const response = await client.post('/club-venues', data, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const updateClubVenue = async (id, data, password) => {
+export const updateClubVenue = async (id, data) => {
     const response = await client.put(`/club-venues/${id}`, data, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const deleteClubVenue = async (id, password) => {
+export const deleteClubVenue = async (id) => {
     const response = await client.delete(`/club-venues/${id}`, {
-        params: { password }
+
     });
     return response.data;
 };
 
-export const bulkImportClubTournaments = async (data, password) => {
+export const bulkImportClubTournaments = async (data) => {
     const response = await client.post('/club-tournaments/bulk-import', data, {
-        params: { password }
+
     });
     return response.data;
 };

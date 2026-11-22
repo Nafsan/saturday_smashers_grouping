@@ -4,13 +4,11 @@ import userEvent from '@testing-library/user-event';
 import ManagePlayers from './ManagePlayers';
 import { renderWithProviders } from '../../tests/frontend/renderWithProviders';
 import * as api from '../api/client';
-import { setAdminAuthCookie } from '../utils/cookieUtils';
 
 jest.mock('../api/client');
 const players = [{ id: 1, name: 'Alice', is_guest: false }, { id: 2, name: 'Bob', is_guest: true }];
 beforeEach(() => {
     api.fetchPlayers.mockResolvedValue(players);
-    setAdminAuthCookie('test-admin-only');
 });
 
 async function showPlayers() {
@@ -65,7 +63,7 @@ test('successful rename trims input, preserves ID and updates cached tournament 
     await userEvent.type(screen.getByRole('textbox', { name: 'Player name' }), '  Zara  ');
     await userEvent.click(screen.getByRole('button', { name: 'Save name' }));
     await screen.findByRole('button', { name: 'Edit name for Zara' });
-    expect(api.updatePlayer).toHaveBeenCalledWith(1, { name: 'Zara' }, 'test-admin-only');
+    expect(api.updatePlayer).toHaveBeenCalledWith(1, { name: 'Zara' });
     expect(store.getState().app.history[0].ranks[0].players).toEqual(['Zara']);
     expect(screen.getByRole('alert')).toHaveTextContent('Player renamed to Zara');
 });
@@ -86,7 +84,7 @@ test('guest toggle sends only the changed status and updates the UI', async () =
     await showPlayers();
     await userEvent.click(screen.getByRole('switch', { name: 'Guest status for Alice' }));
     await waitFor(() => expect(screen.getByRole('switch', { name: 'Guest status for Alice' })).toBeChecked());
-    expect(api.updatePlayer).toHaveBeenCalledWith(1, { is_guest: true }, 'test-admin-only');
+    expect(api.updatePlayer).toHaveBeenCalledWith(1, { is_guest: true });
 });
 
 test('saving an unchanged name closes the dialog without a request', async () => {

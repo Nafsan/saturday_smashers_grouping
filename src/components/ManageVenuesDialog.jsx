@@ -18,7 +18,6 @@ import {
     Divider,
 } from '@mui/material';
 import { X, MapPin, Plus, Edit2, Trash2, Upload, Image } from 'lucide-react';
-import { getAdminAuthCookie } from '../utils/cookieUtils';
 import {
     fetchClubVenues,
     createClubVenue,
@@ -106,7 +105,6 @@ const ManageVenuesDialog = ({ open, onClose }) => {
 
         setSaving(true);
         try {
-            const password = getAdminAuthCookie();
             const payload = {
                 name: venueName.trim(),
                 logo_base64: venueLogo || null,
@@ -114,10 +112,10 @@ const ManageVenuesDialog = ({ open, onClose }) => {
             };
 
             if (editingVenue) {
-                await updateClubVenue(editingVenue.id, payload, password);
+                await updateClubVenue(editingVenue.id, payload);
                 successNotification(VENUE_UPDATED_MESSAGE);
             } else {
-                await createClubVenue(payload, password);
+                await createClubVenue(payload);
                 successNotification(VENUE_CREATED_MESSAGE);
             }
             resetForm();
@@ -132,8 +130,7 @@ const ManageVenuesDialog = ({ open, onClose }) => {
     const handleDelete = async (venue) => {
         if (!window.confirm(`Delete venue "${venue.name}"?`)) return;
         try {
-            const password = getAdminAuthCookie();
-            await deleteClubVenue(venue.id, password);
+            await deleteClubVenue(venue.id);
             successNotification(VENUE_DELETED_MESSAGE);
             loadVenues();
         } catch (err) {
@@ -210,6 +207,7 @@ const ManageVenuesDialog = ({ open, onClose }) => {
                                     <ListItemSecondaryAction>
                                         <IconButton
                                             size="small"
+                                            aria-label={`Edit ${venue.name}`}
                                             onClick={() => handleEdit(venue)}
                                             sx={{ color: 'var(--text-muted)' }}
                                         >
@@ -217,6 +215,7 @@ const ManageVenuesDialog = ({ open, onClose }) => {
                                         </IconButton>
                                         <IconButton
                                             size="small"
+                                            aria-label={`Delete ${venue.name}`}
                                             onClick={() => handleDelete(venue)}
                                             sx={{ color: 'var(--text-muted)', '&:hover': { color: 'var(--accent-danger)' } }}
                                         >
@@ -286,6 +285,7 @@ const ManageVenuesDialog = ({ open, onClose }) => {
                                         sx={{ flex: 2 }}
                                     />
                                     <IconButton 
+                                        aria-label="Remove registration link"
                                         onClick={() => setWhatsappLinks(whatsappLinks.filter((_, i) => i !== index))}
                                         sx={{ color: 'var(--accent-danger)' }}
                                     >
@@ -331,6 +331,7 @@ const ManageVenuesDialog = ({ open, onClose }) => {
                                     />
                                     <IconButton
                                         size="small"
+                                        aria-label="Remove venue logo"
                                         onClick={() => setVenueLogo(null)}
                                         sx={{ color: 'var(--accent-danger)' }}
                                     >

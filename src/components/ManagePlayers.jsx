@@ -22,7 +22,6 @@ import {
     IconButton,
 } from '@mui/material';
 import { fetchPlayersAsync, updatePlayerAsync } from '../store/appSlice';
-import { getAdminAuthCookie } from '../utils/cookieUtils';
 import { useToast } from '../context/ToastContext';
 import './ManagePlayers.scss';
 
@@ -68,7 +67,7 @@ const ManagePlayers = () => {
         setSavingName(true);
         try {
             await dispatch(updatePlayerAsync({
-                playerId: editingPlayer.id, name, password: getAdminAuthCookie(),
+                playerId: editingPlayer.id, name,
             })).unwrap();
             setEditingPlayer(null);
             successNotification(`Player renamed to ${name}`);
@@ -80,13 +79,11 @@ const ManagePlayers = () => {
     };
 
     const handleToggleGuest = async (player, currentStatus) => {
-        const password = getAdminAuthCookie();
         setUpdatingPlayerId(player.id);
         try {
             await dispatch(updatePlayerAsync({ 
                 playerId: player.id, 
-                isGuest: !currentStatus, 
-                password 
+                isGuest: !currentStatus
             })).unwrap();
             successNotification(`Updated guest status for ${player.name}`);
         } catch (error) {

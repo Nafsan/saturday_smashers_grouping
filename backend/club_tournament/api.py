@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
-from database import get_db, ADMIN_PASSWORD
+from database import get_db
+from admin_auth import require_admin
 from club_tournament import services
 from club_tournament.schemas import (
     ClubVenueCreate,
@@ -22,15 +23,6 @@ from club_tournament.constants import ERROR_INVALID_PASSWORD
 from club_tournament.cache import club_cache
 
 router = APIRouter(tags=["club-tournaments"])
-
-
-def _verify_admin(password: str):
-    """Verify admin password."""
-    if password != ADMIN_PASSWORD:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=ERROR_INVALID_PASSWORD,
-        )
 
 
 # ============ Venue Endpoints ============
@@ -51,11 +43,10 @@ async def list_venues(db: AsyncSession = Depends(get_db)):
 @router.post("/club-venues", response_model=ClubVenueResponse, status_code=status.HTTP_201_CREATED)
 async def create_venue(
     data: ClubVenueCreate,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new venue (admin only)."""
-    _verify_admin(password)
     result = await services.create_venue(data, db)
     club_cache.clear()
     return result
@@ -65,11 +56,10 @@ async def create_venue(
 async def update_venue(
     venue_id: int,
     data: ClubVenueUpdate,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Update a venue (admin only)."""
-    _verify_admin(password)
     result = await services.update_venue(venue_id, data, db)
     club_cache.clear()
     return result
@@ -78,11 +68,10 @@ async def update_venue(
 @router.delete("/club-venues/{venue_id}")
 async def delete_venue(
     venue_id: int,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a venue (admin only)."""
-    _verify_admin(password)
     result = await services.delete_venue(venue_id, db)
     club_cache.clear()
     return result
@@ -124,11 +113,10 @@ async def list_tournaments(
 @router.post("/club-tournaments", status_code=status.HTTP_201_CREATED)
 async def create_tournament(
     data: ClubTournamentCreate,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new tournament (admin only)."""
-    _verify_admin(password)
     result = await services.create_tournament(data, db)
     club_cache.clear()
     return result
@@ -138,11 +126,10 @@ async def create_tournament(
 async def update_tournament(
     tournament_id: int,
     data: ClubTournamentUpdate,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Update a tournament (admin only)."""
-    _verify_admin(password)
     result = await services.update_tournament(tournament_id, data, db)
     club_cache.clear()
     return result
@@ -151,11 +138,10 @@ async def update_tournament(
 @router.delete("/club-tournaments/{tournament_id}")
 async def delete_tournament(
     tournament_id: int,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a tournament (admin only)."""
-    _verify_admin(password)
     result = await services.delete_tournament(tournament_id, db)
     club_cache.clear()
     return result
@@ -167,11 +153,10 @@ async def delete_tournament(
 async def submit_results(
     tournament_id: int,
     data: ClubTournamentResultCreate,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Submit results for a tournament (admin only)."""
-    _verify_admin(password)
     result = await services.submit_results(tournament_id, data, db)
     club_cache.clear()
     return result
@@ -181,11 +166,10 @@ async def submit_results(
 async def update_results(
     tournament_id: int,
     data: ClubTournamentResultUpdate,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Update results for a tournament (admin only)."""
-    _verify_admin(password)
     result = await services.update_results(tournament_id, data, db)
     club_cache.clear()
     return result
@@ -196,11 +180,10 @@ async def update_results(
 @router.post("/club-tournaments/bulk-import", status_code=status.HTTP_201_CREATED)
 async def bulk_import_tournaments(
     data: BulkTournamentImport,
-    password: str,
+    admin = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Bulk import tournaments with optional results (admin only)."""
-    _verify_admin(password)
     result = await services.bulk_import_tournaments(data.tournaments, db)
     club_cache.clear()
     return result

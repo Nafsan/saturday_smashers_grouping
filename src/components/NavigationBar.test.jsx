@@ -1,10 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 jest.mock('react-router-dom', () => ({ Link: ({ to, children, ...props }) => <a href={to} {...props}>{children}</a> }));
 import NavigationBar from './NavigationBar';
-import { isAdminAuthenticated, clearAdminAuthCookie } from '../utils/cookieUtils';
+import { isAdminAuthenticated, logoutAdmin } from '../utils/cookieUtils';
 
-jest.mock('../utils/cookieUtils', () => ({ isAdminAuthenticated: jest.fn(), clearAdminAuthCookie: jest.fn() }));
+jest.mock('../utils/cookieUtils', () => ({ isAdminAuthenticated: jest.fn(), clearAdminAuthCookie: jest.fn(), refreshAdminSession: jest.fn().mockResolvedValue(false), logoutAdmin: jest.fn().mockResolvedValue() }));
 jest.mock('./ThemeToggle', () => () => <button>Theme</button>);
 jest.mock('./LoginDialog', () => ({ open, onLoginSuccess }) => open ? <button onClick={onLoginSuccess}>Complete login</button> : null);
 
@@ -19,15 +19,16 @@ test('keeps requested links hidden in desktop and mobile navigation', () => {
     expect(screen.getAllByRole('link', { name: 'Fund' })).toHaveLength(2);
 });
 
-test('admin can log in and log out', () => {
+test('admin can log in and log out', async () => {
     isAdminAuthenticated.mockReturnValue(false);
     renderNav();
     fireEvent.click(screen.getByRole('button', { name: /admin/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Login' }));
+    isAdminAuthenticated.mockReturnValue(true);
     fireEvent.click(screen.getByRole('button', { name: 'Complete login' }));
     fireEvent.click(screen.getByRole('button', { name: /admin/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Logout' }));
-    expect(clearAdminAuthCookie).toHaveBeenCalled();
+    await waitFor(() => expect(logoutAdmin).toHaveBeenCalled());
 });
 
 test('admin actions work on desktop and mobile', () => {
@@ -48,7 +49,7 @@ test('admin actions work on desktop and mobile', () => {
 });
 
 
-test('mobile login and logout controls work', () => {
+test('mobile login and logout controls work', async () => {
     isAdminAuthenticated.mockReturnValue(false);
     const { container, unmount } = renderNav();
     fireEvent.click(container.querySelector('.mobile-menu-toggle'));
@@ -59,7 +60,7 @@ test('mobile login and logout controls work', () => {
     const next = renderNav();
     fireEvent.click(next.container.querySelector('.mobile-menu-toggle'));
     fireEvent.click(screen.getByText('Logout'));
-    expect(clearAdminAuthCookie).toHaveBeenCalled();
+    await waitFor(() => expect(logoutAdmin).toHaveBeenCalled());
 });
 
 test('shows fallback when logo fails and refreshes authentication', () => {
@@ -69,9 +70,37 @@ test('shows fallback when logo fails and refreshes authentication', () => {
     fireEvent.error(screen.getByAltText('Saturday Smashers Logo'));
     expect(container.querySelector('.logo-fallback')).toHaveStyle({ display: 'flex' });
     isAdminAuthenticated.mockReturnValue(true);
-    const { act } = require('@testing-library/react');
-    act(() => jest.advanceTimersByTime(5000));
+    act(() => window.dispatchEvent(new Event('authStatusChanged')));
     fireEvent.click(screen.getByRole('button', { name: /admin/i }));
     expect(screen.getByRole('button', { name: 'Logout' })).toBeInTheDocument();
+    jest.useRealTimers();
+});
+
+test('refreshes the server session on startup', () => {
+    const { refreshAdminSession } = require('../utils/cookieUtils');
+    renderNav();
+    expect(refreshAdminSession).toHaveBeenCalled();
+});
+
+
+
+
+test('does not poll signed-out visitors and refreshes when the tab becomes visible', () => {
+    jest.useFakeTimers();
+    const { refreshAdminSession } = require('../utils/cookieUtils');
+    isAdminAuthenticated.mockReturnValue(false);
+    renderNav();
+    expect(refreshAdminSession).toHaveBeenCalledTimes(1);
+    act(() => jest.advanceTimersByTime(30000));
+    expect(refreshAdminSession).toHaveBeenCalledTimes(1);
+    const descriptor = Object.getOwnPropertyDescriptor(document, 'visibilityState');
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+    fireEvent(document, new Event('visibilitychange'));
+    expect(refreshAdminSession).toHaveBeenCalledTimes(1);
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+    fireEvent(document, new Event('visibilitychange'));
+    expect(refreshAdminSession).toHaveBeenCalledTimes(2);
+    if (descriptor) Object.defineProperty(document, 'visibilityState', descriptor);
+    else delete document.visibilityState;
     jest.useRealTimers();
 });

@@ -34,10 +34,10 @@ const AddPlayer = ({ open, onClose }) => {
         setShowPasswordPrompt(true);
     };
 
-    const handleFinalSubmit = async (password) => {
+    const handleFinalSubmit = async () => {
         setIsSubmitting(true);
         try {
-            await dispatch(addPlayerAsync({ playerName: playerName.trim(), password })).unwrap();
+            await dispatch(addPlayerAsync({ playerName: playerName.trim() })).unwrap();
             successNotification(`Player "${playerName.trim()}" added successfully! 🎉`);
 
             setPlayerName('');
@@ -170,7 +170,7 @@ const AddPlayer = ({ open, onClose }) => {
                 onSuccess={handleFinalSubmit}
                 onCancel={() => setShowPasswordPrompt(false)}
                 title="Admin Authentication"
-                description={`Please enter the admin password to confirm adding ${playerName}.`}
+                description={`Sign in with an approved Google account to confirm adding ${playerName}.`}
             />
         </>
     );

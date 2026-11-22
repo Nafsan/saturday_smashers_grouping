@@ -13,7 +13,6 @@ import {
     Typography
 } from '@mui/material';
 import { X, Calendar } from 'lucide-react';
-import { getAdminAuthCookie } from '../utils/cookieUtils';
 import {
     fetchClubVenues,
     createClubTournament,
@@ -109,7 +108,6 @@ const AddClubTournamentDialog = ({ open, onClose, tournament }) => {
 
         setLoading(true);
         try {
-            const password = getAdminAuthCookie();
             const payload = {
                 venue_id: selectedVenue.id,
                 category: category.trim(),
@@ -121,10 +119,10 @@ const AddClubTournamentDialog = ({ open, onClose, tournament }) => {
             };
 
             if (isEditing) {
-                await updateClubTournament(tournament.id, payload, password);
+                await updateClubTournament(tournament.id, payload);
                 successNotification(TOURNAMENT_UPDATED_MESSAGE);
             } else {
-                await createClubTournament(payload, password);
+                await createClubTournament(payload);
                 successNotification(TOURNAMENT_CREATED_MESSAGE);
             }
             onClose(true);

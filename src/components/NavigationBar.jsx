@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Calculator, DollarSign, UserPlus, BarChart3, ChevronDown, Trophy, LogIn, LogOut, Swords } from 'lucide-react';
+import { Menu, X, DollarSign, UserPlus, ChevronDown, Trophy, LogIn, LogOut } from 'lucide-react';
 import { isAdminAuthenticated, clearAdminAuthCookie } from '../utils/cookieUtils';
 import ThemeToggle from './ThemeToggle';
 import LoginDialog from './LoginDialog';
@@ -69,10 +69,6 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
 
                 {/* Desktop Navigation Links */}
                 <div className="nav-links desktop-only">
-                    <Link to="/gtt-elo-calculator" className="nav-link">
-                        <Calculator size={18} />
-                        <span>ELO Calculator</span>
-                    </Link>
                     <Link to="/fund" className="nav-link">
                         <DollarSign size={18} />
                         <span>Fund</span>
@@ -80,10 +76,6 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
                     <Link to="/national-ranking" className="nav-link">
                         <Trophy size={18} />
                         <span>National Ranking</span>
-                    </Link>
-                    <Link to="/club-tournaments" className="nav-link">
-                        <Swords size={18} />
-                        <span>Tournaments</span>
                     </Link>
 
                 </div>
@@ -139,10 +131,6 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
             {/* Mobile Menu */}
             {mobileMenuOpen && (
                 <div className="mobile-menu">
-                    <Link to="/gtt-elo-calculator" onClick={() => setMobileMenuOpen(false)} className="mobile-link">
-                        <Calculator size={18} />
-                        <span>ELO Calculator</span>
-                    </Link>
                     <Link to="/fund" onClick={() => setMobileMenuOpen(false)} className="mobile-link">
                         <DollarSign size={18} />
                         <span>Fund</span>
@@ -150,10 +138,6 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
                     <Link to="/national-ranking" onClick={() => setMobileMenuOpen(false)} className="mobile-link">
                         <Trophy size={18} />
                         <span>National Ranking</span>
-                    </Link>
-                    <Link to="/club-tournaments" onClick={() => setMobileMenuOpen(false)} className="mobile-link">
-                        <Swords size={18} />
-                        <span>Tournaments</span>
                     </Link>
 
                     <div className="mobile-divider"></div>
@@ -195,3 +179,4 @@ const NavigationBar = ({ onAddPlayer, onPlayerStats, onSubmitResults }) => {
 };
 
 export default NavigationBar;
+
